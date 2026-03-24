@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>여행 경로 요약 지도 - Google Maps 버전</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      font-family: Arial, sans-serif;
+      background: #f5f6f8;
+      color: #222;
+    }
+
+    .app {
+      display: flex;
+      width: 100%;
+      height: 100%;
+    }
+
+    .sidebar {
+      width: 360px;
+      min-width: 360px;
+      max-width: 360px;
+      height: 100%;
+      background: #fff;
+      border-right: 1px solid #ddd;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .section {
+      padding: 14px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .section h2 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+
+    .section h3 {
+      margin: 0 0 8px;
+      font-size: 14px;
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    input[type="text"], select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 70px;
+    }
+
+    button {
+      padding: 10px 12px;
+      border: none;
+      border-radius: 8px;
+      background: #2f6fed;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    button.secondary {
+      background: #666;
+    }
+
+    button.danger {
+      background: #d9534f;
+    }
+
+    button.small {
+      padding: 6px 8px;
+      font-size: 12px;
+    }
+
+    .help-text {
+      font-size: 13px;
+      color: #666;
+      line-height: 1.5;
+    }
+
+    .places-list {
+      flex: 1;
+      overflow: auto;
+      padding: 12px;
+    }
+
+    .place-card {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 10px;
+      cursor: grab;
+      user-select: none;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      touch-action: pan-y;
+    }
+
+    .place-card:active {
+      cursor: grabbing;
+    }
+
+    .place-card.sortable-chosen {
+      border-color: #2f6fed;
+      box-shadow: 0 8px 20px rgba(47, 111, 237, 0.16);
+    }
+
+    .place-card.sortable-ghost {
+      opacity: 0.35;
+    }
+
+    .place-card.sortable-drag {
+      box-shadow: 0 12px 28px rgba(0,0,0,0.18);
+      transform: scale(1.01);
+    }
+
+    .drag-guide {
+      font-size: 12px;
+      color: #777;
+      margin-top: 6px;
+    }
+
+    .place-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .place-title {
+      font-size: 15px;
+      font-weight: bold;
+      line-height: 1.4;
+    }
+
+    .place-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #eef4ff;
+      color: #2f6fed;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .place-memo {
+      font-size: 13px;
+      color: #555;
+      margin-top: 6px;
+      white-space: pre-wrap;
+    }
+
+    .place-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .map-wrap {
+      flex: 1;
+      height: 100%;
+      position: relative;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+
+    .map-tip {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      z-index: 1000;
+      background: rgba(255,255,255,0.95);
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      border: 1px solid #ddd;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .google-search-box {
+      width: 100%;
+    }
+
+    .status-box {
+      font-size: 12px;
+      color: #666;
+      margin-top: 6px;
+      min-height: 18px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="section">
+        <h2>여행 경로 요약 지도</h2>
+        <div class="row">
+          <input type="text" id="apiKeyInput" placeholder="Google Maps API 키 입력" />
+        </div>
+        <div class="row">
+          <button id="applyApiKeyBtn">API 키 적용</button>
+          <button id="resetApiKeyBtn" class="secondary">초기화</button>
+        </div>
+        <div class="status-box" id="apiKeyStatus">API 키를 입력한 뒤 적용 버튼을 누르세요.</div>
+        <div class="row">
+          <input type="text" id="tripTitle" placeholder="예: 나트랑 1일차" value="나트랑 1일차" />
+        </div>
+        <div class="row">
+          <button id="fitRouteBtn">경로에 맞게 보기</button>
+          <button id="clearAllBtn" class="danger">전체 삭제</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>장소 검색</h3>
+        <div class="row">
+          <input type="text" id="placeSearchInput" class="google-search-box" placeholder="예: CCCP Coffee Nha Trang" />
+        </div>
+
+        <div class="row">
+          <textarea id="memoInput" placeholder="메모를 입력하세요"></textarea>
+        </div>
+        <div class="status-box" id="searchStatus"></div>
+      </div>
+
+      <div class="section">
+        <h3>지도 클릭으로 직접 추가 가능</h3>
+      </div>
+
+      <div class="places-list" id="placesList"></div>
+    </aside>
+
+    <main class="map-wrap">
+      <div class="map-tip">
+        단순화 지도 · 빨간 이동선 클릭 후 조절점 드래그로 선 편집 가능
+      </div>
+      <div id="map"></div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.3/Sortable.min.js"></script>
+  <script>
+    let map;
+    let polyline;
+    let segmentMarkers = [];
+    let infoWindow;
+    let autocomplete;
+
+    const state = {
+      places: [],
+      markers: [],
+      labelOverlays: [],
+      segmentPolylines: [],
+      segmentControlMarkers: [],
+      activeSegmentIndex: null,
+      sortable: null
+    };
+
+    const apiKeyInput = document.getElementById('apiKeyInput');
+    const applyApiKeyBtn = document.getElementById('applyApiKeyBtn');
+    const resetApiKeyBtn = document.getElementById('resetApiKeyBtn');
+    const apiKeyStatus = document.getElementById('apiKeyStatus');
+    const memoInput = document.getElementById('memoInput');
+    const placesList = document.getElementById('placesList');
+    const fitRouteBtn = document.getElementById('fitRouteBtn');
+    const clearAllBtn = document.getElementById('clearAllBtn');
+    const placeSearchInput = document.getElementById('placeSearchInput');
+    const searchStatus = document.getElementById('searchStatus');
+
+    function escapeHtml(text) {
+      return String(text || '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function getMarkerIcon() {
+      return {
+        url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+        <svg width="42" height="42" viewBox="0 0 42 42" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+              <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="rgba(0,0,0,0.22)"/>
+            </filter>
+          </defs>
+          <g filter="url(#shadow)">
+            <circle cx="21" cy="21" r="13.5" fill="#ffffff" stroke="#9ca3af" stroke-width="4"/>
+            <circle cx="21" cy="21" r="6" fill="#ef4444"/>
+          </g>
+        </svg>
+        `),
+        scaledSize: new google.maps.Size(42, 42),
+        anchor: new google.maps.Point(21, 21)
+      };
+    }
+
+    function getInfoWindowHtml(place, index) {
+      return `
+        <div style="font-size:13px; line-height:1.5; min-width:180px;">
+          ${place.memo ? `<div>메모: ${escapeHtml(place.memo)}</div>` : ''}
+          <div style="color:#777; font-size:12px; margin-top:4px;">
+            ${place.lat.toFixed(6)}, ${place.lng.toFixed(6)}
+          </div>
+        </div>
+      `;
+    }
+
+    function clearMarkers() {
+      state.markers.forEach(marker => marker.setMap(null));
+      state.markers = [];
+
+      state.labelOverlays.forEach(overlay => overlay.setMap(null));
+      state.labelOverlays = [];
+
+      state.segmentPolylines.forEach(line => line.setMap(null));
+      state.segmentPolylines = [];
+
+      state.segmentControlMarkers.forEach(marker => marker.setMap(null));
+      state.segmentControlMarkers = [];
+
+      segmentMarkers.forEach(marker => marker.setMap(null));
+      segmentMarkers = [];
+    }
+
+    function getDefaultControlPoint(p1, p2) {
+      const midLat = (p1.lat + p2.lat) / 2;
+      const midLng = (p1.lng + p2.lng) / 2;
+      const dx = p2.lng - p1.lng;
+      const dy = p2.lat - p1.lat;
+      const distance = Math.sqrt(dx * dx + dy * dy) || 0.0001;
+
+      const perpLat = dx / distance;
+      const perpLng = -dy / distance;
+      const offset = Math.max(distance * 0.12, 0.01);
+
+      return {
+        lat: midLat + perpLat * offset,
+        lng: midLng + perpLng * offset
+      };
+    }
+
+    function getQuadraticBezierPath(p1, control, p2, steps = 28) {
+      const path = [];
+
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const oneMinusT = 1 - t;
+        const lat = oneMinusT * oneMinusT * p1.lat + 2 * oneMinusT * t * control.lat + t * t * p2.lat;
+        const lng = oneMinusT * oneMinusT * p1.lng + 2 * oneMinusT * t * control.lng + t * t * p2.lng;
+        path.push({ lat, lng });
+      }
+
+      return path;
+    }
+
+    function getSegmentPath(p1, p2, controlPoint) {
+      if (controlPoint && Number.isFinite(controlPoint.lat) && Number.isFinite(controlPoint.lng)) {
+        return getQuadraticBezierPath(p1, controlPoint, p2);
+      }
+      return [p1, p2];
+    }
+
+    function getSegmentLabelPosition(path) {
+      if (!Array.isArray(path) || path.length === 0) return null;
+      if (path.length === 1) return path[0];
+      if (path.length === 2) {
+        return {
+          lat: (path[0].lat + path[1].lat) / 2,
+          lng: (path[0].lng + path[1].lng) / 2
+        };
+      }
+      return path[Math.floor(path.length / 2)];
+    }
+
+    function clearSegmentControlMarkers() {
+      state.segmentControlMarkers.forEach(marker => marker.setMap(null));
+      state.segmentControlMarkers = [];
+      state.activeSegmentIndex = null;
+    }
+
+    function redrawSegmentLine(segmentIndex) {
+      if (!state.segmentPolylines[segmentIndex]) return;
+      if (segmentIndex < 0 || segmentIndex >= state.places.length - 1) return;
+
+      const start = state.places[segmentIndex];
+      const end = state.places[segmentIndex + 1];
+      const p1 = { lat: start.lat, lng: start.lng };
+      const p2 = { lat: end.lat, lng: end.lng };
+      const path = getSegmentPath(p1, p2, end.curveControl);
+
+      state.segmentPolylines[segmentIndex].setPath(path);
+
+      if (segmentMarkers[segmentIndex]) {
+        const midPoint = getSegmentLabelPosition(path);
+        if (midPoint) {
+          segmentMarkers[segmentIndex].setPosition(midPoint);
+        }
+      }
+    }
+
+    function showSegmentControlMarker(segmentIndex) {
+      if (!map || segmentIndex < 0 || segmentIndex >= state.places.length - 1) return;
+
+      clearSegmentControlMarkers();
+
+      const start = state.places[segmentIndex];
+      const end = state.places[segmentIndex + 1];
+      const currentControl = end.curveControl || getDefaultControlPoint(start, end);
+      state.places[segmentIndex + 1].curveControl = { ...currentControl };
+      state.activeSegmentIndex = segmentIndex;
+
+      const controlMarker = new google.maps.Marker({
+        position: currentControl,
+        map,
+        draggable: true,
+        zIndex: 999,
+        title: '곡선 조절점',
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          fillColor: '#ffffff',
+          fillOpacity: 1,
+          strokeColor: '#ff3b3b',
+          strokeWeight: 3,
+          scale: 8
+        }
+      });
+
+      controlMarker.addListener('drag', (event) => {
+        state.places[segmentIndex + 1].curveControl = {
+          lat: event.latLng.lat(),
+          lng: event.latLng.lng()
+        };
+        redrawSegmentLine(segmentIndex);
+      });
+
+      controlMarker.addListener('dragend', (event) => {
+        state.places[segmentIndex + 1].curveControl = {
+          lat: event.latLng.lat(),
+          lng: event.latLng.lng()
+        };
+        redrawSegmentLine(segmentIndex);
+        renderPlacesList();
+      });
+
+      state.segmentControlMarkers.push(controlMarker);
+    }
+
+    function resetSegmentCurve(segmentIndex) {
+      if (segmentIndex < 0 || segmentIndex >= state.places.length - 1) return;
+      delete state.places[segmentIndex + 1].curveControl;
+      renderMap();
+      renderPlacesList();
+      clearSegmentControlMarkers();
+      searchStatus.textContent = '해당 구간이 직선으로 복구되었습니다.';
+    }
+
+    function finishSegmentCurveEdit() {
+      clearSegmentControlMarkers();
+      state.activeSegmentIndex = null;
+      renderMap();
+      renderPlacesList();
+      searchStatus.textContent = '선 편집이 완료되었습니다.';
+    }
+
+    function renderMap() {
+      if (!map) return;
+
+      const previousActiveSegmentIndex = state.activeSegmentIndex;
+      clearMarkers();
+
+      if (polyline) {
+        polyline.setMap(null);
+        polyline = null;
+      }
+
+      state.places.forEach((place, index) => {
+        const marker = new google.maps.Marker({
+          position: { lat: place.lat, lng: place.lng },
+          map,
+          draggable: true,
+          icon: getMarkerIcon(),
+          title: place.name
+        });
+
+        const labelDiv = document.createElement('div');
+        labelDiv.style.background = 'white';
+        labelDiv.style.padding = '6px 10px';
+        labelDiv.style.borderRadius = '999px';
+        labelDiv.style.boxShadow = '0 2px 6px rgba(0,0,0,0.2)';
+        labelDiv.style.fontSize = '13px';
+        labelDiv.style.fontWeight = '600';
+        labelDiv.innerText = place.name;
+
+        const labelOverlay = new google.maps.OverlayView();
+
+        labelOverlay.onAdd = function () {
+          const panes = this.getPanes();
+          panes.overlayLayer.appendChild(labelDiv);
+        };
+
+        labelOverlay.draw = function () {
+          const projection = this.getProjection();
+          const position = projection.fromLatLngToDivPixel(marker.getPosition());
+          if (position) {
+            labelDiv.style.position = 'absolute';
+            labelDiv.style.left = position.x + 20 + 'px';
+            labelDiv.style.top = position.y - 10 + 'px';
+          }
+        };
+
+        labelOverlay.onRemove = function () {
+          if (labelDiv.parentNode) {
+            labelDiv.parentNode.removeChild(labelDiv);
+          }
+        };
+
+        labelOverlay.setMap(map);
+        state.labelOverlays.push(labelOverlay);
+
+        marker.addListener('click', () => {
+          infoWindow.setContent(getInfoWindowHtml(place, index));
+          infoWindow.open(map, marker);
+        });
+
+        marker.addListener('dragend', (event) => {
+          state.places[index].lat = event.latLng.lat();
+          state.places[index].lng = event.latLng.lng();
+          if (index > 0 && state.places[index].curveControl) {
+            delete state.places[index].curveControl;
+          }
+          if (index < state.places.length - 1 && state.places[index + 1]?.curveControl) {
+            delete state.places[index + 1].curveControl;
+          }
+          renderMap();
+          renderPlacesList();
+        });
+
+        state.markers.push(marker);
+      });
+
+      for (let i = 0; i < state.places.length - 1; i++) {
+        const start = state.places[i];
+        const end = state.places[i + 1];
+        const p1 = { lat: start.lat, lng: start.lng };
+        const p2 = { lat: end.lat, lng: end.lng };
+        const path = getSegmentPath(p1, p2, end.curveControl);
+
+        const segmentLine = new google.maps.Polyline({
+          path,
+          geodesic: true,
+          strokeColor: '#ff3b3b',
+          strokeOpacity: 0.95,
+          strokeWeight: 4,
+          clickable: true
+        });
+
+        segmentLine.setMap(map);
+        segmentLine.addListener('click', () => {
+          showSegmentControlMarker(i);
+          searchStatus.textContent = `${i + 1} → ${i + 2} 구간 조절점을 드래그해서 선을 휘게 만들 수 있습니다.`;
+        });
+
+        state.segmentPolylines.push(segmentLine);
+
+        const midPoint = getSegmentLabelPosition(path);
+        const midMarker = new google.maps.Marker({
+          position: midPoint,
+          map,
+          clickable: false,
+          icon: {
+            url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+              <svg width="34" height="34" viewBox="0 0 34 34" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="17" cy="17" r="11" fill="#ff3b3b" stroke="#ffffff" stroke-width="2" />
+                <text x="17" y="21" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">${i + 1}</text>
+              </svg>
+            `),
+            scaledSize: new google.maps.Size(34, 34),
+            anchor: new google.maps.Point(17, 17)
+          }
+        });
+
+        segmentMarkers.push(midMarker);
+      }
+
+      if (previousActiveSegmentIndex !== null && previousActiveSegmentIndex < state.places.length - 1) {
+        showSegmentControlMarker(previousActiveSegmentIndex);
+      }
+    }
+
+    function initSortablePlaces() {
+      if (!window.Sortable || state.sortable) return;
+
+      state.sortable = new Sortable(placesList, {
+        animation: 180,
+        delay: 220,
+        delayOnTouchOnly: true,
+        ghostClass: 'sortable-ghost',
+        chosenClass: 'sortable-chosen',
+        dragClass: 'sortable-drag',
+        filter: 'button',
+        preventOnFilter: false,
+        onEnd: (evt) => {
+          const { oldIndex, newIndex } = evt;
+          if (oldIndex === newIndex || oldIndex == null || newIndex == null) return;
+
+          const movedItem = state.places.splice(oldIndex, 1)[0];
+          state.places.splice(newIndex, 0, movedItem);
+
+          clearSegmentControlMarkers();
+          renderMap();
+          renderPlacesList();
+          searchStatus.textContent = `순서 변경 완료: ${oldIndex + 1} → ${newIndex + 1}`;
+        }
+      });
+    }
+
+    function renderPlacesList() {
+      if (state.places.length === 0) {
+        placesList.innerHTML = '<div style="color:#777; font-size:14px;">아직 추가된 장소가 없습니다.</div>';
+        return;
+      }
+
+      placesList.innerHTML = state.places.map((place, index) => `
+        <div class="place-card" data-index="${index}">
+          <div class="place-header">
+            <div>
+              <div class="place-title">${index + 1}. ${escapeHtml(place.name)}</div>
+            </div>
+          </div>
+          ${place.memo ? `<div class="place-memo">${escapeHtml(place.memo)}</div>` : ''}
+          ${index > 0 ? `
+            <div class="place-actions">
+              <button class="small secondary" onclick="editSegmentCurve(${index - 1})">${state.activeSegmentIndex === index - 1 ? '편집 완료' : '선 편집'}</button>
+              <button class="small" onclick="resetSegmentCurve(${index - 1})">직선 복구</button>
+              <button class="small secondary" onclick="focusPlace(${index})">지도 보기</button>
+              <button class="small danger" onclick="removePlace(${index})">삭제</button>
+            </div>
+          ` : `
+            <div class="place-actions">
+              <button class="small secondary" onclick="focusPlace(${index})">지도 보기</button>
+              <button class="small danger" onclick="removePlace(${index})">삭제</button>
+            </div>
+          `}
+        </div>
+      `).join('');
+
+      initSortablePlaces();
+    }
+
+    function addPlace(place) {
+      state.places.push(place);
+      renderMap();
+      renderPlacesList();
+    }
+
+    function focusPlace(index) {
+      const place = state.places[index];
+      if (!place || !map) return;
+
+      map.setCenter({ lat: place.lat, lng: place.lng });
+      map.setZoom(16);
+
+      const marker = state.markers[index];
+      if (marker) {
+        infoWindow.setContent(getInfoWindowHtml(place, index));
+        infoWindow.open(map, marker);
+      }
+    }
+
+    function movePlaceUp(index) {
+      if (index <= 0) return;
+      [state.places[index - 1], state.places[index]] = [state.places[index], state.places[index - 1]];
+      renderMap();
+      renderPlacesList();
+    }
+
+    function movePlaceDown(index) {
+      if (index >= state.places.length - 1) return;
+      [state.places[index + 1], state.places[index]] = [state.places[index], state.places[index + 1]];
+      renderMap();
+      renderPlacesList();
+    }
+
+    function removePlace(index) {
+      state.places.splice(index, 1);
+      clearSegmentControlMarkers();
+      renderMap();
+      renderPlacesList();
+    }
+
+    function editSegmentCurve(segmentIndex) {
+      if (state.activeSegmentIndex === segmentIndex) {
+        finishSegmentCurveEdit();
+        return;
+      }
+
+      showSegmentControlMarker(segmentIndex);
+      state.activeSegmentIndex = segmentIndex;
+
+      searchStatus.textContent = `${segmentIndex + 1} → ${segmentIndex + 2} 구간 조절점을 드래그해 곡선을 수정하세요.`;
+      renderPlacesList();
+    }
+
+    function fitRoute() {
+      if (!map || state.places.length === 0) return;
+
+      if (state.places.length === 1) {
+        map.setCenter({ lat: state.places[0].lat, lng: state.places[0].lng });
+        map.setZoom(16);
+        return;
+      }
+
+      const bounds = new google.maps.LatLngBounds();
+      state.places.forEach(place => {
+        bounds.extend({ lat: place.lat, lng: place.lng });
+      });
+      map.fitBounds(bounds, 80);
+    }
+
+    function handlePlaceSelected() {
+      const place = autocomplete.getPlace();
+
+      if (!place || !place.geometry || !place.geometry.location) {
+        searchStatus.textContent = '검색 결과에서 장소를 선택해주세요.';
+        return;
+      }
+
+      const lat = place.geometry.location.lat();
+      const lng = place.geometry.location.lng();
+      const memo = memoInput.value.trim();
+      const name = place.name || place.formatted_address || '선택한 장소';
+
+      addPlace({
+        name,
+        lat,
+        lng,
+        memo,
+        placeId: place.place_id || ''
+      });
+
+      map.setCenter({ lat, lng });
+      map.setZoom(16);
+      searchStatus.textContent = `추가됨: ${name}`;
+      placeSearchInput.value = '';
+    }
+
+    function addPlaceByMapClick(latLng) {
+      const placeName = prompt('장소명을 입력하세요.', '');
+      if (placeName === null) return;
+
+      const trimmedName = placeName.trim() || '직접 추가한 장소';
+      const memo = memoInput.value.trim();
+
+      addPlace({
+        name: trimmedName,
+        lat: latLng.lat(),
+        lng: latLng.lng(),
+        memo,
+        placeId: ''
+      });
+
+      searchStatus.textContent = `직접 추가됨: ${trimmedName}`;
+    }
+
+    function initGooglePlaceSearch() {
+      autocomplete = new google.maps.places.Autocomplete(placeSearchInput, {
+        fields: ['name', 'formatted_address', 'geometry', 'place_id'],
+        types: ['establishment', 'geocode']
+      });
+
+      autocomplete.bindTo('bounds', map);
+      autocomplete.addListener('place_changed', handlePlaceSelected);
+    }
+
+    function saveApiKey(apiKey) {
+      localStorage.setItem('travel_route_google_api_key', apiKey);
+    }
+
+    function loadSavedApiKey() {
+      return localStorage.getItem('travel_route_google_api_key') || '';
+    }
+
+    function updateApiKeyUi(isApplied, message) {
+      apiKeyStatus.textContent = message;
+      apiKeyInput.disabled = isApplied;
+      applyApiKeyBtn.disabled = isApplied;
+      resetApiKeyBtn.disabled = !isApplied;
+    }
+
+    function removeGoogleMapsScript() {
+      const oldScript = document.getElementById('googleMapsScript');
+      if (oldScript) oldScript.remove();
+    }
+
+    function loadGoogleMapsScript(apiKey) {
+      removeGoogleMapsScript();
+
+      const script = document.createElement('script');
+      script.id = 'googleMapsScript';
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&libraries=places&callback=initMap`;
+      script.async = true;
+      script.defer = true;
+      script.onerror = () => {
+        updateApiKeyUi(false, 'Google Maps 스크립트를 불러오지 못했습니다. API 키 또는 네트워크를 확인하세요.');
+      };
+      document.body.appendChild(script);
+    }
+
+    function applyApiKey() {
+      const apiKey = apiKeyInput.value.trim();
+      if (!apiKey) {
+        apiKeyStatus.textContent = 'API 키를 입력하세요.';
+        return;
+      }
+
+      saveApiKey(apiKey);
+      updateApiKeyUi(true, 'API 키 적용 중입니다...');
+      loadGoogleMapsScript(apiKey);
+    }
+
+    function resetApiKey() {
+      localStorage.removeItem('travel_route_google_api_key');
+      apiKeyInput.disabled = false;
+      apiKeyInput.value = '';
+      applyApiKeyBtn.disabled = false;
+      resetApiKeyBtn.disabled = true;
+      apiKeyStatus.textContent = 'API 키가 초기화되었습니다. 다시 입력 후 적용하세요.';
+    }
+
+    function initMap() {
+      map = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: 12.2388, lng: 109.1967 },
+        zoom: 13,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: true,
+        clickableIcons: false,
+        styles: [
+          {
+            featureType: 'poi',
+            stylers: [{ visibility: 'off' }]
+          },
+          {
+            featureType: 'transit',
+            stylers: [{ visibility: 'off' }]
+          },
+          {
+            featureType: 'road.local',
+            elementType: 'labels',
+            stylers: [{ visibility: 'off' }]
+          },
+          {
+            featureType: 'road',
+            elementType: 'labels.icon',
+            stylers: [{ visibility: 'off' }]
+          },
+          {
+            featureType: 'poi.park',
+            elementType: 'labels.text',
+            stylers: [{ visibility: 'off' }]
+          },
+          {
+            featureType: 'administrative.locality',
+            elementType: 'labels.text',
+            stylers: [{ visibility: 'simplified' }]
+          },
+          {
+            featureType: 'administrative.land_parcel',
+            stylers: [{ visibility: 'off' }]
+          },
+          {
+            featureType: 'road.arterial',
+            elementType: 'labels.text',
+            stylers: [{ visibility: 'on' }]
+          },
+          {
+            featureType: 'road.highway',
+            elementType: 'labels.text',
+            stylers: [{ visibility: 'on' }]
+          }
+        ]
+      });
+
+      infoWindow = new google.maps.InfoWindow();
+      polyline = null;
+
+      map.addListener('click', (event) => {
+        addPlaceByMapClick(event.latLng);
+      });
+
+      initGooglePlaceSearch();
+      renderMap();
+      renderPlacesList();
+      updateApiKeyUi(true, 'Google Maps가 정상적으로 연결되었습니다.');
+    }
+
+    applyApiKeyBtn.addEventListener('click', applyApiKey);
+    resetApiKeyBtn.addEventListener('click', resetApiKey);
+
+    apiKeyInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        applyApiKey();
+      }
+    });
+
+    fitRouteBtn.addEventListener('click', fitRoute);
+
+    clearAllBtn.addEventListener('click', () => {
+      if (!confirm('모든 장소를 삭제할까요?')) return;
+      state.places = [];
+      clearSegmentControlMarkers();
+      renderMap();
+      renderPlacesList();
+      searchStatus.textContent = '전체 삭제 완료';
+    });
+
+    window.movePlaceUp = movePlaceUp;
+    window.movePlaceDown = movePlaceDown;
+    window.removePlace = removePlace;
+    window.focusPlace = focusPlace;
+    window.editSegmentCurve = editSegmentCurve;
+    window.finishSegmentCurveEdit = finishSegmentCurveEdit;
+    window.resetSegmentCurve = resetSegmentCurve;
+    window.initMap = initMap;
+
+    (function bootstrapApiKey() {
+      const savedApiKey = loadSavedApiKey();
+      if (savedApiKey) {
+        apiKeyInput.value = savedApiKey;
+        updateApiKeyUi(true, '저장된 API 키로 Google Maps를 불러오는 중입니다...');
+        loadGoogleMapsScript(savedApiKey);
+      } else {
+        resetApiKeyBtn.disabled = true;
+      }
+    })();
+  </script>
+</body>
+</html>
