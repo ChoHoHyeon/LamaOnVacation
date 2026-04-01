@@ -1,1 +1,559 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>직원 차량 및 5부제 판별 데모</title>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --line: #d9dfeb;
+      --text: #1f2937;
+      --sub: #6b7280;
+      --accent: #2563eb;
+      --ok: #15803d;
+      --warn: #b45309;
+      --bad: #b91c1c;
+    }
 
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 28px;
+    }
+
+    .desc {
+      color: var(--sub);
+      margin-bottom: 18px;
+      line-height: 1.6;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 20px;
+    }
+
+    video, canvas, img.preview {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: #111827;
+    }
+
+    canvas { display: none; }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 12px 16px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .primary { background: var(--accent); color: white; }
+    .secondary { background: #e5e7eb; color: #111827; }
+
+    .status {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: #eef4ff;
+      color: #1d4ed8;
+      font-size: 14px;
+      line-height: 1.5;
+      white-space: pre-line;
+      min-height: 48px;
+    }
+
+    .result-box {
+      display: grid;
+      gap: 12px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 130px 1fr;
+      gap: 10px;
+      align-items: start;
+      padding: 10px 0;
+      border-bottom: 1px dashed var(--line);
+    }
+
+    .row:last-child { border-bottom: 0; }
+
+    .label {
+      font-weight: 700;
+      color: #374151;
+    }
+
+    .value {
+      line-height: 1.6;
+      word-break: break-all;
+    }
+
+    .chip {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      margin-right: 8px;
+      margin-bottom: 6px;
+    }
+
+    .chip.ok { background: #dcfce7; color: var(--ok); }
+    .chip.warn { background: #fef3c7; color: var(--warn); }
+    .chip.bad { background: #fee2e2; color: var(--bad); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      background: white;
+    }
+
+    th, td {
+      border: 1px solid var(--line);
+      padding: 10px;
+      font-size: 14px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f8fafc;
+    }
+
+    .small {
+      color: var(--sub);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr; }
+      .row { grid-template-columns: 1fr; gap: 4px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>직원 차량 및 5부제 판별 데모</h1>
+    <div class="desc">
+      카메라로 번호판 사진을 찍고 OCR로 차량번호를 읽은 뒤, 미리 등록된 직원 차량 목록과 비교하여 직원 차량 여부와 5부제 해당 여부를 화면에 표시하는 데모입니다.<br>
+      여러 번 시도하면 결과가 아래 기록표에 계속 누적됩니다.
+    </div>
+
+    <div class="grid">
+      <section class="card">
+        <h2>카메라 촬영</h2>
+        <video id="video" autoplay playsinline muted></video>
+        <canvas id="canvas"></canvas>
+        <div class="buttons">
+          <button class="primary" id="startCameraBtn">카메라 켜기</button>
+          <button class="primary" id="captureBtn">사진 찍고 판독하기</button>
+          <button class="secondary" id="switchCameraBtn">전/후면 전환</button>
+          <button class="secondary" id="clearBtn">기록 지우기</button>
+        </div>
+        <div class="status" id="statusBox">대기 중입니다. 먼저 카메라를 켜주세요.</div>
+      </section>
+
+      <section class="card">
+        <h2>이번 판독 결과</h2>
+        <img id="capturedImage" class="preview" alt="촬영 이미지" style="display:none;" />
+        <div class="result-box" style="margin-top: 14px;">
+          <div class="row">
+            <div class="label">OCR 원문</div>
+            <div class="value mono" id="ocrRaw">-</div>
+          </div>
+          <div class="row">
+            <div class="label">정리된 번호</div>
+            <div class="value mono" id="plateNormalized">-</div>
+          </div>
+          <div class="row">
+            <div class="label">판정</div>
+            <div class="value" id="decisionArea">-</div>
+          </div>
+          <div class="row">
+            <div class="label">설명</div>
+            <div class="value" id="detailArea">-</div>
+          </div>
+        </div>
+
+        <div class="small" style="margin-top: 16px;">
+          기본 5부제 규칙은 <b>월(1,6) / 화(2,7) / 수(3,8) / 목(4,9) / 금(5,0)</b> 으로 넣어두었습니다.<br>
+          실제 운영 기준이 다르면 코드 상단의 <span class="mono">restrictedByWeekday</span> 값을 수정하면 됩니다.
+        </div>
+      </section>
+    </div>
+
+    <section class="card" style="margin-top: 18px;">
+      <h2>직원 차량 목록</h2>
+      <div class="small">
+        아래 목록은 예시입니다. 실제 배포 시 <span class="mono">employeeVehicles</span> 배열을 사용자 보유 차량번호로 바꾸면 됩니다.
+      </div>
+      <table id="employeeTable">
+        <thead>
+          <tr>
+            <th>이름</th>
+            <th>부서</th>
+            <th>차량번호</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section class="card" style="margin-top: 18px;">
+      <h2>판독 이력</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>시각</th>
+            <th>OCR 원문</th>
+            <th>정리된 번호</th>
+            <th>직원 차량</th>
+            <th>5부제</th>
+            <th>상세</th>
+          </tr>
+        </thead>
+        <tbody id="historyBody">
+          <tr>
+            <td colspan="6" class="small">아직 기록이 없습니다.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+
+  <script>
+    // =========================
+    // 1. 직원 차량 목록 예시
+    // =========================
+    const employeeVehicles = [
+      { name: "홍길동", dept: "총무팀", plate: "12가3456" },
+      { name: "김영희", dept: "정보통신과", plate: "123가4567" },
+      { name: "박철수", dept: "민원과", plate: "45나6789" },
+      { name: "이민정", dept: "행정지원과", plate: "88다1234" },
+      { name: "최지훈", dept: "안전관리과", plate: "234무5678" }
+    ];
+
+    // =========================
+    // 2. 5부제 규칙
+    //    0: 일, 1: 월, 2: 화, 3: 수, 4: 목, 5: 금, 6: 토
+    // =========================
+    const restrictedByWeekday = {
+      1: [1, 6],
+      2: [2, 7],
+      3: [3, 8],
+      4: [4, 9],
+      5: [5, 0]
+    };
+
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const capturedImage = document.getElementById("capturedImage");
+    const statusBox = document.getElementById("statusBox");
+    const ocrRaw = document.getElementById("ocrRaw");
+    const plateNormalized = document.getElementById("plateNormalized");
+    const decisionArea = document.getElementById("decisionArea");
+    const detailArea = document.getElementById("detailArea");
+    const historyBody = document.getElementById("historyBody");
+    const employeeTableBody = document.querySelector("#employeeTable tbody");
+
+    let stream = null;
+    let currentFacingMode = "environment";
+    let historyItems = [];
+
+    function renderEmployeeTable() {
+      employeeTableBody.innerHTML = employeeVehicles.map(item => `
+        <tr>
+          <td>${item.name}</td>
+          <td>${item.dept}</td>
+          <td class="mono">${item.plate}</td>
+        </tr>
+      `).join("");
+    }
+
+    function setStatus(message) {
+      statusBox.textContent = message;
+    }
+
+    async function startCamera() {
+      try {
+        if (stream) {
+          stream.getTracks().forEach(track => track.stop());
+        }
+
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: currentFacingMode },
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: false
+        });
+
+        video.srcObject = stream;
+        setStatus("카메라가 켜졌습니다. 번호판이 화면 중앙에 오도록 맞춘 뒤 사진을 찍어주세요.");
+      } catch (error) {
+        console.error(error);
+        setStatus("카메라를 사용할 수 없습니다. 브라우저 권한을 확인하거나 HTTPS 환경에서 실행해주세요.");
+      }
+    }
+
+    function normalizePlate(text) {
+      if (!text) return "";
+
+      return text
+        .replace(/\s+/g, "")
+        .replace(/[^0-9가-힣]/g, "")
+        .trim();
+    }
+
+    function extractLastDigit(plate) {
+      const digits = (plate.match(/\d/g) || []);
+      if (!digits.length) return null;
+      return Number(digits[digits.length - 1]);
+    }
+
+    function findEmployee(plate) {
+      return employeeVehicles.find(item => item.plate === plate) || null;
+    }
+
+    function getTodayRestriction(lastDigit) {
+      const today = new Date();
+      const weekday = today.getDay();
+      const restrictedDigits = restrictedByWeekday[weekday] || [];
+      const isRestricted = lastDigit !== null && restrictedDigits.includes(lastDigit);
+      return {
+        weekday,
+        restrictedDigits,
+        isRestricted
+      };
+    }
+
+    function weekdayToKorean(day) {
+      return ["일", "월", "화", "수", "목", "금", "토"][day] || "-";
+    }
+
+    function buildDecision(employee, plate, restriction) {
+      const lastDigit = extractLastDigit(plate);
+      const chips = [];
+      const details = [];
+
+      if (employee) {
+        chips.push('<span class="chip ok">직원 차량</span>');
+        details.push(`${employee.name} / ${employee.dept} 등록 차량입니다.`);
+      } else {
+        chips.push('<span class="chip bad">직원 차량 아님</span>');
+        details.push("직원 차량 목록과 일치하지 않습니다.");
+      }
+
+      if (lastDigit === null) {
+        chips.push('<span class="chip warn">끝번호 확인 불가</span>');
+        details.push("차량번호 마지막 숫자를 찾지 못해 5부제 판별이 어렵습니다.");
+      } else if (restriction.restrictedDigits.length === 0) {
+        chips.push('<span class="chip ok">오늘은 기준 없음</span>');
+        details.push(`오늘은 ${weekdayToKorean(restriction.weekday)}요일로 기본 5부제 규칙을 적용하지 않도록 되어 있습니다.`);
+      } else if (restriction.isRestricted) {
+        chips.push('<span class="chip bad">5부제 해당</span>');
+        details.push(`오늘은 ${weekdayToKorean(restriction.weekday)}요일이며 제한 끝번호는 ${restriction.restrictedDigits.join(", ")} 입니다. 현재 차량 끝번호는 ${lastDigit} 입니다.`);
+      } else {
+        chips.push('<span class="chip ok">5부제 비해당</span>');
+        details.push(`오늘은 ${weekdayToKorean(restriction.weekday)}요일이며 제한 끝번호는 ${restriction.restrictedDigits.join(", ")} 입니다. 현재 차량 끝번호는 ${lastDigit} 입니다.`);
+      }
+
+      return {
+        chips: chips.join(""),
+        details: details.join(" ")
+      };
+    }
+
+    function updateCurrentResult(rawText, normalized, employee, restriction) {
+      ocrRaw.textContent = rawText || "-";
+      plateNormalized.textContent = normalized || "-";
+
+      if (!normalized) {
+        decisionArea.innerHTML = '<span class="chip warn">번호 인식 실패</span>';
+        detailArea.textContent = "번호판 문자를 충분히 읽지 못했습니다. 다시 촬영해보세요.";
+        return;
+      }
+
+      const decision = buildDecision(employee, normalized, restriction);
+      decisionArea.innerHTML = decision.chips;
+      detailArea.textContent = decision.details;
+    }
+
+    function renderHistory() {
+      if (!historyItems.length) {
+        historyBody.innerHTML = `
+          <tr>
+            <td colspan="6" class="small">아직 기록이 없습니다.</td>
+          </tr>
+        `;
+        return;
+      }
+
+      historyBody.innerHTML = historyItems.map(item => `
+        <tr>
+          <td>${item.time}</td>
+          <td class="mono">${item.raw}</td>
+          <td class="mono">${item.normalized || "-"}</td>
+          <td>${item.employeeText}</td>
+          <td>${item.restrictionText}</td>
+          <td>${item.detail}</td>
+        </tr>
+      `).join("");
+    }
+
+    function addHistory(rawText, normalized, employee, restriction) {
+      const now = new Date();
+      const timeText = now.toLocaleString("ko-KR");
+      const lastDigit = extractLastDigit(normalized);
+
+      let restrictionText = "판정 불가";
+      if (normalized && lastDigit !== null) {
+        if (restriction.restrictedDigits.length === 0) {
+          restrictionText = "오늘 기준 없음";
+        } else {
+          restrictionText = restriction.isRestricted ? "해당" : "비해당";
+        }
+      }
+
+      historyItems.unshift({
+        time: timeText,
+        raw: rawText || "-",
+        normalized: normalized || "",
+        employeeText: employee ? `예 (${employee.name}/${employee.dept})` : "아니오",
+        restrictionText,
+        detail: !normalized
+          ? "번호 인식 실패"
+          : `${employee ? "직원 차량 일치" : "직원 차량 불일치"} / ${lastDigit === null ? "끝번호 확인 불가" : `끝번호 ${lastDigit}`}`
+      });
+
+      renderHistory();
+    }
+
+    async function captureAndRead() {
+      try {
+        if (!stream) {
+          setStatus("먼저 카메라를 켜주세요.");
+          return;
+        }
+
+        const width = video.videoWidth;
+        const height = video.videoHeight;
+
+        if (!width || !height) {
+          setStatus("카메라 화면이 아직 준비되지 않았습니다. 잠시 후 다시 시도해주세요.");
+          return;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(video, 0, 0, width, height);
+
+        const dataUrl = canvas.toDataURL("image/png");
+        capturedImage.src = dataUrl;
+        capturedImage.style.display = "block";
+
+        setStatus("사진을 촬영했습니다. 번호판 문자를 인식 중입니다...");
+
+        const result = await Tesseract.recognize(dataUrl, "kor+eng", {
+          logger: m => {
+            if (m.status === "recognizing text") {
+              setStatus(`번호판 문자를 인식 중입니다... ${Math.round((m.progress || 0) * 100)}%`);
+            }
+          }
+        });
+
+        const rawText = (result?.data?.text || "").trim();
+        const normalized = normalizePlate(rawText);
+        const employee = findEmployee(normalized);
+        const restriction = getTodayRestriction(extractLastDigit(normalized));
+
+        updateCurrentResult(rawText, normalized, employee, restriction);
+        addHistory(rawText, normalized, employee, restriction);
+
+        if (normalized) {
+          setStatus("판독이 완료되었습니다. 아래 이력에도 추가되었습니다.");
+        } else {
+          setStatus("번호를 충분히 인식하지 못했습니다. 번호판이 크게 보이도록 다시 촬영해보세요.");
+        }
+      } catch (error) {
+        console.error(error);
+        setStatus("판독 중 오류가 발생했습니다. 다시 시도해주세요.");
+      }
+    }
+
+    async function switchCamera() {
+      currentFacingMode = currentFacingMode === "environment" ? "user" : "environment";
+      await startCamera();
+    }
+
+    function clearHistory() {
+      historyItems = [];
+      renderHistory();
+      ocrRaw.textContent = "-";
+      plateNormalized.textContent = "-";
+      decisionArea.textContent = "-";
+      detailArea.textContent = "-";
+      capturedImage.style.display = "none";
+      capturedImage.src = "";
+      setStatus("기록을 지웠습니다.");
+    }
+
+    document.getElementById("startCameraBtn").addEventListener("click", startCamera);
+    document.getElementById("captureBtn").addEventListener("click", captureAndRead);
+    document.getElementById("switchCameraBtn").addEventListener("click", switchCamera);
+    document.getElementById("clearBtn").addEventListener("click", clearHistory);
+
+    renderEmployeeTable();
+    renderHistory();
+  </script>
+</body>
+</html>
