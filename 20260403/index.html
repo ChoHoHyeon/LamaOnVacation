@@ -152,7 +152,7 @@
        이유: Directions REST API는 Client Secret이 필요하므로 프론트에 노출하면 안 됨.
     3) 네이버 클라우드 콘솔에서 Maps > Dynamic Map + Geocoding + Directions 상품이 활성화되어 있어야 함.
   -->
-<script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=s95475emm3&submodules=geocoder"></script>
+  <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=s95475emm3&submodules=geocoder"></script>
 </head>
 <body>
   <div class="app">
@@ -278,9 +278,10 @@
       </div>
 
       <div class="warning">
-        자동차 경로 표시는 네이버 Directions REST API를 사용해야 하며, 이 API는 <b>Client Secret</b>이 필요합니다.
-        그래서 현재 코드는 <b>/api/naver-driving</b> 백엔드 프록시가 있다는 전제로 작성되어 있습니다.
-        프론트에 Secret을 직접 넣으면 안 됩니다.
+        현재 버전은 <b>서버 없이 동작하는 간편형</b>입니다.
+        따라서 자동차 경로는 <b>직선 연결선 + 도로거리 보정값(직선거리×1.25)</b>으로 계산되며,
+        예상 시간은 평균 속도 기준 <b>추정값</b>, 통행료는 <b>0원</b>으로 표시됩니다.
+        실제 네이버 자동차 길찾기 경로선/시간/통행료 자동조회는 별도 서버 또는 서버리스 함수가 필요합니다.
       </div>
     </aside>
 
@@ -387,28 +388,16 @@
       }
 
       try {
-        const url = `/api/naver-driving?start=${startCoord.lng},${startCoord.lat}&goal=${goalCoord.lng},${goalCoord.lat}`;
-        const response = await fetch(url);
+        const startLatLng = new naver.maps.LatLng(startCoord.lat, startCoord.lng);
+        const goalLatLng = new naver.maps.LatLng(goalCoord.lat, goalCoord.lng);
 
-        if (!response.ok) {
-          throw new Error(`서버 응답 오류: ${response.status}`);
-        }
+        const straightDistanceM = startLatLng.distanceTo(goalLatLng);
+        const roadDistanceM = straightDistanceM * 1.25; // 단순 보정치: 실제 도로거리 근사
+        currentRouteDistanceKm = roadDistanceM / 1000;
 
-        const data = await response.json();
-
-        // 네이버 Directions 5 응답 기준: route.traoptimal[0]
-        const route = data.route?.traoptimal?.[0]
-          || data.route?.trafast?.[0]
-          || data.route?.tracomfort?.[0]
-          || data.route?.traavoidtoll?.[0]
-          || data.route?.traavoidcaronly?.[0];
-
-        if (!route || !route.path || !route.path.length) {
-          alert('자동차 경로를 찾지 못했습니다.');
-          return;
-        }
-
-        const path = route.path.map(([lng, lat]) => new naver.maps.LatLng(lat, lng));
+        const avgSpeedKmH = 40; // 기본 평균 주행속도 가정
+        const durationMin = Math.round((currentRouteDistanceKm / avgSpeedKmH) * 60);
+        const tollFare = 0; // 서버 없는 버전은 통행료 자동조회 불가
 
         if (routePolyline) {
           routePolyline.setMap(null);
@@ -416,28 +405,22 @@
 
         routePolyline = new naver.maps.Polyline({
           map,
-          path,
+          path: [startLatLng, goalLatLng],
           strokeColor: '#2563eb',
           strokeWeight: 6,
-          strokeOpacity: 0.85
+          strokeOpacity: 0.85,
+          strokeStyle: 'shortdash'
         });
 
         const bounds = new naver.maps.LatLngBounds();
-        path.forEach(p => bounds.extend(p));
+        bounds.extend(startLatLng);
+        bounds.extend(goalLatLng);
         map.fitBounds(bounds);
 
-        currentRouteDistanceKm = (route.summary.distance || 0) / 1000;
-        const durationMin = Math.round((route.summary.duration || 0) / 60000);
-        const tollFare = route.summary.tollFare || 0;
-
         document.getElementById('distanceText').textContent = `${currentRouteDistanceKm.toFixed(2)} km`;
-        document.getElementById('durationText').textContent = `${durationMin} 분`;
+        document.getElementById('durationText').textContent = `${durationMin} 분 (추정)`;
         document.getElementById('tollText').textContent = `${formatNumber(tollFare)} 원`;
-
         document.getElementById('tripDistanceText').textContent = `${currentRouteDistanceKm.toFixed(2)} km`;
-      } catch (error) {
-        console.error(error);
-        alert('자동차 경로 표시 실패. 백엔드 프록시(/api/naver-driving)와 Directions 설정을 확인하세요.');
       }
     }
 
