@@ -394,12 +394,41 @@
       drawCustomRoute();
     }
 
+    function getDistanceMeters(p1, p2) {
+      const lat1 = typeof p1.lat === 'function' ? p1.lat() : (p1.y ?? p1.lat);
+      const lng1 = typeof p1.lng === 'function' ? p1.lng() : (p1.x ?? p1.lng);
+      const lat2 = typeof p2.lat === 'function' ? p2.lat() : (p2.y ?? p2.lat);
+      const lng2 = typeof p2.lng === 'function' ? p2.lng() : (p2.x ?? p2.lng);
+
+      const R = 6371000;
+      const toRad = deg => deg * Math.PI / 180;
+      const dLat = toRad(lat2 - lat1);
+      const dLng = toRad(lng2 - lng1);
+
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+        Math.sin(dLng / 2) * Math.sin(dLng / 2);
+
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    }
+
     function drawCustomRoute() {
       if (pathPoints.length < 2) return;
 
       if (routePolyline) {
         routePolyline.setMap(null);
       }
+
+      // pathPoints 안의 점들을 naver.maps.LatLng 형태로 정규화
+      const normalizedPath = pathPoints.map(point => {
+        if (point instanceof naver.maps.LatLng) return point;
+        const lat = typeof point.lat === 'function' ? point.lat() : (point.y ?? point.lat);
+        const lng = typeof point.lng === 'function' ? point.lng() : (point.x ?? point.lng);
+        return new naver.maps.LatLng(lat, lng);
+      });
+      pathPoints = normalizedPath;
 
       routePolyline = new naver.maps.Polyline({
         map: map,
@@ -411,7 +440,7 @@
 
       let totalDistanceM = 0;
       for (let i = 0; i < pathPoints.length - 1; i++) {
-        totalDistanceM += pathPoints[i].distanceTo(pathPoints[i + 1]);
+        totalDistanceM += getDistanceMeters(pathPoints[i], pathPoints[i + 1]);
       }
 
       totalDistanceM *= 1.08;
