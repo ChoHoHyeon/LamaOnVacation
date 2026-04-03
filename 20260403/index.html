@@ -387,41 +387,39 @@
         return;
       }
 
-      try {
-        const startLatLng = new naver.maps.LatLng(startCoord.lat, startCoord.lng);
-        const goalLatLng = new naver.maps.LatLng(goalCoord.lat, goalCoord.lng);
+      const startLatLng = new naver.maps.LatLng(startCoord.lat, startCoord.lng);
+      const goalLatLng = new naver.maps.LatLng(goalCoord.lat, goalCoord.lng);
 
-        const straightDistanceM = startLatLng.distanceTo(goalLatLng);
-        const roadDistanceM = straightDistanceM * 1.25; // 단순 보정치: 실제 도로거리 근사
-        currentRouteDistanceKm = roadDistanceM / 1000;
+      const straightDistanceM = startLatLng.distanceTo(goalLatLng);
+      const roadDistanceM = straightDistanceM * 1.25; // 단순 보정치: 실제 도로거리 근사
+      currentRouteDistanceKm = roadDistanceM / 1000;
 
-        const avgSpeedKmH = 40; // 기본 평균 주행속도 가정
-        const durationMin = Math.round((currentRouteDistanceKm / avgSpeedKmH) * 60);
-        const tollFare = 0; // 서버 없는 버전은 통행료 자동조회 불가
+      const avgSpeedKmH = 40; // 기본 평균 주행속도 가정
+      const durationMin = Math.round((currentRouteDistanceKm / avgSpeedKmH) * 60);
+      const tollFare = 0; // 서버 없는 버전은 통행료 자동조회 불가
 
-        if (routePolyline) {
-          routePolyline.setMap(null);
-        }
-
-        routePolyline = new naver.maps.Polyline({
-          map,
-          path: [startLatLng, goalLatLng],
-          strokeColor: '#2563eb',
-          strokeWeight: 6,
-          strokeOpacity: 0.85,
-          strokeStyle: 'shortdash'
-        });
-
-        const bounds = new naver.maps.LatLngBounds();
-        bounds.extend(startLatLng);
-        bounds.extend(goalLatLng);
-        map.fitBounds(bounds);
-
-        document.getElementById('distanceText').textContent = `${currentRouteDistanceKm.toFixed(2)} km`;
-        document.getElementById('durationText').textContent = `${durationMin} 분 (추정)`;
-        document.getElementById('tollText').textContent = `${formatNumber(tollFare)} 원`;
-        document.getElementById('tripDistanceText').textContent = `${currentRouteDistanceKm.toFixed(2)} km`;
+      if (routePolyline) {
+        routePolyline.setMap(null);
       }
+
+      routePolyline = new naver.maps.Polyline({
+        map,
+        path: [startLatLng, goalLatLng],
+        strokeColor: '#2563eb',
+        strokeWeight: 6,
+        strokeOpacity: 0.85,
+        strokeStyle: 'shortdash'
+      });
+
+      const bounds = new naver.maps.LatLngBounds();
+      bounds.extend(startLatLng);
+      bounds.extend(goalLatLng);
+      map.fitBounds(bounds);
+
+      document.getElementById('distanceText').textContent = `${currentRouteDistanceKm.toFixed(2)} km`;
+      document.getElementById('durationText').textContent = `${durationMin} 분 (추정)`;
+      document.getElementById('tollText').textContent = `${formatNumber(tollFare)} 원`;
+      document.getElementById('tripDistanceText').textContent = `${currentRouteDistanceKm.toFixed(2)} km`;
     }
 
     function calculateFuelCost() {
