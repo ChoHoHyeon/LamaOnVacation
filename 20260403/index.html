@@ -1,93 +1,26 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>간단한 네이버 맵</title>
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-    }
+import requests
 
-    #map {
-      width: 100%;
-      height: 100vh;
-    }
+# 🔑 네가 준 API 키
+app_key = "uXkC2Olels9rHPslNbycT65yJzsT04Hz63CoErJL"
 
-    .toolbar {
-      position: absolute;
-      top: 12px;
-      left: 12px;
-      z-index: 1000;
-      background: rgba(255, 255, 255, 0.95);
-      padding: 10px 12px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-      font-family: sans-serif;
-    }
+url = "https://apis.openapi.sk.com/tmap/routes"
 
-    .toolbar button {
-      margin-top: 6px;
-      padding: 8px 12px;
-      border: 0;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-  </style>
+headers = {
+    "appKey": app_key,
+    "Content-Type": "application/json"
+}
 
-  <!-- 질문에서 주신 ID 사용 -->
-  <script
-    type="text/javascript"
-    src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=s95475emm3">
-  </script>
-</head>
-<body>
-  <div class="toolbar">
-    <div><strong>네이버 맵 예제</strong></div>
-    <button onclick="moveToSeoul()">서울시청으로 이동</button>
-  </div>
+data = {
+    "startX": "126.978275264",   # 서울시청
+    "startY": "37.566642192",
+    "endX": "127.027621",        # 강남역
+    "endY": "37.497942",
+    "reqCoordType": "WGS84GEO",
+    "resCoordType": "WGS84GEO",
+    "searchOption": "0"
+}
 
-  <div id="map"></div>
+response = requests.post(url, json=data, headers=headers)
 
-  <script>
-    // 기본 중심: 서울시청
-    const cityHall = new naver.maps.LatLng(37.5666103, 126.9783882);
-
-    const map = new naver.maps.Map('map', {
-      center: cityHall,
-      zoom: 15
-    });
-
-    const marker = new naver.maps.Marker({
-      position: cityHall,
-      map: map,
-      title: '서울시청'
-    });
-
-    const infoWindow = new naver.maps.InfoWindow({
-      content: `
-        <div style="padding:10px;min-width:140px;font-size:14px;">
-          <strong>서울시청</strong><br/>
-          네이버 지도 예제 마커
-        </div>
-      `
-    });
-
-    naver.maps.Event.addListener(marker, 'click', function () {
-      if (infoWindow.getMap()) {
-        infoWindow.close();
-      } else {
-        infoWindow.open(map, marker);
-      }
-    });
-
-    function moveToSeoul() {
-      map.setCenter(cityHall);
-      map.setZoom(15);
-    }
-  </script>
-</body>
-</html>
+print("상태코드:", response.status_code)
+print(response.text)
