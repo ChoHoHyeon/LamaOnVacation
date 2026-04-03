@@ -205,6 +205,15 @@
     let editMarkers = [];
     let suggestTimer = null;
 
+    const customPlaceAliases = [
+      { keyword: '달성군청', address: '대구광역시 달성군 논공읍 달성군청로 33', label: '달성군청' },
+      { keyword: '달성군청역', address: '대구광역시 달성군 논공읍 달성군청로 33 인근', label: '달성군청역 인근' },
+      { keyword: '상인화성파크드림', address: '대구광역시 달서구 송현로7길 9 상인화성파크드림', label: '상인화성파크드림' },
+      { keyword: '대구수목원', address: '대구광역시 달서구 화암로 342', label: '대구수목원' },
+      { keyword: '대구교도소', address: '대구광역시 달성군 하빈면 하빈로 455', label: '대구교도소' },
+      { keyword: '현풍테크노폴리스', address: '대구광역시 달성군 유가읍 테크노대로 일원', label: '현풍테크노폴리스' }
+    ];
+
     function initMap() {
       map = new naver.maps.Map('map', {
         center: new naver.maps.LatLng(35.8714, 128.6014),
@@ -293,21 +302,21 @@
       searchAddress(address, type);
     }
 
-    function renderSuggestions(type, addresses) {
+    function renderSuggestions(type, items) {
       const box = document.getElementById(type === 'start' ? 'startSuggestions' : 'goalSuggestions');
-      if (!addresses || addresses.length === 0) {
+      if (!items || items.length === 0) {
         hideSuggestions(type);
         return;
       }
 
-      box.innerHTML = addresses.map(item => {
-        const road = item.roadAddress || '';
-        const jibun = item.jibunAddress || '';
-        const chosen = road || jibun;
+      box.innerHTML = items.map(item => {
+        const chosen = item.address;
+        const title = item.label || chosen;
+        const sub = item.sub || '';
         return `
           <div onclick="selectSuggestion('${type}', ${JSON.stringify(chosen).replace(/"/g, '&quot;')})" style="padding:10px 12px; border-bottom:1px solid #f1f5f9; cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
-            <div style="font-size:14px; color:#111827;">${chosen}</div>
-            ${road && jibun ? `<div style="font-size:12px; color:#6b7280; margin-top:2px;">지번: ${jibun}</div>` : ''}
+            <div style="font-size:14px; color:#111827;">${title}</div>
+            ${sub ? `<div style="font-size:12px; color:#6b7280; margin-top:2px;">${sub}</div>` : ''}
           </div>
         `;
       }).join('');
@@ -319,20 +328,41 @@
       const query = input.value.trim();
 
       clearTimeout(suggestTimer);
-      if (query.length < 2) {
+      if (query.length < 1) {
         hideSuggestions(type);
         return;
       }
 
       suggestTimer = setTimeout(() => {
+        const localMatches = customPlaceAliases
+          .filter(item => item.keyword.includes(query) || item.address.includes(query) || query.includes(item.keyword))
+          .slice(0, 5)
+          .map(item => ({
+            label: item.label,
+            address: item.address,
+            sub: `추천 장소 · ${item.address}`
+          }));
+
         naver.maps.Service.geocode({ query }, function(status, response) {
-          if (status !== naver.maps.Service.Status.OK) {
-            hideSuggestions(type);
-            return;
+          let apiResults = [];
+          if (status === naver.maps.Service.Status.OK && response.v2 && response.v2.addresses) {
+            apiResults = response.v2.addresses.slice(0, 5).map(item => ({
+              label: item.roadAddress || item.jibunAddress || query,
+              address: item.roadAddress || item.jibunAddress || query,
+              sub: item.roadAddress && item.jibunAddress ? `지번: ${item.jibunAddress}` : ''
+            }));
           }
 
-          const results = (response.v2 && response.v2.addresses) ? response.v2.addresses.slice(0, 5) : [];
-          renderSuggestions(type, results);
+          const merged = [];
+          const seen = new Set();
+          [...localMatches, ...apiResults].forEach(item => {
+            if (!seen.has(item.address)) {
+              seen.add(item.address);
+              merged.push(item);
+            }
+          });
+
+          renderSuggestions(type, merged.slice(0, 8));
         });
       }, 250);
     }
@@ -372,7 +402,7 @@
       }
 
       routePolyline = new naver.maps.Polyline({
-        map,
+        map: map,
         path: pathPoints,
         strokeColor: '#ef4444',
         strokeWeight: 8,
@@ -383,30 +413,43 @@
       for (let i = 0; i < pathPoints.length - 1; i++) {
         totalDistanceM += pathPoints[i].distanceTo(pathPoints[i + 1]);
       }
+
       totalDistanceM *= 1.08;
       currentRouteDistanceKm = totalDistanceM / 1000;
 
       const avgSpeedKmH = 40;
-      const durationMin = Math.round((currentRouteDistanceKm / avgSpeedKmH) * 60);
+      const durationMin = Math.max(1, Math.round((currentRouteDistanceKm / avgSpeedKmH) * 60));
       const tollFare = 0;
 
       const bounds = new naver.maps.LatLngBounds();
       pathPoints.forEach(point => bounds.extend(point));
       map.fitBounds(bounds);
 
-      document.getElementById('distanceText').textContent = `${currentRouteDistanceKm.toFixed(2)} km`;
-      document.getElementById('durationText').textContent = `${durationMin} 분 (추정)`;
-      document.getElementById('tollText').textContent = `${formatNumber(tollFare)} 원`;
-      document.getElementById('tripDistanceText').textContent = `${currentRouteDistanceKm.toFixed(2)} km`;
+      const distanceEl = document.getElementById('distanceText');
+      const durationEl = document.getElementById('durationText');
+      const tollEl = document.getElementById('tollText');
+      const tripDistanceEl = document.getElementById('tripDistanceText');
 
-      const efficiency = parseFloat(document.getElementById('efficiency').value);
-      const fuelPrice = parseFloat(document.getElementById('fuelPrice').value);
+      if (distanceEl) distanceEl.textContent = `${currentRouteDistanceKm.toFixed(2)} km`;
+      if (durationEl) durationEl.textContent = `${durationMin} 분 (추정)`;
+      if (tollEl) tollEl.textContent = `${formatNumber(tollFare)} 원`;
+      if (tripDistanceEl) tripDistanceEl.textContent = `${currentRouteDistanceKm.toFixed(2)} km`;
+
+      const efficiency = parseFloat(document.getElementById('efficiency')?.value);
+      const fuelPrice = parseFloat(document.getElementById('fuelPrice')?.value);
       if (efficiency > 0 && !Number.isNaN(fuelPrice) && fuelPrice >= 0) {
-        const fuelType = document.getElementById('fuelType').value;
+        const fuelType = document.getElementById('fuelType')?.value || '휘발유';
         const usedFuel = currentRouteDistanceKm / efficiency;
         currentFuelCost = usedFuel * fuelPrice;
-        document.getElementById('usedFuelText').textContent = fuelType === '전기' ? `${usedFuel.toFixed(2)} kWh` : `${usedFuel.toFixed(2)} L`;
-        document.getElementById('fuelCostText').textContent = `${formatNumber(Math.round(currentFuelCost))} 원`;
+
+        const usedFuelEl = document.getElementById('usedFuelText');
+        const fuelCostEl = document.getElementById('fuelCostText');
+        if (usedFuelEl) {
+          usedFuelEl.textContent = fuelType === '전기' ? `${usedFuel.toFixed(2)} kWh` : `${usedFuel.toFixed(2)} L`;
+        }
+        if (fuelCostEl) {
+          fuelCostEl.textContent = `${formatNumber(Math.round(currentFuelCost))} 원`;
+        }
       }
     }
 
