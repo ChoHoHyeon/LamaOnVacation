@@ -43,7 +43,7 @@
       #map { height: 60vh; }
     }
   </style>
-  <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyID=s95475emm3&submodules=geocoder"></script>
+  <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=s95475emm3&submodules=geocoder"></script>
 </head>
 <body>
   <div class="app">
@@ -374,10 +374,9 @@
       routePolyline = new naver.maps.Polyline({
         map,
         path: pathPoints,
-        strokeColor: '#2563eb',
-        strokeWeight: 6,
-        strokeOpacity: 0.9,
-        strokeStyle: 'shortdash'
+        strokeColor: '#ef4444',
+        strokeWeight: 8,
+        strokeOpacity: 0.95
       });
 
       let totalDistanceM = 0;
@@ -399,6 +398,16 @@
       document.getElementById('durationText').textContent = `${durationMin} 분 (추정)`;
       document.getElementById('tollText').textContent = `${formatNumber(tollFare)} 원`;
       document.getElementById('tripDistanceText').textContent = `${currentRouteDistanceKm.toFixed(2)} km`;
+
+      const efficiency = parseFloat(document.getElementById('efficiency').value);
+      const fuelPrice = parseFloat(document.getElementById('fuelPrice').value);
+      if (efficiency > 0 && !Number.isNaN(fuelPrice) && fuelPrice >= 0) {
+        const fuelType = document.getElementById('fuelType').value;
+        const usedFuel = currentRouteDistanceKm / efficiency;
+        currentFuelCost = usedFuel * fuelPrice;
+        document.getElementById('usedFuelText').textContent = fuelType === '전기' ? `${usedFuel.toFixed(2)} kWh` : `${usedFuel.toFixed(2)} L`;
+        document.getElementById('fuelCostText').textContent = `${formatNumber(Math.round(currentFuelCost))} 원`;
+      }
     }
 
     function clearEditMarkers() {
@@ -492,6 +501,7 @@
       const usedFuel = currentRouteDistanceKm / efficiency;
       currentFuelCost = usedFuel * fuelPrice;
 
+      document.getElementById('distanceText').textContent = `${currentRouteDistanceKm.toFixed(2)} km`;
       document.getElementById('tripDistanceText').textContent = `${currentRouteDistanceKm.toFixed(2)} km`;
       document.getElementById('usedFuelText').textContent = fuelType === '전기' ? `${usedFuel.toFixed(2)} kWh` : `${usedFuel.toFixed(2)} L`;
       document.getElementById('fuelCostText').textContent = `${formatNumber(Math.round(currentFuelCost))} 원`;
