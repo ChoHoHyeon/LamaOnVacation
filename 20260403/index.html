@@ -3,62 +3,78 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>네이버맵 자동차 경로 + 유류비 + 2부제/5부제 계산기</title>
+  <title>네이버맵 경로·유류비 계산기</title>
+
+  <!-- favicon 404 방지 -->
+  <link rel="icon" href="data:," />
+
   <style>
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       font-family: "Malgun Gothic", Arial, sans-serif;
       background: #f5f7fb;
       color: #222;
     }
+
     .app {
       display: grid;
       grid-template-columns: 420px 1fr;
       min-height: 100vh;
     }
+
     .panel {
       background: #fff;
       border-right: 1px solid #e5e7eb;
       padding: 20px;
       overflow-y: auto;
     }
+
     .map-wrap {
       position: relative;
     }
+
     #map {
       width: 100%;
       height: 100vh;
     }
+
     h1 {
       margin: 0 0 16px;
       font-size: 24px;
     }
+
     h2 {
       margin: 24px 0 12px;
       font-size: 18px;
       border-left: 4px solid #22c55e;
       padding-left: 8px;
     }
+
     .desc {
       font-size: 13px;
       line-height: 1.55;
       color: #555;
       margin-bottom: 14px;
     }
+
     .field {
       margin-bottom: 12px;
     }
+
     .field label {
       display: block;
       font-size: 13px;
       font-weight: 700;
       margin-bottom: 6px;
     }
+
     .row {
       display: flex;
       gap: 8px;
     }
+
     input[type="text"],
     input[type="number"],
     input[type="date"],
@@ -70,9 +86,11 @@
       font-size: 14px;
       background: #fff;
     }
+
     input[readonly] {
       background: #f9fafb;
     }
+
     button {
       border: none;
       border-radius: 10px;
@@ -81,9 +99,12 @@
       font-weight: 700;
       cursor: pointer;
     }
+
     .btn-search { background: #22c55e; color: white; }
     .btn-route { background: #2563eb; color: white; width: 100%; }
     .btn-calc { background: #111827; color: white; width: 100%; }
+    .btn-sub { background: #6b7280; color: white; width: 100%; }
+
     .result-box {
       background: #f8fafc;
       border: 1px solid #e5e7eb;
@@ -91,6 +112,7 @@
       padding: 14px;
       margin-top: 10px;
     }
+
     .result-item {
       display: flex;
       justify-content: space-between;
@@ -99,19 +121,24 @@
       border-bottom: 1px dashed #e5e7eb;
       font-size: 14px;
     }
+
     .result-item:last-child { border-bottom: none; }
+
     .muted { color: #6b7280; font-size: 12px; }
+
     .hr {
       height: 1px;
       background: #e5e7eb;
       margin: 18px 0;
     }
+
     .checkbox-group {
       display: flex;
       gap: 16px;
       flex-wrap: wrap;
       margin: 8px 0 14px;
     }
+
     .checkbox-group label {
       display: flex;
       align-items: center;
@@ -119,6 +146,7 @@
       font-size: 14px;
       font-weight: 600;
     }
+
     .badge {
       display: inline-block;
       font-size: 12px;
@@ -128,6 +156,7 @@
       border-radius: 999px;
       margin-bottom: 12px;
     }
+
     .warning {
       background: #fff7ed;
       border: 1px solid #fdba74;
@@ -138,6 +167,13 @@
       line-height: 1.5;
       margin-top: 12px;
     }
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
     @media (max-width: 960px) {
       .app { grid-template-columns: 1fr; }
       .panel { border-right: none; border-bottom: 1px solid #e5e7eb; }
@@ -145,13 +181,7 @@
     }
   </style>
 
-  <!--
-    중요
-    1) 아래 client ID는 사용자가 준 값으로 반영됨.
-    2) 길찾기(Directions)는 브라우저에서 직접 호출하지 않고, 서버 프록시(/api/naver-driving)로 호출하도록 구성.
-       이유: Directions REST API는 Client Secret이 필요하므로 프론트에 노출하면 안 됨.
-    3) 네이버 클라우드 콘솔에서 Maps > Dynamic Map + Geocoding + Directions 상품이 활성화되어 있어야 함.
-  -->
+  <!-- 현재 정상 동작 중인 방식 -->
   <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=s95475emm3&submodules=geocoder"></script>
 </head>
 <body>
@@ -159,8 +189,9 @@
     <aside class="panel">
       <h1>네이버맵 경로·유류비 계산기</h1>
       <div class="badge">Client ID 적용 완료: s95475emm3</div>
+
       <div class="desc">
-        출발지와 목적지를 주소로 검색하고, 자동차 경로를 표시한 뒤 연비/유종/기름값으로 유류비를 계산합니다.
+        출발지와 목적지를 주소로 검색하고, 경로를 표시한 뒤 연비/유종/기름값으로 유류비를 계산합니다.
         아래 2부제·5부제 영역에서는 선택한 기간의 예상 절감비용도 계산합니다.
       </div>
 
@@ -191,7 +222,12 @@
         <button class="btn-route" type="button" onclick="drawDrivingRoute()">자동차 경로 표시</button>
       </div>
 
-      <div id="routeSummary" class="result-box">
+      <div class="btn-group">
+        <button class="btn-sub" type="button" onclick="undoWaypoint()">경유지 되돌리기</button>
+        <button class="btn-sub" type="button" onclick="resetRoute()">경로 초기화</button>
+      </div>
+
+      <div class="result-box">
         <div class="result-item"><span>거리</span><strong id="distanceText">-</strong></div>
         <div class="result-item"><span>예상 시간</span><strong id="durationText">-</strong></div>
         <div class="result-item"><span>통행료</span><strong id="tollText">-</strong></div>
@@ -231,14 +267,14 @@
       <div class="field">
         <label for="fuelPrice">현재 연료 가격</label>
         <input id="fuelPrice" type="number" min="0" step="1" value="1700" placeholder="원/L 또는 원/kWh" />
-        <div class="muted">지금은 수동 입력 방식이며, 나중에 API로 연결 가능</div>
+        <div class="muted">현재는 수동 입력 방식입니다.</div>
       </div>
 
       <div class="field">
         <button class="btn-calc" type="button" onclick="calculateFuelCost()">유류비 계산하기</button>
       </div>
 
-      <div id="fuelSummary" class="result-box">
+      <div class="result-box">
         <div class="result-item"><span>1회 이동 거리 기준</span><strong id="tripDistanceText">-</strong></div>
         <div class="result-item"><span>예상 사용 연료량</span><strong id="usedFuelText">-</strong></div>
         <div class="result-item"><span>예상 유류비</span><strong id="fuelCostText">-</strong></div>
@@ -247,9 +283,9 @@
       <div class="hr"></div>
 
       <h2>3. 2부제 / 5부제 절감비용 계산</h2>
+
       <div class="desc">
-        기본 계산은 <b>평일 출근 기준</b>으로 잡았습니다. 절감비용은 앞에서 계산된 <b>1회 이동 유류비</b>를 기준으로 산정합니다.
-        현재는 단순 계산 버전이라서, <b>2부제 = 평일의 50%</b>, <b>5부제 = 평일의 20%</b>를 절감일로 가정합니다.
+        기본 계산은 <b>평일 기준</b>입니다. 절감비용은 앞에서 계산된 <b>1회 이동 유류비</b>를 기준으로 산정합니다.
       </div>
 
       <div class="checkbox-group">
@@ -271,17 +307,17 @@
         <button class="btn-calc" type="button" onclick="calculateSaving()">절감비용 계산하기</button>
       </div>
 
-      <div id="savingSummary" class="result-box">
+      <div class="result-box">
         <div class="result-item"><span>기간 내 평일 수</span><strong id="weekdayCountText">-</strong></div>
         <div class="result-item"><span>2부제 절감 예상</span><strong id="saving2Text">-</strong></div>
         <div class="result-item"><span>5부제 절감 예상</span><strong id="saving5Text">-</strong></div>
       </div>
 
       <div class="warning">
-        현재 버전은 <b>서버 없이 동작하는 간편형</b>입니다.
-        따라서 자동차 경로는 <b>직선 연결선 + 도로거리 보정값(직선거리×1.25)</b>으로 계산되며,
-        예상 시간은 평균 속도 기준 <b>추정값</b>, 통행료는 <b>0원</b>으로 표시됩니다.
-        실제 네이버 자동차 길찾기 경로선/시간/통행료 자동조회는 별도 서버 또는 서버리스 함수가 필요합니다.
+        현재 버전은 <b>서버 없이 동작하는 간편형</b>입니다.<br />
+        - 기본 경로는 출발지와 목적지를 잇는 직선 기반입니다.<br />
+        - 지도 클릭으로 <b>경유지</b>를 추가해 더 현실적인 경로를 만들 수 있습니다.<br />
+        - 시간은 평균 속도 기준 <b>추정값</b>, 통행료는 <b>0원</b>으로 표시됩니다.
       </div>
     </aside>
 
@@ -292,19 +328,51 @@
 
   <script>
     let map;
+
     let startMarker = null;
     let goalMarker = null;
     let routePolyline = null;
 
-    let startCoord = null; // {lat, lng, address}
-    let goalCoord = null;  // {lat, lng, address}
+    let startCoord = null;  // {lat, lng, address}
+    let goalCoord = null;   // {lat, lng, address}
+
     let currentRouteDistanceKm = 0;
     let currentFuelCost = 0;
+
+    let pathPoints = [];
+    let waypointMarkers = [];
 
     function initMap() {
       map = new naver.maps.Map('map', {
         center: new naver.maps.LatLng(35.8714, 128.6014),
         zoom: 11
+      });
+
+      // 지도 클릭 시 경유지 추가
+      naver.maps.Event.addListener(map, 'click', function(e) {
+        // 출발지/목적지 없이 찍는 건 막기
+        if (!startCoord || !goalCoord) return;
+
+        // 기본 경로가 아직 없으면 막기
+        if (pathPoints.length < 2) return;
+
+        const clicked = e.coord;
+
+        // 마지막 점(도착지) 바로 앞에 삽입
+        pathPoints.splice(pathPoints.length - 1, 0, clicked);
+
+        const marker = new naver.maps.Marker({
+          position: clicked,
+          map: map,
+          title: '경유지',
+          icon: {
+            content: '<div style="width:12px;height:12px;background:#f59e0b;border:2px solid white;border-radius:50%;box-shadow:0 0 4px rgba(0,0,0,.25);"></div>',
+            anchor: new naver.maps.Point(6, 6)
+          }
+        });
+
+        waypointMarkers.push(marker);
+        drawCustomRoute();
       });
     }
 
@@ -345,10 +413,11 @@
         if (type === 'start') {
           startCoord = { lat, lng, address: addressText };
           if (startMarker) startMarker.setMap(null);
+
           startMarker = new naver.maps.Marker({
             position: latlng,
             map,
-            title: '거주지',
+            title: '출발지',
             icon: {
               content: '<div style="width:16px;height:16px;background:#ef4444;border:2px solid white;border-radius:50%;box-shadow:0 0 6px rgba(0,0,0,.25);"></div>',
               anchor: new naver.maps.Point(8, 8)
@@ -357,6 +426,7 @@
         } else {
           goalCoord = { lat, lng, address: addressText };
           if (goalMarker) goalMarker.setMap(null);
+
           goalMarker = new naver.maps.Marker({
             position: latlng,
             map,
@@ -381,45 +451,101 @@
       searchAddress(document.getElementById('goalAddress').value, 'goal');
     }
 
-    async function drawDrivingRoute() {
+    function drawDrivingRoute() {
       if (!startCoord || !goalCoord) {
         alert('출발지와 목적지를 먼저 검색하세요.');
         return;
       }
 
-      const startLatLng = new naver.maps.LatLng(startCoord.lat, startCoord.lng);
-      const goalLatLng = new naver.maps.LatLng(goalCoord.lat, goalCoord.lng);
+      clearWaypointsOnly();
 
-      const straightDistanceM = startLatLng.distanceTo(goalLatLng);
-      const roadDistanceM = straightDistanceM * 1.25; // 단순 보정치: 실제 도로거리 근사
-      currentRouteDistanceKm = roadDistanceM / 1000;
+      pathPoints = [
+        new naver.maps.LatLng(startCoord.lat, startCoord.lng),
+        new naver.maps.LatLng(goalCoord.lat, goalCoord.lng)
+      ];
 
-      const avgSpeedKmH = 40; // 기본 평균 주행속도 가정
-      const durationMin = Math.round((currentRouteDistanceKm / avgSpeedKmH) * 60);
-      const tollFare = 0; // 서버 없는 버전은 통행료 자동조회 불가
+      drawCustomRoute();
+    }
+
+    function drawCustomRoute() {
+      if (pathPoints.length < 2) return;
 
       if (routePolyline) {
         routePolyline.setMap(null);
       }
 
       routePolyline = new naver.maps.Polyline({
-        map,
-        path: [startLatLng, goalLatLng],
+        map: map,
+        path: pathPoints,
         strokeColor: '#2563eb',
         strokeWeight: 6,
-        strokeOpacity: 0.85,
+        strokeOpacity: 0.9,
         strokeStyle: 'shortdash'
       });
 
+      let totalDistanceM = 0;
+      for (let i = 0; i < pathPoints.length - 1; i++) {
+        totalDistanceM += pathPoints[i].distanceTo(pathPoints[i + 1]);
+      }
+
+      // 직선 연결의 과소추정을 줄이기 위해 약간 보정
+      totalDistanceM *= 1.08;
+
+      currentRouteDistanceKm = totalDistanceM / 1000;
+
+      const avgSpeedKmH = 40;
+      const durationMin = Math.round((currentRouteDistanceKm / avgSpeedKmH) * 60);
+      const tollFare = 0;
+
       const bounds = new naver.maps.LatLngBounds();
-      bounds.extend(startLatLng);
-      bounds.extend(goalLatLng);
+      pathPoints.forEach(point => bounds.extend(point));
       map.fitBounds(bounds);
 
       document.getElementById('distanceText').textContent = `${currentRouteDistanceKm.toFixed(2)} km`;
       document.getElementById('durationText').textContent = `${durationMin} 분 (추정)`;
       document.getElementById('tollText').textContent = `${formatNumber(tollFare)} 원`;
       document.getElementById('tripDistanceText').textContent = `${currentRouteDistanceKm.toFixed(2)} km`;
+    }
+
+    function undoWaypoint() {
+      if (pathPoints.length <= 2) {
+        alert('되돌릴 경유지가 없습니다.');
+        return;
+      }
+
+      // 마지막 경유지 삭제 (도착지 바로 앞)
+      pathPoints.splice(pathPoints.length - 2, 1);
+
+      const lastMarker = waypointMarkers.pop();
+      if (lastMarker) {
+        lastMarker.setMap(null);
+      }
+
+      drawCustomRoute();
+    }
+
+    function clearWaypointsOnly() {
+      waypointMarkers.forEach(marker => marker.setMap(null));
+      waypointMarkers = [];
+    }
+
+    function resetRoute() {
+      if (routePolyline) {
+        routePolyline.setMap(null);
+        routePolyline = null;
+      }
+
+      clearWaypointsOnly();
+      pathPoints = [];
+      currentRouteDistanceKm = 0;
+      currentFuelCost = 0;
+
+      document.getElementById('distanceText').textContent = '-';
+      document.getElementById('durationText').textContent = '-';
+      document.getElementById('tollText').textContent = '-';
+      document.getElementById('tripDistanceText').textContent = '-';
+      document.getElementById('usedFuelText').textContent = '-';
+      document.getElementById('fuelCostText').textContent = '-';
     }
 
     function calculateFuelCost() {
@@ -446,9 +572,11 @@
       currentFuelCost = usedFuel * fuelPrice;
 
       document.getElementById('tripDistanceText').textContent = `${currentRouteDistanceKm.toFixed(2)} km`;
-      document.getElementById('usedFuelText').textContent = fuelType === '전기'
-        ? `${usedFuel.toFixed(2)} kWh`
-        : `${usedFuel.toFixed(2)} L`;
+      document.getElementById('usedFuelText').textContent =
+        fuelType === '전기'
+          ? `${usedFuel.toFixed(2)} kWh`
+          : `${usedFuel.toFixed(2)} L`;
+
       document.getElementById('fuelCostText').textContent = `${formatNumber(Math.round(currentFuelCost))} 원`;
     }
 
@@ -502,42 +630,5 @@
 
     initMap();
   </script>
-
-  <!--
-    ===============================
-    예시 백엔드(Node.js / Express)
-    ===============================
-
-    const express = require('express');
-    const axios = require('axios');
-    const app = express();
-
-    app.get('/api/naver-driving', async (req, res) => {
-      try {
-        const { start, goal } = req.query;
-        const response = await axios.get('https://naveropenapi.apigw.ntruss.com/map-direction/v1/driving', {
-          params: { start, goal },
-          headers: {
-            'X-NCP-APIGW-API-KEY-ID': process.env.NAVER_CLIENT_ID,
-            'X-NCP-APIGW-API-KEY': process.env.NAVER_CLIENT_SECRET
-          }
-        });
-        res.json(response.data);
-      } catch (err) {
-        res.status(500).json({ message: 'Directions 호출 실패', detail: err.response?.data || err.message });
-      }
-    });
-
-    app.listen(3000, () => console.log('server running on 3000'));
-
-    ===============================
-    확인할 것
-    ===============================
-    1) Maps Dynamic Map 활성화
-    2) Geocoding 활성화
-    3) Directions 5 또는 Directions 15 활성화
-    4) Web 서비스 URL 등록 (예: http://localhost)
-    5) Client Secret은 .env에 보관
-  -->
 </body>
 </html>
