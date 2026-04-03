@@ -43,7 +43,7 @@
       #map { height: 60vh; }
     }
   </style>
-  <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=s95475emm3&submodules=geocoder"></script>
+  <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKey=s95475emm3&submodules=geocoder"></script>
 </head>
 <body>
   <div class="app">
@@ -58,16 +58,22 @@
       <h2>1. 주소 검색 및 경로 표시</h2>
       <div class="field">
         <label for="startAddress">거주지 주소</label>
-        <div class="row">
-          <input id="startAddress" type="text" placeholder="예: 대구광역시 달성군 ..." />
+        <div class="row" style="position:relative;">
+          <div style="flex:1; position:relative;">
+            <input id="startAddress" type="text" placeholder="예: 대구광역시 달성군 ..." autocomplete="off" oninput="handleAddressInput('start')" onfocus="handleAddressInput('start')" />
+            <div id="startSuggestions" style="display:none; position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #d1d5db; border-radius:10px; margin-top:4px; box-shadow:0 8px 20px rgba(0,0,0,.08); z-index:1000; max-height:220px; overflow-y:auto;"></div>
+          </div>
           <button class="btn-search" type="button" onclick="searchStart()">검색</button>
         </div>
       </div>
 
       <div class="field">
         <label for="goalAddress">목적지 주소</label>
-        <div class="row">
-          <input id="goalAddress" type="text" placeholder="예: 대구광역시 중구 ..." />
+        <div class="row" style="position:relative;">
+          <div style="flex:1; position:relative;">
+            <input id="goalAddress" type="text" placeholder="예: 대구광역시 중구 ..." autocomplete="off" oninput="handleAddressInput('goal')" onfocus="handleAddressInput('goal')" />
+            <div id="goalSuggestions" style="display:none; position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #d1d5db; border-radius:10px; margin-top:4px; box-shadow:0 8px 20px rgba(0,0,0,.08); z-index:1000; max-height:220px; overflow-y:auto;"></div>
+          </div>
           <button class="btn-search" type="button" onclick="searchGoal()">검색</button>
         </div>
       </div>
@@ -197,6 +203,7 @@
     let pathPoints = [];
     let isEditMode = false;
     let editMarkers = [];
+    let suggestTimer = null;
 
     function initMap() {
       map = new naver.maps.Map('map', {
@@ -272,6 +279,63 @@
 
     function searchStart() { searchAddress(document.getElementById('startAddress').value, 'start'); }
     function searchGoal() { searchAddress(document.getElementById('goalAddress').value, 'goal'); }
+
+    function hideSuggestions(type) {
+      const box = document.getElementById(type === 'start' ? 'startSuggestions' : 'goalSuggestions');
+      box.style.display = 'none';
+      box.innerHTML = '';
+    }
+
+    function selectSuggestion(type, address) {
+      const input = document.getElementById(type === 'start' ? 'startAddress' : 'goalAddress');
+      input.value = address;
+      hideSuggestions(type);
+      searchAddress(address, type);
+    }
+
+    function renderSuggestions(type, addresses) {
+      const box = document.getElementById(type === 'start' ? 'startSuggestions' : 'goalSuggestions');
+      if (!addresses || addresses.length === 0) {
+        hideSuggestions(type);
+        return;
+      }
+
+      box.innerHTML = addresses.map(item => {
+        const road = item.roadAddress || '';
+        const jibun = item.jibunAddress || '';
+        const chosen = road || jibun;
+        return `
+          <div onclick="selectSuggestion('${type}', ${JSON.stringify(chosen).replace(/"/g, '&quot;')})" style="padding:10px 12px; border-bottom:1px solid #f1f5f9; cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
+            <div style="font-size:14px; color:#111827;">${chosen}</div>
+            ${road && jibun ? `<div style="font-size:12px; color:#6b7280; margin-top:2px;">지번: ${jibun}</div>` : ''}
+          </div>
+        `;
+      }).join('');
+      box.style.display = 'block';
+    }
+
+    function handleAddressInput(type) {
+      const input = document.getElementById(type === 'start' ? 'startAddress' : 'goalAddress');
+      const query = input.value.trim();
+
+      clearTimeout(suggestTimer);
+      if (query.length < 2) {
+        hideSuggestions(type);
+        return;
+      }
+
+      suggestTimer = setTimeout(() => {
+        naver.maps.Service.geocode({ query }, function(status, response) {
+          if (status !== naver.maps.Service.Status.OK) {
+            hideSuggestions(type);
+            return;
+          }
+
+          const results = (response.v2 && response.v2.addresses) ? response.v2.addresses.slice(0, 5) : [];
+          renderSuggestions(type, results);
+        });
+      }, 250);
+    }
 
     function buildDefaultPath() {
       const startPoint = new naver.maps.LatLng(startCoord.lat, startCoord.lng);
@@ -477,6 +541,20 @@
       document.getElementById('saving2Text').textContent = useRule2 ? `${formatNumber(saving2)} 원` : '-';
       document.getElementById('saving5Text').textContent = useRule5 ? `${formatNumber(saving5)} 원` : '-';
     }
+
+    document.addEventListener('click', function(e) {
+      const startInput = document.getElementById('startAddress');
+      const goalInput = document.getElementById('goalAddress');
+      const startBox = document.getElementById('startSuggestions');
+      const goalBox = document.getElementById('goalSuggestions');
+
+      if (!startInput.contains(e.target) && !startBox.contains(e.target)) {
+        hideSuggestions('start');
+      }
+      if (!goalInput.contains(e.target) && !goalBox.contains(e.target)) {
+        hideSuggestions('goal');
+      }
+    });
 
     initMap();
   </script>
