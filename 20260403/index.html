@@ -96,6 +96,17 @@
       }
     }
 
+   .section-card {
+      background: #ffffff;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+      border: 1px solid #e5e7eb;
+    }
+
+
+
     
   </style>
   <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=s95475emm3&submodules=geocoder"></script>
@@ -104,7 +115,7 @@
   <div class="app">
     <aside class="panel">
       <h1>네이버맵 경로·유류비 계산기</h1>
-      
+      <div class="section-card">
       <h2>1. 주소 검색 및 경로 표시</h2>
       <div class="field">
         <label for="startAddress">거주지 주소</label>
@@ -145,7 +156,9 @@
       <div id="routeSummaryBox" class="result-box metrics-animated">
         <div class="result-item"><span>거리</span><strong id="distanceText">-</strong></div>        
       </div>
+      </div>
 
+      <div class="section-card">
       <h2>2. 유류비 계산</h2>
       <div class="form-grid-2">
       <div class="field compact-field">
@@ -202,7 +215,9 @@
       </div>
 
       <div class="hr"></div>
+</div>
 
+      <div class="section-card">
       <h2>3. 2부제 / 5부제 절감비용 계산</h2>
       <div class="desc">
         기본 계산은 <b>평일 기준</b>입니다. 절감비용은 앞에서 계산된 <b>1회 이동 유류비</b>를 기준으로 산정합니다.
@@ -232,7 +247,7 @@
         <div class="result-item"><span>2부제 절감 예상</span><strong id="saving2Text">-</strong></div>
         <div class="result-item"><span>5부제 절감 예상</span><strong id="saving5Text">-</strong></div>
       </div>
-
+</div>
       <div class="warning">
         현재 버전은 <b>서버 없이 동작하는 간편형</b>입니다.<br />
         - 경로는 <b>노란 숫자점 1·2·3</b>과 <b>파란 세부점</b>으로 편집됩니다.<br />
