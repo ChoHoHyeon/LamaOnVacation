@@ -140,6 +140,12 @@
         <label for="fuelPrice">현재 연료 가격</label>
         <input id="fuelPrice" type="number" min="0" step="1" value="1700" placeholder="원/L 또는 원/kWh" />
         <div class="muted">현재는 수동 입력 방식입니다.</div>
+        <div class="field" style="margin-top:8px;">
+          <label style="display:flex; align-items:center; gap:8px; font-size:14px; font-weight:600; margin-bottom:0;">
+            <input type="checkbox" id="roundTrip" />
+            왕복 계산(출근+퇴근)
+          </label>
+        </div>
       </div>
 
       <div class="field">
@@ -147,7 +153,8 @@
       </div>
 
       <div id="fuelSummaryBox" class="result-box metrics-animated">
-        <div class="result-item"><span>1회 이동 거리 기준</span><strong id="tripDistanceText">-</strong></div>
+        <div class="result-item"><span id="tripDistanceLabel">편도 이동 거리</span><strong id="tripDistanceText">-</strong></div>
+        
         <div class="result-item"><span>예상 사용 연료량</span><strong id="usedFuelText">-</strong></div>
         <div class="result-item"><span>예상 유류비</span><strong id="fuelCostText">-</strong></div>
       </div>
@@ -864,9 +871,14 @@
         return;
       }
 
-      const usedFuel = currentRouteDistanceKm / efficiency;
+      const isRoundTrip = document.getElementById('roundTrip').checked;
+      const appliedDistanceKm = isRoundTrip ? currentRouteDistanceKm * 2 : currentRouteDistanceKm;
+
+      const usedFuel = appliedDistanceKm / efficiency;
       currentFuelCost = usedFuel * fuelPrice;
-      document.getElementById('tripDistanceText').textContent = `${currentRouteDistanceKm.toFixed(2)} km`;
+
+      document.getElementById('tripDistanceLabel').textContent = isRoundTrip ? '왕복 이동 거리' : '편도 이동 거리';
+      document.getElementById('tripDistanceText').textContent = `${appliedDistanceKm.toFixed(2)} km`;
       document.getElementById('usedFuelText').textContent = fuelType === '전기' ? `${usedFuel.toFixed(2)} kWh` : `${usedFuel.toFixed(2)} L`;
       document.getElementById('fuelCostText').textContent = `${formatNumber(Math.round(currentFuelCost))} 원`;
       revealMetricAnimation();
@@ -927,6 +939,12 @@
       if (!goalInput.contains(e.target) && !goalBox.contains(e.target)) hideSuggestions('goal');
     });
 
+    document.getElementById('roundTrip').addEventListener('change', function() {
+      if (currentRouteDistanceKm > 0) {
+        calculateFuelCost();
+      }
+    });
+   
     initMap();
   </script>
 </body>
