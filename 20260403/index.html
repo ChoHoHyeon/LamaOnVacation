@@ -182,30 +182,60 @@
     }
 
 .rule-top-row {
+  display: grid;
+  grid-template-columns: 1fr 110px;
+  gap: 14px;
+  align-items: end;
+  margin: 10px 0 14px;
+}
+
+.rule-check-group {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin: 8px 0 14px;
+  gap: 18px;
   flex-wrap: wrap;
 }
 
-.rule-top-row label {
+.rule-check-group label {
   display: flex;
   align-items: center;
   gap: 6px;
   font-size: 14px;
   font-weight: 600;
+  margin: 0;
 }
 
 .digit-inline {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 6px;
-  margin-left: auto;
+}
+
+.digit-inline label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
 }
 
 .digit-inline select {
-  width: 70px;
+  width: 100%;
+  min-width: 0;
+}
+
+.date-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.date-row .field {
+  margin-bottom: 0;
+}
+
+.date-row input[type="date"] {
+  width: 100%;
   min-width: 0;
 }
 
@@ -330,39 +360,40 @@
 
   <!-- 🔥 상단 조건 영역 -->
   <div class="rule-top-row">
+  <div class="rule-check-group">
     <label><input type="checkbox" id="rule2" /> 2부제</label>
     <label><input type="checkbox" id="rule5" /> 5부제</label>
-
-    <div class="digit-inline">
-      <label for="carLastDigit">끝번호</label>
-      <select id="carLastDigit">
-        <option value="">선택</option>
-        <option value="0">0</option>
-        <option value="1">1</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
-        <option value="4">4</option>
-        <option value="5">5</option>
-        <option value="6">6</option>
-        <option value="7">7</option>
-        <option value="8">8</option>
-        <option value="9">9</option>
-      </select>
-    </div>
   </div>
 
-  <!-- 🔥 날짜 영역 -->
-  <div class="form-grid-2">
-    <div class="field compact-field">
-      <label for="startDate">시작 날짜</label>
-      <input id="startDate" type="date" />
-    </div>
-
-    <div class="field compact-field">
-      <label for="endDate">종료 날짜</label>
-      <input id="endDate" type="date" />
-    </div>
+  <div class="digit-inline">
+    <label for="carLastDigit">끝번호</label>
+    <select id="carLastDigit">
+      <option value="">선택</option>
+      <option value="0">0</option>
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+      <option value="6">6</option>
+      <option value="7">7</option>
+      <option value="8">8</option>
+      <option value="9">9</option>
+    </select>
   </div>
+</div>
+
+<div class="date-row">
+  <div class="field compact-field">
+    <label for="startDate">시작 날짜</label>
+    <input id="startDate" type="date" />
+  </div>
+
+  <div class="field compact-field">
+    <label for="endDate">종료 날짜</label>
+    <input id="endDate" type="date" />
+  </div>
+</div>
 
   <div class="field">
     <button class="btn-calc" type="button" onclick="calculateSaving()">절감비용 계산하기</button>
