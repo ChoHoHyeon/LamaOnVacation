@@ -123,9 +123,6 @@
       align-items: start;
     }
 
-  .result-col {
-      padding: 4px 2px;
-    }
 
     .result-col .label {
       font-size: 12px;
@@ -224,6 +221,7 @@
       <div id="routeSummaryBox" class="result-box metrics-animated">
         <div class="result-item"><span>거리</span><strong id="distanceText">-</strong></div>        
       </div>
+       
       </div>
 
       <div class="section-card">
@@ -296,7 +294,7 @@
       <div class="section-card">
       <h2>3. 2부제 / 5부제 절감비용 계산</h2>
       <div class="desc">
-        기본 계산은 <b>평일 기준</b>입니다. 절감비용은 앞에서 계산된 <b>1회 이동 유류비</b>를 기준으로 산정합니다.
+        기본 계산은 <b>평일 기준</b>입니다. 절감비용은 앞에서 계산된 <b>하루 통근(왕복) 유류비</b>를 기준으로 산정합니다.
       </div>
 
       <div class="checkbox-group">
@@ -340,7 +338,7 @@
         <button class="btn-calc" type="button" onclick="calculateSaving()">절감비용 계산하기</button>
       </div>
 
-      <div class="result-box">
+      <div id="savingSummaryBox" class="result-box metrics-animated">
 
       <!-- 평일수 -->
       <div class="result-single">
@@ -363,7 +361,7 @@
       <!-- 절감 -->
       <div class="result-grid-2">
       <div class="result-col">
-      <div class="label">2부제 절감액)</div>
+      <div class="label">2부제 절감액</div>
       <div class="value" id="saving2Text">-</div>
       </div>
     <div class="result-col">
@@ -576,8 +574,11 @@
     function revealMetricAnimation() {
       const routeBox = document.getElementById('routeSummaryBox');
       const fuelBox = document.getElementById('fuelSummaryBox');
-      setTimeout(() => routeBox.classList.add('show'), 70);
-      setTimeout(() => fuelBox.classList.add('show'), 180);
+      const savingBox = document.getElementById('savingSummaryBox');
+
+      if (routeBox) setTimeout(() => routeBox.classList.add('show'), 70);
+      if (fuelBox) setTimeout(() => fuelBox.classList.add('show'), 180);
+      if (savingBox) setTimeout(() => savingBox.classList.add('show'), 290);
     }
 
     function updateCoordInfo() {
@@ -827,7 +828,13 @@
       const durationMin = Math.max(1, Math.round((currentRouteDistanceKm / avgSpeedKmH) * 60));
       const tollFare = 0;
 
+      const hours = Math.floor(durationMin / 60);
+      const minutes = durationMin % 60;
+      const durationText = hours > 0 ? `${hours}시간 ${minutes}분` : `${minutes}분`;
+
       document.getElementById('distanceText').textContent = `${currentRouteDistanceKm.toFixed(2)} km`;
+      document.getElementById('durationText').textContent = durationText;
+      document.getElementById('tollText').textContent = `${formatNumber(tollFare)} 원`;
       document.getElementById('tripDistanceText').textContent = `${currentRouteDistanceKm.toFixed(2)} km`;
 
       const efficiency = parseFloat(document.getElementById('efficiency').value);
@@ -1164,6 +1171,7 @@
       document.getElementById('rule5DaysText').textContent = useRule5 ? `${formatNumber(rule5Days)} 일` : '-';
       document.getElementById('saving2Text').textContent = useRule2 ? `${formatNumber(Math.round(saving2))} 원` : '-';
       document.getElementById('saving5Text').textContent = useRule5 ? `${formatNumber(Math.round(saving5))} 원` : '-';
+      revealMetricAnimation();
     }
 
     document.addEventListener('click', function(e) {
