@@ -466,6 +466,8 @@
     let detailPointMarkers = [];
     let detailHandleMarkers = [];
 
+    let vehicleMarker = null;
+    
     const ROUTE_DETOUR_FACTOR = 1.05;
     const DEFAULT_MAIN_RATIOS = [0.25, 0.5, 0.75];
 
@@ -683,6 +685,35 @@
     }
 
 
+function createVehicleIcon(rotationDeg = 0) {
+  return {
+    content: `
+      <div style="
+        width:28px;
+        height:28px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        transform: rotate(${rotationDeg}deg);
+        transform-origin:center center;
+        font-size:22px;
+        filter: drop-shadow(0 2px 3px rgba(0,0,0,.25));
+      ">🚗</div>
+    `,
+    anchor: new naver.maps.Point(14, 14)
+  };
+}
+
+function getBearingDeg(p1, p2) {
+  const a = normalizePoint(p1);
+  const b = normalizePoint(p2);
+
+  const dx = b.lng() - a.lng();
+  const dy = b.lat() - a.lat();
+
+  return Math.atan2(dy, dx) * 180 / Math.PI + 90;
+}
+    
     function normalizeSearchKeyword(text) {
       return (text || '')
         .trim()
@@ -880,16 +911,20 @@
     }
 
     function clearRoutePolylines() {
-      stopRouteAnimation();
-      if (routePolyline) {
-        routePolyline.setMap(null);
-        routePolyline = null;
-      }
-      if (routeShadowPolyline) {
-        routeShadowPolyline.setMap(null);
-        routeShadowPolyline = null;
-      }
-    }
+  stopRouteAnimation();
+  if (routePolyline) {
+    routePolyline.setMap(null);
+    routePolyline = null;
+  }
+  if (routeShadowPolyline) {
+    routeShadowPolyline.setMap(null);
+    routeShadowPolyline = null;
+  }
+  if (vehicleMarker) {
+    vehicleMarker.setMap(null);
+    vehicleMarker = null;
+  }
+}
 
     function renderStaticRoute() {
       const controlPoints = getControlPoints();
@@ -905,6 +940,7 @@
         strokeOpacity: 1
       });
 
+      
       routePolyline = new naver.maps.Polyline({
         map,
         path: smoothPath,
@@ -935,6 +971,10 @@
           strokeOpacity: 1
         });
 
+
+
+
+        
         routePolyline = new naver.maps.Polyline({
           map,
           path: [smoothPath[0]],
@@ -943,11 +983,30 @@
           strokeOpacity: 0.96
         });
 
+        vehicleMarker = new naver.maps.Marker({
+          position: smoothPath[0],
+          map,
+          title: '자동차',
+          icon: createVehicleIcon(0)
+        });
+
         showRouteStatus('자동차 경로를 표시하는 중입니다...');
         let stepIndex = 1;
+
         routeAnimTimer = setInterval(() => {
           routePolyline.setPath(smoothPath.slice(0, stepIndex + 1));
+
+          const currentPoint = smoothPath[stepIndex];
+          const prevPoint = smoothPath[Math.max(0, stepIndex - 1)];
+          const angle = getBearingDeg(prevPoint, currentPoint);
+
+          if (vehicleMarker && currentPoint) {
+            vehicleMarker.setPosition(currentPoint);
+            vehicleMarker.setIcon(createVehicleIcon(angle));
+          }
+
           stepIndex += 1;
+
           if (stepIndex >= smoothPath.length) {
             stopRouteAnimation();
             updateRouteSummary();
