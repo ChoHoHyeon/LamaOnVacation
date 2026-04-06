@@ -27,6 +27,7 @@
     .btn-route { background: #2563eb; color: white; width: 100%; }
     .btn-calc { background: #111827; color: white; width: 100%; }
     .btn-sub { background: #6b7280; color: white; width: 100%; }
+
     .result-box {
       background: #f1f3f6;
       border-radius: 12px;
@@ -35,6 +36,7 @@
       margin-top: 10px;
       box-shadow: inset 0 1px 2px rgba(0,0,0,0.04);
     }
+
     .result-item { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px dashed #e5e7eb; font-size: 14px; }
     .result-item:last-child { border-bottom: none; }
     .muted { color: #6b7280; font-size: 12px; }
@@ -44,6 +46,7 @@
     .badge { display: inline-block; font-size: 12px; background: #eef2ff; color: #3730a3; padding: 4px 8px; border-radius: 999px; margin-bottom: 12px; }
     .warning { background: #fff7ed; border: 1px solid #fdba74; color: #9a3412; padding: 12px; border-radius: 10px; font-size: 13px; line-height: 1.5; margin-top: 12px; }
     .btn-group { display: flex; gap: 8px; margin-top: 10px; }
+
     .metrics-animated {
       opacity: 1;
       transform: translateY(0);
@@ -54,6 +57,7 @@
       opacity: 1;
       transform: translateY(0);
     }
+
     .route-status {
       position: absolute; top: 18px; left: 50%; transform: translateX(-50%) translateY(-8px);
       background: rgba(17, 24, 39, 0.88); color: #fff; padding: 10px 14px; border-radius: 999px;
@@ -61,11 +65,13 @@
       opacity: 0; pointer-events: none; transition: opacity .25s ease, transform .25s ease; z-index: 30; white-space: nowrap;
     }
     .route-status.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
     .map-hint {
       position: absolute; bottom: 18px; left: 18px; background: rgba(255,255,255,.92);
       color: #374151; font-size: 12px; padding: 9px 12px; border-radius: 12px;
       box-shadow: 0 10px 24px rgba(0,0,0,.08); z-index: 20; backdrop-filter: blur(6px); max-width: 360px;
     }
+
     @media (max-width: 960px) {
       .app { grid-template-columns: 1fr; }
       .panel { border-right: none; border-bottom: 1px solid #e5e7eb; }
@@ -103,20 +109,18 @@
       }
     }
 
-   .section-card {
+    .section-card {
       background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
       border-radius: 16px;
       padding: 14px 16px 16px;
       margin-bottom: 18px;
-
       border: 1px solid rgba(0, 0, 0, 0.06);
-
       box-shadow:
         0 2px 6px rgba(0, 0, 0, 0.04),
         0 8px 20px rgba(0, 0, 0, 0.06);
     }
 
-   .result-grid {
+    .result-grid {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
       gap: 8px;
@@ -124,8 +128,8 @@
       align-items: start;
     }
 
-  .result-col {
-      padding: 4px 2px;
+    .result-col {
+      padding: 6px 4px;
     }
 
     .result-col .label {
@@ -153,30 +157,22 @@
       margin-top: 6px;
       gap: 8px;
     }
-    .result-col {
-      padding: 6px 4px;
-    }
 
-    .result-col .label,
     .result-single .label {
       font-size: 12px;
       color: #6b7280;
       margin-bottom: 2px;
     }
 
-    .result-col .value,
     .result-single .value {
       font-size: 16px;
       font-weight: 700;
       color: #111827;
     }
 
-   .button-group {
+    .button-group {
       margin-bottom: 10px;
     }
-
-
-    
   </style>
   <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=s95475emm3&submodules=geocoder"></script>
 </head>
@@ -184,221 +180,178 @@
   <div class="app">
     <aside class="panel">
       <h1>네이버맵 경로·유류비 계산기</h1>
-      <div class="section-card">
-      <h2>1. 주소 검색 및 경로 표시</h2>
-      <div class="field">
-        <label for="startAddress">거주지 주소</label>
-        <div class="row" style="position:relative;">
-          <div style="flex:1; position:relative;">
-            <input id="startAddress" type="text" placeholder="예: 대구광역시 달성군 ..." autocomplete="off" oninput="handleAddressInput('start')" onfocus="handleAddressInput('start')" />
-            <div id="startSuggestions" style="display:none; position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #d1d5db; border-radius:10px; margin-top:4px; box-shadow:0 8px 20px rgba(0,0,0,.08); z-index:1000; max-height:220px; overflow-y:auto;"></div>
-          </div>
-          <button class="btn-search" type="button" onclick="searchStart()">검색</button>
-        </div>
-      </div>
-
-      <div class="field">
-        <label for="goalAddress">목적지 주소</label>
-        <div class="row" style="position:relative;">
-          <div style="flex:1; position:relative;">
-            <input id="goalAddress" type="text" placeholder="예: 달성군청" autocomplete="off" oninput="handleAddressInput('goal')" onfocus="handleAddressInput('goal')" />
-            <div id="goalSuggestions" style="display:none; position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #d1d5db; border-radius:10px; margin-top:4px; box-shadow:0 8px 20px rgba(0,0,0,.08); z-index:1000; max-height:220px; overflow-y:auto;"></div>
-          </div>
-          <button class="btn-search" type="button" onclick="searchGoal()">검색</button>
-        </div>
-      </div>
-        
-      <div class="field" style="display: none;">
-        <label>선택된 좌표</label>
-        <input id="coordInfo" type="text" readonly value="출발지와 목적지를 검색하면 표시됩니다." />
-      </div>
-
-      <div class="field">
-        <button class="btn-route" type="button" onclick="drawDrivingRoute()">자동차 경로 표시</button>
-      </div>
-        
-      <div class="btn-group">
-        <button id="editRouteBtn" class="btn-sub" type="button" onclick="toggleEditRoute()">선편집</button>
-        <button class="btn-sub" type="button" onclick="resetEditRoute()">편집 초기화</button>
-      </div>
-
-      <div id="routeSummaryBox" class="result-box metrics-animated">
-        <div class="result-item"><span>거리</span><strong id="distanceText">-</strong></div>        
-      </div>
-      </div>
 
       <div class="section-card">
-      <h2>2. 유류비 계산</h2>
-      <div class="form-grid-2">
+        <h2>1. 주소 검색 및 경로 표시</h2>
 
-        <div class="field compact-field">
-          <label for="efficiency">연비</label>
-          <input id="efficiency" type="number" min="0.1" step="0.1" value="12.0" placeholder="km/L 또는 km/kWh" />
+        <div class="field">
+          <label for="startAddress">거주지 주소</label>
+          <div class="row" style="position:relative;">
+            <div style="flex:1; position:relative;">
+              <input id="startAddress" type="text" placeholder="예: 대구광역시 달성군 ..." autocomplete="off" oninput="handleAddressInput('start')" onfocus="handleAddressInput('start')" />
+              <div id="startSuggestions" style="display:none; position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #d1d5db; border-radius:10px; margin-top:4px; box-shadow:0 8px 20px rgba(0,0,0,.08); z-index:1000; max-height:220px; overflow-y:auto;"></div>
+            </div>
+            <button class="btn-search" type="button" onclick="searchStart()">검색</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="goalAddress">목적지 주소</label>
+          <div class="row" style="position:relative;">
+            <div style="flex:1; position:relative;">
+              <input id="goalAddress" type="text" placeholder="예: 달성군청" autocomplete="off" oninput="handleAddressInput('goal')" onfocus="handleAddressInput('goal')" />
+              <div id="goalSuggestions" style="display:none; position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #d1d5db; border-radius:10px; margin-top:4px; box-shadow:0 8px 20px rgba(0,0,0,.08); z-index:1000; max-height:220px; overflow-y:auto;"></div>
+            </div>
+            <button class="btn-search" type="button" onclick="searchGoal()">검색</button>
+          </div>
+        </div>
+
+        <div class="field" style="display:none;">
+          <label>선택된 좌표</label>
+          <input id="coordInfo" type="text" readonly value="출발지와 목적지를 검색하면 표시됩니다." />
+        </div>
+
+        <div class="field">
+          <button class="btn-route" type="button" onclick="drawDrivingRoute()">자동차 경로 표시</button>
+        </div>
+
+        <div class="btn-group">
+          <button id="editRouteBtn" class="btn-sub" type="button" onclick="toggleEditRoute()">선편집</button>
+          <button class="btn-sub" type="button" onclick="resetEditRoute()">편집 초기화</button>
+        </div>
+
+        <div id="routeSummaryBox" class="result-box metrics-animated">
+          <div class="result-item"><span>거리</span><strong id="distanceText">-</strong></div>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <h2>2. 유류비 계산</h2>
+
+        <div class="form-grid-2">
+          <div class="field compact-field">
+            <label for="efficiency">연비</label>
+            <input id="efficiency" type="number" min="0.1" step="0.1" value="12.0" placeholder="km/L 또는 km/kWh" />
+          </div>
+
+          <div class="field compact-field">
+            <label for="fuelType">유종</label>
+            <select id="fuelType">
+              <option value="휘발유" selected>휘발유</option>
+              <option value="경유">경유</option>
+              <option value="LPG">LPG</option>
+              <option value="전기">전기(참고용)</option>
+            </select>
+          </div>
+
+          <div class="field compact-field">
+            <label for="fuelPrice">현재 연료 가격</label>
+            <input id="fuelPrice" type="number" min="0" step="1" value="1700" placeholder="원/L 또는 원/kWh" />
+          </div>
+        </div>
+
+        <div class="compact-check">
+          <label>
+            <input type="checkbox" id="roundTrip" />
+            왕복 계산
+          </label>
+        </div>
+
+        <div class="field">
+          <button class="btn-calc" type="button" onclick="calculateFuelCost()">유류비 계산하기</button>
+        </div>
+
+        <div id="fuelSummaryBox" class="result-box metrics-animated">
+          <div class="result-grid">
+            <div class="result-col">
+              <div class="label" id="tripDistanceLabel">편도 거리</div>
+              <div class="value" id="tripDistanceText">-</div>
+            </div>
+            <div class="result-col">
+              <div class="label">연료</div>
+              <div class="value" id="usedFuelText">-</div>
+            </div>
+            <div class="result-col">
+              <div class="label">유류비</div>
+              <div class="value" id="fuelCostText">-</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <h2>3. 2부제 / 5부제 절감비용 계산</h2>
+        <div class="desc">
+          기본 계산은 <b>평일 기준</b>입니다. 절감비용은 앞에서 계산된 <b>1회 이동 유류비</b>를 기준으로 산정합니다.
+        </div>
+
+        <div class="checkbox-group">
+          <label><input type="checkbox" id="rule2" /> 2부제</label>
+          <label><input type="checkbox" id="rule5" /> 5부제</label>
         </div>
 
         <div class="field compact-field">
-          <label for="fuelType">유종</label>
-          <select id="fuelType">
-            <option value="휘발유" selected>휘발유</option>
-            <option value="경유">경유</option>
-            <option value="LPG">LPG</option>
-            <option value="전기">전기(참고용)</option>
+          <label for="carLastDigit">자동차 끝번호</label>
+          <select id="carLastDigit">
+            <option value="">선택</option>
+            <option value="0">0</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
           </select>
         </div>
 
-        <div class="field compact-field">
-          <label for="fuelPrice">현재 연료 가격</label>
-          <input id="fuelPrice" type="number" min="0" step="1" value="1700" placeholder="원/L 또는 원/kWh" />
+        <div class="form-grid-2">
+          <div class="field compact-field">
+            <label for="startDate">시작 날짜</label>
+            <input id="startDate" type="date" />
+          </div>
+
+          <div class="field compact-field">
+            <label for="endDate">종료 날짜</label>
+            <input id="endDate" type="date" />
+          </div>
         </div>
 
-      </div>
+        <div class="field">
+          <button class="btn-calc" type="button" onclick="calculateSaving()">절감비용 계산하기</button>
+        </div>
 
-      <!-- ✅ 여기로 이동 -->
-      <div class="compact-check">
-        <label>
-          <input type="checkbox" id="roundTrip" />
-          왕복 계산
-        </label>
-      </div>
-      </div>
-    </div>
-
-    
-      <div class="section-card">
-  <h2>2. 유류비 계산</h2>
-
-  <div class="form-grid-2">
-    <div class="field compact-field">
-      <label for="efficiency">연비</label>
-      <input id="efficiency" type="number" min="0.1" step="0.1" value="12.0" placeholder="km/L 또는 km/kWh" />
-    </div>
-
-    <div class="field compact-field">
-      <label for="fuelType">유종</label>
-      <select id="fuelType">
-        <option value="휘발유" selected>휘발유</option>
-        <option value="경유">경유</option>
-        <option value="LPG">LPG</option>
-        <option value="전기">전기(참고용)</option>
-      </select>
-    </div>
-
-    <div class="field compact-field">
-      <label for="fuelPrice">현재 연료 가격</label>
-      <input id="fuelPrice" type="number" min="0" step="1" value="1700" placeholder="원/L 또는 원/kWh" />
-    </div>
-  </div>
-
-  <div class="compact-check">
-    <label>
-      <input type="checkbox" id="roundTrip" />
-      왕복 계산
-    </label>
-  </div>
-
-      <div class="field">
-        <button class="btn-calc" type="button" onclick="calculateFuelCost()">유류비 계산하기</button>
-      </div>
-
-      <div id="fuelSummaryBox" class="result-box metrics-animated">
-        <div class="result-grid">
-          <div class="result-col">
-            <div class="label" id="tripDistanceLabel">편도 거리</div>
-            <div class="value" id="tripDistanceText">-</div>
+        <div class="result-box">
+          <div class="result-single">
+            <div class="label">평일수</div>
+            <div class="value" id="weekdayCountText">-</div>
           </div>
-          <div class="result-col">
-            <div class="label">연료</div>
-            <div class="value" id="usedFuelText">-</div>
+
+          <div class="result-grid-2">
+            <div class="result-col">
+              <div class="label">2부제 적용일수</div>
+              <div class="value" id="rule2DaysText">-</div>
+            </div>
+            <div class="result-col">
+              <div class="label">5부제 적용일수</div>
+              <div class="value" id="rule5DaysText">-</div>
+            </div>
           </div>
-          <div class="result-col">
-            <div class="label">유류비</div>
-            <div class="value" id="fuelCostText">-</div>
+
+          <div class="result-grid-2">
+            <div class="result-col">
+              <div class="label">2부제 절감액</div>
+              <div class="value" id="saving2Text">-</div>
+            </div>
+            <div class="result-col">
+              <div class="label">5부제 절감액</div>
+              <div class="value" id="saving5Text">-</div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-
-      <div class="section-card">
-      <h2>3. 2부제 / 5부제 절감비용 계산</h2>
-      <div class="desc">
-        기본 계산은 <b>평일 기준</b>입니다. 절감비용은 앞에서 계산된 <b>1회 이동 유류비</b>를 기준으로 산정합니다.
-      </div>
-
-      <div class="checkbox-group">
-        <label><input type="checkbox" id="rule2" /> 2부제</label>
-        <label><input type="checkbox" id="rule5" /> 5부제</label>
-      </div>
-
-      <div class="field compact-field">
-        <label for="carLastDigit">자동차 끝번호</label>
-        <select id="carLastDigit">
-          <option value="">선택</option>
-          <option value="0">0</option>
-          <option value="1">1</option>
-          <option value="2">2</option>
-          <option value="3">3</option>
-          <option value="4">4</option>
-          <option value="5">5</option>
-          <option value="6">6</option>
-          <option value="7">7</option>
-          <option value="8">8</option>
-          <option value="9">9</option>
-        </select>
-      </div>
-
-
-
-        
-      <div class="form-grid-2">
-        <div class="field compact-field">
-          <label for="startDate">시작 날짜</label>
-          <input id="startDate" type="date" />
-        </div>
-
-        <div class="field compact-field">
-          <label for="endDate">종료 날짜</label>
-          <input id="endDate" type="date" />
-        </div>
-      </div>
-
-      <div class="field">
-        <button class="btn-calc" type="button" onclick="calculateSaving()">절감비용 계산하기</button>
-      </div>
-
-      <div class="result-box">
-
-      <!-- 평일수 -->
-      <div class="result-single">
-        <div class="label">평일수</div>
-        <div class="value" id="weekdayCountText">-</div>
-      </div>
-
-      <!-- 2부제 / 5부제 -->
-      <div class="result-grid-2">
-        <div class="result-col">
-          <div class="label">2부제 적용일수</div>
-          <div class="value" id="rule2DaysText">-</div>
-        </div>
-        <div class="result-col">
-          <div class="label">5부제 적용일수</div>
-          <div class="value" id="rule5DaysText">-</div>
-        </div>
-      </div>
-
-      <!-- 절감 -->
-      <div class="result-grid-2">
-      <div class="result-col">
-      <div class="label">2부제 절감액)</div>
-      <div class="value" id="saving2Text">-</div>
-      </div>
-    <div class="result-col">
-      <div class="label">5부제 절감액</div>
-      <div class="value" id="saving5Text">-</div>
-    </div>
-  </div>
-
-</div>
-</div>      
     </aside>
 
     <section class="map-wrap">
@@ -423,7 +376,7 @@
     let routeAnimTimer = null;
 
     let pointIdCounter = 1;
-    let intermediatePoints = []; // main + detail
+    let intermediatePoints = [];
     let mainMarkers = [];
     let detailPointMarkers = [];
     let detailHandleMarkers = [];
@@ -563,9 +516,9 @@
     }
 
     function createDetailPointIcon(level = 1) {
-      let color = '#2563eb';   // 파랑
-      if (level >= 2) color = '#7dd3fc';   // 하늘색
-      if (level >= 3) color = '#7dd3fc';   // 마지막도 하늘색 유지
+      let color = '#2563eb';
+      if (level >= 2) color = '#7dd3fc';
+      if (level >= 3) color = '#7dd3fc';
 
       return {
         content: `<div style="width:14px;height:14px;background:${color};border:2px solid white;border-radius:50%;box-shadow:0 1px 6px rgba(0,0,0,.25);opacity:0.95;"></div>`,
@@ -574,7 +527,7 @@
     }
 
     function createDetailHandleIcon(level = 1) {
-      let color = '#93c5fd';   // 기본 하늘 계열
+      let color = '#93c5fd';
       if (level >= 2) color = '#bae6fd';
       if (level >= 3) color = '#bae6fd';
 
@@ -897,7 +850,7 @@
           mainMarkers.push(marker);
         } else {
           if (!point.level) point.level = 1;
-          
+
           const marker = new naver.maps.Marker({
             position: coord,
             map,
@@ -926,73 +879,73 @@
     }
 
     function createDetailHandles() {
-  detailHandleMarkers.forEach(marker => marker.setMap(null));
-  detailHandleMarkers = [];
-  if (!isEditMode) return;
+      detailHandleMarkers.forEach(marker => marker.setMap(null));
+      detailHandleMarkers = [];
+      if (!isEditMode) return;
 
-  const fullPoints = getControlPoints();
-  if (fullPoints.length < 2) return;
+      const fullPoints = getControlPoints();
+      if (fullPoints.length < 2) return;
 
-  for (let segmentIndex = 0; segmentIndex < fullPoints.length - 1; segmentIndex++) {
-    const leftPoint = segmentIndex === 0 ? null : intermediatePoints[segmentIndex - 1];
-    const rightPoint = segmentIndex >= intermediatePoints.length ? null : intermediatePoints[segmentIndex];
+      for (let segmentIndex = 0; segmentIndex < fullPoints.length - 1; segmentIndex++) {
+        const leftPoint = segmentIndex === 0 ? null : intermediatePoints[segmentIndex - 1];
+        const rightPoint = segmentIndex >= intermediatePoints.length ? null : intermediatePoints[segmentIndex];
 
-    let nextLevel = 1;
+        let nextLevel = 1;
 
-    if (leftPoint && rightPoint) {
-      nextLevel = Math.max(leftPoint.level || 1, rightPoint.level || 1) + 1;
-    } else if (leftPoint) {
-      nextLevel = (leftPoint.level || 1) + 1;
-    } else if (rightPoint) {
-      nextLevel = (rightPoint.level || 1) + 1;
-    } else {
-      nextLevel = 1;
+        if (leftPoint && rightPoint) {
+          nextLevel = Math.max(leftPoint.level || 1, rightPoint.level || 1) + 1;
+        } else if (leftPoint) {
+          nextLevel = (leftPoint.level || 1) + 1;
+        } else if (rightPoint) {
+          nextLevel = (rightPoint.level || 1) + 1;
+        } else {
+          nextLevel = 1;
+        }
+
+        if (nextLevel > 3) continue;
+
+        const mid = interpolateLatLng(fullPoints[segmentIndex], fullPoints[segmentIndex + 1], 0.5);
+        const insertIndex = segmentIndex;
+
+        const marker = new naver.maps.Marker({
+          position: mid,
+          map,
+          draggable: true,
+          title: `새 세부 포인트 추가 (단계 ${nextLevel})`,
+          icon: createDetailHandleIcon(nextLevel)
+        });
+
+        let insertedPoint = null;
+
+        naver.maps.Event.addListener(marker, 'dragstart', function(e) {
+          insertedPoint = {
+            id: nextPointId(),
+            type: 'detail',
+            level: nextLevel,
+            coord: e.coord
+          };
+          intermediatePoints.splice(insertIndex, 0, insertedPoint);
+          renderStaticRoute();
+        });
+
+        naver.maps.Event.addListener(marker, 'drag', function(e) {
+          if (!insertedPoint) return;
+          insertedPoint.coord = e.coord;
+          renderStaticRoute();
+        });
+
+        naver.maps.Event.addListener(marker, 'dragend', function(e) {
+          if (!insertedPoint) return;
+          insertedPoint.coord = e.coord;
+          renderStaticRoute();
+          updateRouteSummary();
+          refreshEditMarkers();
+        });
+
+        detailHandleMarkers.push(marker);
+      }
     }
 
-    // 최대 3단계까지만 생성 허용
-    if (nextLevel > 3) continue;
-
-    const mid = interpolateLatLng(fullPoints[segmentIndex], fullPoints[segmentIndex + 1], 0.5);
-    const insertIndex = segmentIndex;
-
-    const marker = new naver.maps.Marker({
-      position: mid,
-      map,
-      draggable: true,
-      title: `새 세부 포인트 추가 (단계 ${nextLevel})`,
-      icon: createDetailHandleIcon(nextLevel)
-    });
-
-    let insertedPoint = null;
-
-    naver.maps.Event.addListener(marker, 'dragstart', function(e) {
-      insertedPoint = {
-        id: nextPointId(),
-        type: 'detail',
-        level: nextLevel,
-        coord: e.coord
-      };
-      intermediatePoints.splice(insertIndex, 0, insertedPoint);
-      renderStaticRoute();
-    });
-
-    naver.maps.Event.addListener(marker, 'drag', function(e) {
-      if (!insertedPoint) return;
-      insertedPoint.coord = e.coord;
-      renderStaticRoute();
-    });
-
-    naver.maps.Event.addListener(marker, 'dragend', function(e) {
-      if (!insertedPoint) return;
-      insertedPoint.coord = e.coord;
-      renderStaticRoute();
-      updateRouteSummary();
-      refreshEditMarkers();
-    });
-
-    detailHandleMarkers.push(marker);
-  }
-}
     function drawDrivingRoute() {
       if (!startCoord || !goalCoord) {
         alert('출발지와 목적지를 먼저 검색하세요.');
@@ -1097,27 +1050,26 @@
 
     function isRule2Restricted(date, lastDigit) {
       const dayOfMonth = date.getDate();
-      const dateParity = dayOfMonth % 2;   // 홀수일=1, 짝수일=0
-      const carParity = lastDigit % 2;     // 홀수차량=1, 짝수차량=0
+      const dateParity = dayOfMonth % 2;
+      const carParity = lastDigit % 2;
       return dateParity === carParity;
     }
 
     function isRule5Restricted(date, lastDigit) {
-      const day = date.getDay(); // 일0 월1 화2 수3 목4 금5 토6
+      const day = date.getDay();
 
       const ruleMap = {
-        1: [1, 6], // 월
-        2: [2, 7], // 화
-        3: [3, 8], // 수
-        4: [4, 9], // 목
-        5: [5, 0]  // 금
+        1: [1, 6],
+        2: [2, 7],
+        3: [3, 8],
+        4: [4, 9],
+        5: [5, 0]
       };
 
       if (!ruleMap[day]) return false;
       return ruleMap[day].includes(lastDigit);
     }
 
-    
     function calculateSaving() {
       if (!currentFuelCost || currentFuelCost <= 0) {
         alert('먼저 유류비를 계산하세요.');
@@ -1162,7 +1114,6 @@
       while (current <= end) {
         const day = current.getDay();
 
-        // 평일만 계산
         if (day >= 1 && day <= 5) {
           weekdays++;
 
@@ -1206,7 +1157,7 @@
         calculateFuelCost();
       }
     });
-   
+
     initMap();
   </script>
 </body>
