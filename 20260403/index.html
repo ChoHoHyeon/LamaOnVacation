@@ -1021,11 +1021,6 @@
       return ruleMap[day].includes(lastDigit);
     }
 
-
-
-
-
-
     
     function calculateSaving() {
       if (!currentFuelCost || currentFuelCost <= 0) {
@@ -1087,8 +1082,11 @@
         current.setDate(current.getDate() + 1);
       }
 
-      const saving2 = rule2Days * currentFuelCost;
-      const saving5 = rule5Days * currentFuelCost;
+      const isRoundTrip = document.getElementById('roundTrip').checked;
+      const dailyCommuteFuelCost = isRoundTrip ? currentFuelCost : currentFuelCost * 2;
+
+      const saving2 = rule2Days * dailyCommuteFuelCost;
+      const saving5 = rule5Days * dailyCommuteFuelCost;
 
       document.getElementById('weekdayCountText').textContent = `${formatNumber(weekdays)} 일`;
       document.getElementById('rule2DaysText').textContent = useRule2 ? `${formatNumber(rule2Days)} 일` : '-';
