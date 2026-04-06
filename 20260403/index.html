@@ -75,7 +75,7 @@
 
     .form-grid-2 {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr 1fr 1fr;
       gap: 10px;
     }
 
@@ -225,21 +225,8 @@
       </div>
 
       <div class="section-card">
-      <h2>2. 유류비 계산</h2>
-      <div class="form-grid-2">
-      <div class="field compact-field">
-        <label for="carType">자동차 종류</label>
-        <select id="carType">
-          <option value="경차">경차</option>
-          <option value="소형">소형</option>
-          <option value="준중형" selected>준중형</option>
-          <option value="중형">중형</option>
-          <option value="대형">대형</option>
-          <option value="SUV">SUV</option>
-          <option value="승합">승합</option>
-          <option value="직접입력">직접입력</option>
-        </select>
-      </div>
+    <h2>2. 유류비 계산</h2>
+    <div class="form-grid-2">
 
       <div class="field compact-field">
         <label for="fuelType">유종</label>
@@ -259,13 +246,15 @@
       <div class="field compact-field">
         <label for="fuelPrice">현재 연료 가격</label>
         <input id="fuelPrice" type="number" min="0" step="1" value="1700" placeholder="원/L 또는 원/kWh" />
-        <div class="compact-check">
-          <label>
-            <input type="checkbox" id="roundTrip" />
-            왕복 계산
-          </label>
-        </div>
       </div>
+
+    </div>
+
+    <div class="compact-check">
+      <label>
+        <input type="checkbox" id="roundTrip" />
+        왕복 계산
+      </label>
     </div>
 
     
