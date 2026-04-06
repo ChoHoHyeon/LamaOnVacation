@@ -181,12 +181,18 @@
       margin-bottom: 10px;
     }
 
+
+
+
+
+    
 .rule-top-row {
-  display: grid;
-  grid-template-columns: 1fr 110px;
-  gap: 14px;
-  align-items: end;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   margin: 10px 0 14px;
+  flex-wrap: wrap;
 }
 
 .rule-check-group {
@@ -209,14 +215,13 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  justify-content: flex-end;
 }
 
-.digit-inline label {
-  font-size: 13px;
-  font-weight: 700;
+   
+.digit-label {
+  font-size: 14px;
+  font-weight: 600;
   color: #111827;
-  margin: 0;
   white-space: nowrap;
 }
 
@@ -368,7 +373,7 @@
   </div>
 
   <div class="digit-inline">
-    <label for="carLastDigit">자동차 끝번호</label>
+    <span class="digit-label">끝번호</span>
     <select id="carLastDigit">
       <option value="">선택</option>
       <option value="0">0</option>
