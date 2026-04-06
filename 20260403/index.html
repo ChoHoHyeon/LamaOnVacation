@@ -256,9 +256,13 @@
     let isEditMode = false;
     let editMarkers = [];
     let detailMarkers = []; 
+    let mainControlPoints = [];   
+    let detailPathPoints = [];    
     let suggestTimer = null;
     let routeAnimTimer = null;
 
+
+    
     const DEFAULT_INTERMEDIATE_POINT_COUNT = 3;
     const ROUTE_DETOUR_FACTOR = 1.08;
 
@@ -485,16 +489,46 @@
     function buildDefaultPath() {
       const startPoint = new naver.maps.LatLng(startCoord.lat, startCoord.lng);
       const goalPoint = new naver.maps.LatLng(goalCoord.lat, goalCoord.lng);
-      const innerPoints = [];
 
-      for (let i = 1; i <= DEFAULT_INTERMEDIATE_POINT_COUNT; i++) {
-        const ratio = i / (DEFAULT_INTERMEDIATE_POINT_COUNT + 1);
-        innerPoints.push(interpolateLatLng(startPoint, goalPoint, ratio));
-      }
+      const p1 = interpolateLatLng(startPoint, goalPoint, 0.25);
+      const p2 = interpolateLatLng(startPoint, goalPoint, 0.50);
+      const p3 = interpolateLatLng(startPoint, goalPoint, 0.75);
 
-      pathPoints = [startPoint, ...innerPoints, goalPoint];
+      mainControlPoints = [p1, p2, p3];
+      rebuildDetailPathFromMainControls();
     }
 
+
+    function rebuildDetailPathFromMainControls() {
+      if (!startCoord || !goalCoord || mainControlPoints.length !== 3) return;
+
+      const startPoint = new naver.maps.LatLng(startCoord.lat, startCoord.lng);
+      const goalPoint = new naver.maps.LatLng(goalCoord.lat, goalCoord.lng);
+
+      detailPathPoints = [
+        startPoint,
+        mainControlPoints[0],
+        mainControlPoints[1],
+        mainControlPoints[2],
+        goalPoint
+      ];
+
+      pathPoints = [...detailPathPoints];
+    }
+
+    function syncMainControlsToPath() {
+      if (mainControlPoints.length !== 3 || detailPathPoints.length < 5) return;
+
+      mainControlPoints[0] = detailPathPoints[1];
+      mainControlPoints[1] = detailPathPoints[2];
+      mainControlPoints[2] = detailPathPoints[3];
+    }
+
+
+
+
+
+    
     function getDistanceMeters(p1, p2) {
       const point1 = normalizePoint(p1);
       const point2 = normalizePoint(p2);
@@ -553,7 +587,8 @@
 
     function renderStaticRoute(points) {
       const normalizedPath = normalizePath(points);
-      pathPoints = normalizedPath;
+      detailPathPoints = [...normalizedPath];
+      pathPoints = [...normalizedPath];
       clearRoutePolylines();
 
       routeShadowPolyline = new naver.maps.Polyline({
@@ -577,7 +612,8 @@
 
     function animateRoute(points) {
       const normalizedPath = normalizePath(points);
-      pathPoints = normalizedPath;
+      detailPathPoints = [...normalizedPath];
+      pathPoints = [...normalizedPath];
       clearRoutePolylines();
       resetMetricAnimation();
 
@@ -675,7 +711,7 @@
       document.getElementById('editRouteBtn').textContent = '선편집';
       clearEditMarkers();
       buildDefaultPath();
-      animateRoute(pathPoints);
+      animateRoute(detailPathPoints);
     }
 
     function clearEditMarkers() {
@@ -685,32 +721,36 @@
 
     function refreshEditMarkers() {
       if (!isEditMode) return;
-      clearEditMarkers();
-      if (pathPoints.length < 3) return;
 
-      for (let i = 1; i < pathPoints.length - 1; i++) {
+      clearEditMarkers();
+      if (mainControlPoints.length !== 3) return;
+
+      for (let i = 0; i < mainControlPoints.length; i++) {
         const marker = new naver.maps.Marker({
-          position: pathPoints[i],
+          position: mainControlPoints[i],
           map,
           draggable: true,
-          title: `편집 포인트 ${i}`,
-          icon: createPointIcon(i)
+          title: `편집 포인트 ${i + 1}`,
+          icon: createPointIcon(i + 1)
         });
 
         naver.maps.Event.addListener(marker, 'drag', function(e) {
-          pathPoints[i] = e.coord;
-          renderStaticRoute(pathPoints);
+          mainControlPoints[i] = e.coord;
+          rebuildDetailPathFromMainControls();
+          renderStaticRoute(detailPathPoints);
+          createDetailHandles();
         });
 
         naver.maps.Event.addListener(marker, 'dragend', function(e) {
-          pathPoints[i] = e.coord;
-          renderStaticRoute(pathPoints);
-          refreshEditMarkers();
+          mainControlPoints[i] = e.coord;
+          rebuildDetailPathFromMainControls();
+          renderStaticRoute(detailPathPoints);
           updateRouteSummary();
+          refreshEditMarkers();
+          createDetailHandles();
         });
 
         editMarkers.push(marker);
-        createDetailHandles(); 
       }
     }
 
@@ -724,7 +764,7 @@
       const btn = document.getElementById('editRouteBtn');
 
       if (isEditMode) {
-        renderStaticRoute(pathPoints);
+        renderStaticRoute(detailPathPoints);
         refreshEditMarkers();
         createDetailHandles();
         updateRouteSummary();
@@ -735,7 +775,7 @@
         clearEditMarkers();
         clearDetailMarkers(); 
         btn.textContent = '선편집';
-        renderStaticRoute(pathPoints);
+        renderStaticRoute(detailPathPoints);
         updateRouteSummary();
       }
     }
@@ -797,12 +837,13 @@
       }
 
       buildDefaultPath();
-      clearDetailMarkers(); 
-      renderStaticRoute(pathPoints);
+      clearDetailMarkers();
+      renderStaticRoute(detailPathPoints);
       updateRouteSummary();
 
       if (isEditMode) {
         refreshEditMarkers();
+        createDetailHandles();
       } else {
         clearEditMarkers();
       }
@@ -854,38 +895,58 @@
       return count;
     }
 
-    function clearDetailMarkers(){
-  detailMarkers.forEach(m=>m.setMap(null));
-  detailMarkers=[];
-}
-
-  function createDetailHandles(){
-    clearDetailMarkers();
-    if(!isEditMode) return;
-
-    for(let i=0;i<pathPoints.length-1;i++){
-      const mid = interpolateLatLng(pathPoints[i], pathPoints[i+1], 0.5);
-
-      const marker = new naver.maps.Marker({
-        position: mid,
-        map,
-        draggable:true,
-        icon:{
-          content:`<div style="width:14px;height:14px;background:#60a5fa;border:2px solid white;border-radius:50%;opacity:0.7"></div>`,
-          anchor:new naver.maps.Point(7,7)
-        }
-      });
-
-      naver.maps.Event.addListener(marker,'drag',function(e){
-        pathPoints.splice(i+1,0,e.coord);
-        renderStaticRoute(pathPoints);
-        refreshEditMarkers();
-        createDetailHandles();
-      });
-
-      detailMarkers.push(marker);
+    function clearDetailMarkers() {
+      detailMarkers.forEach(marker => marker.setMap(null));
+      detailMarkers = [];
     }
-  }
+
+  function createDetailHandles() {
+      clearDetailMarkers();
+      if (!isEditMode) return;
+      if (detailPathPoints.length < 2) return;
+
+      for (let i = 0; i < detailPathPoints.length - 1; i++) {
+        const mid = interpolateLatLng(detailPathPoints[i], detailPathPoints[i + 1], 0.5);
+
+        const marker = new naver.maps.Marker({
+          position: mid,
+          map,
+          draggable: true,
+          title: '세부 조정 핸들',
+          icon: {
+            content: `<div style="width:14px;height:14px;background:#60a5fa;border:2px solid white;border-radius:50%;opacity:0.75;box-shadow:0 0 6px rgba(0,0,0,.18);"></div>`,
+            anchor: new naver.maps.Point(7, 7)
+          }
+        });
+
+        naver.maps.Event.addListener(marker, 'dragstart', function(e) {
+          detailPathPoints.splice(i + 1, 0, e.coord);
+          pathPoints = [...detailPathPoints];
+          renderStaticRoute(detailPathPoints);
+          refreshEditMarkers();
+        });
+
+        naver.maps.Event.addListener(marker, 'drag', function(e) {
+          detailPathPoints[i + 1] = e.coord;
+          pathPoints = [...detailPathPoints];
+          renderStaticRoute(detailPathPoints);
+          refreshEditMarkers();
+        });
+
+        naver.maps.Event.addListener(marker, 'dragend', function(e) {
+          detailPathPoints[i + 1] = e.coord;
+          pathPoints = [...detailPathPoints];
+
+          syncMainControlsToPath();
+          renderStaticRoute(detailPathPoints);
+          updateRouteSummary();
+          refreshEditMarkers();
+          createDetailHandles();
+        });
+
+        detailMarkers.push(marker);
+      }
+    }
 
     
     function calculateSaving() {
