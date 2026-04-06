@@ -246,9 +246,7 @@
           </div>
         </div>
       </div>
-
-        <div class="hr"></div>
-</div>
+  </div>
 
       <div class="section-card">
       <h2>3. 2부제 / 5부제 절감비용 계산</h2>
@@ -261,6 +259,26 @@
         <label><input type="checkbox" id="rule5" /> 5부제</label>
       </div>
 
+      <div class="field compact-field">
+        <label for="carLastDigit">자동차 끝번호</label>
+        <select id="carLastDigit">
+          <option value="">선택</option>
+          <option value="0">0</option>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+          <option value="7">7</option>
+          <option value="8">8</option>
+          <option value="9">9</option>
+        </select>
+      </div>
+
+
+
+        
       <div class="form-grid-2">
         <div class="field compact-field">
           <label for="startDate">시작 날짜</label>
@@ -279,6 +297,8 @@
 
       <div class="result-box">
         <div class="result-item"><span>기간 내 평일 수</span><strong id="weekdayCountText">-</strong></div>
+        <div class="result-item"><span>2부제 적용일 수</span><strong id="rule2DaysText">-</strong></div>
+        <div class="result-item"><span>5부제 적용일 수</span><strong id="rule5DaysText">-</strong></div>
         <div class="result-item"><span>2부제 절감 예상</span><strong id="saving2Text">-</strong></div>
         <div class="result-item"><span>5부제 절감 예상</span><strong id="saving5Text">-</strong></div>
       </div>
@@ -979,6 +999,34 @@
       return count;
     }
 
+    function isRule2Restricted(date, lastDigit) {
+      const dayOfMonth = date.getDate();
+      const dateParity = dayOfMonth % 2;   // 홀수일=1, 짝수일=0
+      const carParity = lastDigit % 2;     // 홀수차량=1, 짝수차량=0
+      return dateParity === carParity;
+    }
+
+    function isRule5Restricted(date, lastDigit) {
+      const day = date.getDay(); // 일0 월1 화2 수3 목4 금5 토6
+
+      const ruleMap = {
+        1: [1, 6], // 월
+        2: [2, 7], // 화
+        3: [3, 8], // 수
+        4: [4, 9], // 목
+        5: [5, 0]  // 금
+      };
+
+      if (!ruleMap[day]) return false;
+      return ruleMap[day].includes(lastDigit);
+    }
+
+
+
+
+
+
+    
     function calculateSaving() {
       if (!currentFuelCost || currentFuelCost <= 0) {
         alert('먼저 유류비를 계산하세요.');
@@ -989,27 +1037,64 @@
       const endDate = document.getElementById('endDate').value;
       const useRule2 = document.getElementById('rule2').checked;
       const useRule5 = document.getElementById('rule5').checked;
+      const carLastDigitValue = document.getElementById('carLastDigit').value;
 
       if (!startDate || !endDate) {
         alert('시작 날짜와 종료 날짜를 선택하세요.');
         return;
       }
+
       if (startDate > endDate) {
         alert('종료 날짜는 시작 날짜보다 같거나 뒤여야 합니다.');
         return;
       }
+
       if (!useRule2 && !useRule5) {
         alert('2부제 또는 5부제 중 하나 이상 선택하세요.');
         return;
       }
 
-      const weekdays = countWeekdaysInclusive(startDate, endDate);
-      const saving2 = Math.round(weekdays * 0.5 * currentFuelCost);
-      const saving5 = Math.round(weekdays * 0.2 * currentFuelCost);
+      if (carLastDigitValue === '') {
+        alert('자동차 끝번호를 선택하세요.');
+        return;
+      }
+
+      const carLastDigit = parseInt(carLastDigitValue, 10);
+
+      let weekdays = 0;
+      let rule2Days = 0;
+      let rule5Days = 0;
+
+      const current = new Date(startDate);
+      const end = new Date(endDate);
+
+      while (current <= end) {
+        const day = current.getDay();
+
+        // 평일만 계산
+        if (day >= 1 && day <= 5) {
+          weekdays++;
+
+          if (useRule2 && isRule2Restricted(current, carLastDigit)) {
+            rule2Days++;
+          }
+
+          if (useRule5 && isRule5Restricted(current, carLastDigit)) {
+            rule5Days++;
+          }
+        }
+
+        current.setDate(current.getDate() + 1);
+      }
+
+      const saving2 = rule2Days * currentFuelCost;
+      const saving5 = rule5Days * currentFuelCost;
 
       document.getElementById('weekdayCountText').textContent = `${formatNumber(weekdays)} 일`;
-      document.getElementById('saving2Text').textContent = useRule2 ? `${formatNumber(saving2)} 원` : '-';
-      document.getElementById('saving5Text').textContent = useRule5 ? `${formatNumber(saving5)} 원` : '-';
+      document.getElementById('rule2DaysText').textContent = useRule2 ? `${formatNumber(rule2Days)} 일` : '-';
+      document.getElementById('rule5DaysText').textContent = useRule5 ? `${formatNumber(rule5Days)} 일` : '-';
+      document.getElementById('saving2Text').textContent = useRule2 ? `${formatNumber(Math.round(saving2))} 원` : '-';
+      document.getElementById('saving5Text').textContent = useRule5 ? `${formatNumber(Math.round(saving5))} 원` : '-';
     }
 
     document.addEventListener('click', function(e) {
