@@ -195,7 +195,7 @@
           <label for="startAddress">거주지 주소</label>
           <div class="row" style="position:relative;">
             <div style="flex:1; position:relative;">
-              <input id="startAddress" type="text" placeholder="예: 대구광역시 달성군 ..." autocomplete="off" oninput="handleAddressInput('start')" onfocus="handleAddressInput('start')" />
+              <input id="startAddress" type="text" placeholder="예: 대구광역시 달서구 ..." autocomplete="off" oninput="handleAddressInput('start')" onfocus="handleAddressInput('start')" />
               <div id="startSuggestions" style="display:none; position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #d1d5db; border-radius:10px; margin-top:4px; box-shadow:0 8px 20px rgba(0,0,0,.08); z-index:1000; max-height:220px; overflow-y:auto;"></div>
             </div>
             <button class="btn-search" type="button" onclick="searchStart()">검색</button>
@@ -206,7 +206,7 @@
           <label for="goalAddress">목적지 주소</label>
           <div class="row" style="position:relative;">
             <div style="flex:1; position:relative;">
-              <input id="goalAddress" type="text" placeholder="예: 달성군청" autocomplete="off" oninput="handleAddressInput('goal')" onfocus="handleAddressInput('goal')" />
+              <input id="goalAddress" type="text" value="달성군청" placeholder="예: 달성군청" autocomplete="off" oninput="handleAddressInput('goal')" onfocus="handleAddressInput('goal')" />
               <div id="goalSuggestions" style="display:none; position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #d1d5db; border-radius:10px; margin-top:4px; box-shadow:0 8px 20px rgba(0,0,0,.08); z-index:1000; max-height:220px; overflow-y:auto;"></div>
             </div>
             <button class="btn-search" type="button" onclick="searchGoal()">검색</button>
