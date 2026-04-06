@@ -688,19 +688,26 @@
 function createVehicleIcon(rotationDeg = 0) {
   return {
     content: `
-      <div style="
-        width:28px;
-        height:28px;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        transform: rotate(${rotationDeg}deg);
-        transform-origin:center center;
-        font-size:22px;
-        filter: drop-shadow(0 2px 3px rgba(0,0,0,.25));
-      ">🚘</div>
-    `,
-    anchor: new naver.maps.Point(14, 14)
+        <div style="
+          width:22px;
+          height:22px;
+          border-radius:50%;
+          background:#2563eb;
+          border:3px solid white;
+          box-shadow:0 2px 6px rgba(0,0,0,.3);
+          display:flex;
+          align-items:center;
+          justify-content:center;
+        ">
+    <div style="
+      width:6px;
+      height:6px;
+      background:white;
+      border-radius:50%;
+    "></div>
+  </div>
+`,
+    anchor: new naver.maps.Point(10, 10)
   };
 }
 
