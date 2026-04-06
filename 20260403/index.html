@@ -130,6 +130,35 @@
       line-height: 1.2;
     }
 
+    .result-single {
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .result-grid-2 {
+      border-top: 1px solid #e5e7eb;
+      padding-top: 6px;
+    }
+    .result-col {
+      padding: 6px 4px;
+    }
+
+    .result-col .label,
+    .result-single .label {
+      font-size: 12px;
+      color: #6b7280;
+      margin-bottom: 2px;
+    }
+
+    .result-col .value,
+    .result-single .value {
+      font-size: 16px;
+      font-weight: 700;
+      color: #111827;
+    }
+
+
+
     
   </style>
   <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=s95475emm3&submodules=geocoder"></script>
@@ -296,12 +325,38 @@
       </div>
 
       <div class="result-box">
-        <div class="result-item"><span>기간 내 평일 수</span><strong id="weekdayCountText">-</strong></div>
-        <div class="result-item"><span>2부제 적용일 수</span><strong id="rule2DaysText">-</strong></div>
-        <div class="result-item"><span>5부제 적용일 수</span><strong id="rule5DaysText">-</strong></div>
-        <div class="result-item"><span>2부제 절감 예상</span><strong id="saving2Text">-</strong></div>
-        <div class="result-item"><span>5부제 절감 예상</span><strong id="saving5Text">-</strong></div>
+
+      <!-- 평일수 -->
+      <div class="result-single">
+        <div class="label">평일수</div>
+        <div class="value" id="weekdayCountText">-</div>
       </div>
+
+      <!-- 2부제 / 5부제 -->
+      <div class="result-grid-2">
+        <div class="result-col">
+          <div class="label">2부제</div>
+          <div class="value" id="rule2DaysText">-</div>
+        </div>
+        <div class="result-col">
+          <div class="label">5부제</div>
+          <div class="value" id="rule5DaysText">-</div>
+        </div>
+      </div>
+
+      <!-- 절감 -->
+      <div class="result-grid-2">
+      <div class="result-col">
+      <div class="label">절감(2부제)</div>
+      <div class="value" id="saving2Text">-</div>
+      </div>
+    <div class="result-col">
+      <div class="label">절감(5부제)</div>
+      <div class="value" id="saving5Text">-</div>
+    </div>
+  </div>
+
+</div>
 </div>      
     </aside>
 
