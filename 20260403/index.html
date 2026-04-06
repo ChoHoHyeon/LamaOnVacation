@@ -677,7 +677,7 @@
       setTimeout(() => {
         routeShadowPolyline = new naver.maps.Polyline({
           map,
-          path: normalizedPath,
+          path: smoothPath,
           strokeColor: 'rgba(15, 23, 42, 0.16)',
           strokeWeight: 12,
           strokeOpacity: 1
@@ -685,7 +685,7 @@
 
         routePolyline = new naver.maps.Polyline({
           map,
-          path: [smoothPath[0]]
+          path: [smoothPath[0]], 
           strokeColor: '#ef4444',
           strokeWeight: 8,
           strokeOpacity: 0.96
