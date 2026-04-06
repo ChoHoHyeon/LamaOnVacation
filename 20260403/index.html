@@ -516,18 +516,6 @@
       pathPoints = [...detailPathPoints];
     }
 
-    function syncMainControlsToPath() {
-      if (mainControlPoints.length !== 3 || detailPathPoints.length < 5) return;
-
-      mainControlPoints[0] = detailPathPoints[1];
-      mainControlPoints[1] = detailPathPoints[2];
-      mainControlPoints[2] = detailPathPoints[3];
-    }
-
-
-
-
-
     
     function getDistanceMeters(p1, p2) {
       const point1 = normalizePoint(p1);
@@ -937,7 +925,6 @@
           detailPathPoints[i + 1] = e.coord;
           pathPoints = [...detailPathPoints];
 
-          syncMainControlsToPath();
           renderStaticRoute(detailPathPoints);
           updateRouteSummary();
           refreshEditMarkers();
