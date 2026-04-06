@@ -180,6 +180,37 @@
     .button-group {
       margin-bottom: 10px;
     }
+
+.rule-top-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0 14px;
+  flex-wrap: wrap;
+}
+
+.rule-top-row label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.digit-inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.digit-inline select {
+  width: 70px;
+  min-width: 0;
+}
+
+
+    
   </style>
   <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=s95475emm3&submodules=geocoder"></script>
 </head>
@@ -286,79 +317,87 @@
         </div>
       </div>
 
-      <div class="section-card">
-        <h2>3. 2부제 / 5부제 절감비용 계산</h2>
-        <div class="desc">
-          기본 계산은 <b>평일 기준</b>입니다. 절감비용은 앞에서 계산된 <b>1회 이동 유류비</b>를 기준으로 산정합니다.
-        </div>
 
-        <div class="checkbox-group">
-          <label><input type="checkbox" id="rule2" /> 2부제</label>
-          <label><input type="checkbox" id="rule5" /> 5부제</label>
-        </div>
 
-        <div class="form-grid-3">
-          <div class="field compact-field">
-            <label for="carLastDigit">끝번호</label>
-            <select id="carLastDigit">
-              <option value="">선택</option>
-              <option value="0">0</option>
-              <option value="1">1</option>
-              <option value="2">2</option>
-              <option value="3">3</option>
-              <option value="4">4</option>
-              <option value="5">5</option>
-              <option value="6">6</option>
-              <option value="7">7</option>
-              <option value="8">8</option>
-              <option value="9">9</option>
-            </select>
-          </div>
 
-          <div class="field compact-field">
-            <label for="startDate">시작 날짜</label>
-            <input id="startDate" type="date" />
-          </div>
 
-            <div class="field compact-field">
-            <label for="endDate">종료 날짜</label>
-            <input id="endDate" type="date" />
-          </div>
-        </div>
+<div class="section-card">
+  <h2>3. 2부제 / 5부제 절감비용 계산</h2>
 
-        <div class="field">
-          <button class="btn-calc" type="button" onclick="calculateSaving()">절감비용 계산하기</button>
-        </div>
+  <div class="desc">
+    기본 계산은 <b>평일 기준</b>입니다. 절감비용은 앞에서 계산된 <b>1회 이동 유류비</b>를 기준으로 산정합니다.
+  </div>
 
-        <div class="result-box">
-          <div class="result-single">
-            <div class="label">평일수</div>
-            <div class="value" id="weekdayCountText">-</div>
-          </div>
+  <!-- 🔥 상단 조건 영역 -->
+  <div class="rule-top-row">
+    <label><input type="checkbox" id="rule2" /> 2부제</label>
+    <label><input type="checkbox" id="rule5" /> 5부제</label>
 
-          <div class="result-grid-2">
-            <div class="result-col">
-              <div class="label">2부제 적용일수</div>
-              <div class="value" id="rule2DaysText">-</div>
-            </div>
-            <div class="result-col">
-              <div class="label">5부제 적용일수</div>
-              <div class="value" id="rule5DaysText">-</div>
-            </div>
-          </div>
+    <div class="digit-inline">
+      <label for="carLastDigit">끝번호</label>
+      <select id="carLastDigit">
+        <option value="">선택</option>
+        <option value="0">0</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+        <option value="9">9</option>
+      </select>
+    </div>
+  </div>
 
-          <div class="result-grid-2">
-            <div class="result-col">
-              <div class="label">2부제 절감액</div>
-              <div class="value" id="saving2Text">-</div>
-            </div>
-            <div class="result-col">
-              <div class="label">5부제 절감액</div>
-              <div class="value" id="saving5Text">-</div>
-            </div>
-          </div>
-        </div>
+  <!-- 🔥 날짜 영역 -->
+  <div class="form-grid-2">
+    <div class="field compact-field">
+      <label for="startDate">시작 날짜</label>
+      <input id="startDate" type="date" />
+    </div>
+
+    <div class="field compact-field">
+      <label for="endDate">종료 날짜</label>
+      <input id="endDate" type="date" />
+    </div>
+  </div>
+
+  <div class="field">
+    <button class="btn-calc" type="button" onclick="calculateSaving()">절감비용 계산하기</button>
+  </div>
+
+  <div class="result-box">
+    <div class="result-single">
+      <div class="label">평일수</div>
+      <div class="value" id="weekdayCountText">-</div>
+    </div>
+
+    <div class="result-grid-2">
+      <div class="result-col">
+        <div class="label">2부제 적용일수</div>
+        <div class="value" id="rule2DaysText">-</div>
       </div>
+      <div class="result-col">
+        <div class="label">5부제 적용일수</div>
+        <div class="value" id="rule5DaysText">-</div>
+      </div>
+    </div>
+
+    <div class="result-grid-2">
+      <div class="result-col">
+        <div class="label">2부제 절감액</div>
+        <div class="value" id="saving2Text">-</div>
+      </div>
+      <div class="result-col">
+        <div class="label">5부제 절감액</div>
+        <div class="value" id="saving5Text">-</div>
+      </div>
+    </div>
+  </div>
+</div>
+      
     </aside>
 
     <section class="map-wrap">
