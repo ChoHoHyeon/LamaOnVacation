@@ -258,6 +258,7 @@
     let detailMarkers = []; 
     let mainControlPoints = [];   
     let detailPathPoints = [];    
+    let mainPointIndices = [1, 2, 3];   
     let suggestTimer = null;
     let routeAnimTimer = null;
 
@@ -495,28 +496,90 @@
       const p3 = interpolateLatLng(startPoint, goalPoint, 0.75);
 
       mainControlPoints = [p1, p2, p3];
-      rebuildDetailPathFromMainControls();
+      detailPathPoints = [startPoint, p1, p2, p3, goalPoint];
+      mainPointIndices = [1, 2, 3];
+      pathPoints = [...detailPathPoints];
     }
 
 
-    function rebuildDetailPathFromMainControls() {
-      if (!startCoord || !goalCoord || mainControlPoints.length !== 3) return;
 
-      const startPoint = new naver.maps.LatLng(startCoord.lat, startCoord.lng);
-      const goalPoint = new naver.maps.LatLng(goalCoord.lat, goalCoord.lng);
+    function moveMainControlPoint(mainIdx, newCoord) {
+      if (!detailPathPoints.length) return;
 
-      detailPathPoints = [
-        startPoint,
-        mainControlPoints[0],
-        mainControlPoints[1],
-        mainControlPoints[2],
-        goalPoint
-      ];
+      const pathIdx = mainPointIndices[mainIdx];
+      const oldPoint = detailPathPoints[pathIdx];
+      const newPoint = normalizePoint(newCoord);
+
+      const oldLat = oldPoint.lat();
+      const oldLng = oldPoint.lng();
+      const dLat = newPoint.lat() - oldLat;
+      const dLng = newPoint.lng() - oldLng;
+
+      detailPathPoints[pathIdx] = newPoint;
+      mainControlPoints[mainIdx] = newPoint;
+
+      const leftBound = mainIdx === 0 ? 0 : mainPointIndices[mainIdx - 1];
+      const rightBound = mainIdx === 2 ? detailPathPoints.length - 1 : mainPointIndices[mainIdx + 1];
+
+      for (let i = leftBound + 1; i < rightBound; i++) {
+        if (i === pathIdx) continue;    
+
+        const pt = detailPathPoints[i];
+        detailPathPoints[i] = new naver.maps.LatLng(
+          pt.lat() + dLat,
+          pt.lng() + dLng
+        );
+      }
 
       pathPoints = [...detailPathPoints];
     }
 
+
+    function getSmoothPath(points, samplesPerSegment = 12) {
+      const pts = normalizePath(points);
+      if (pts.length < 2) return pts;
+
+      const result = [];
+
+      for (let i = 0; i < pts.length - 1; i++) {
+        const p0 = pts[Math.max(0, i - 1)];
+        const p1 = pts[i];
+        const p2 = pts[i + 1];
+        const p3 = pts[Math.min(pts.length - 1, i + 2)];
+
+      for (let j = 0; j < samplesPerSegment; j++) {
+        const t = j / samplesPerSegment;
+         const t2 = t * t;
+        const t3 = t2 * t;
+
+        const lat =
+          0.5 * (
+            (2 * p1.lat()) +
+            (-p0.lat() + p2.lat()) * t +
+            (2*p0.lat() - 5*p1.lat() + 4*p2.lat() - p3.lat()) * t2 +
+            (-p0.lat() + 3*p1.lat() - 3*p2.lat() + p3.lat()) * t3
+          );
+
+        const lng =
+          0.5 * (
+            (2 * p1.lng()) +
+            (-p0.lng() + p2.lng()) * t +
+            (2*p0.lng() - 5*p1.lng() + 4*p2.lng() - p3.lng()) * t2 +
+            (-p0.lng() + 3*p1.lng() - 3*p2.lng() + p3.lng()) * t3
+          );
+
+        result.push(new naver.maps.LatLng(lat, lng));
+      }
+    }
+
+    result.push(pts[pts.length - 1]);
+    return result;
+  }
+
     
+
+
+       
     function getDistanceMeters(p1, p2) {
       const point1 = normalizePoint(p1);
       const point2 = normalizePoint(p2);
@@ -577,11 +640,12 @@
       const normalizedPath = normalizePath(points);
       detailPathPoints = [...normalizedPath];
       pathPoints = [...normalizedPath];
+      const smoothPath = getSmoothPath(normalizedPath);
       clearRoutePolylines();
 
       routeShadowPolyline = new naver.maps.Polyline({
         map,
-        path: normalizedPath,
+        path: smoothPath,
         strokeColor: 'rgba(15, 23, 42, 0.20)',
         strokeWeight: 12,
         strokeOpacity: 1
@@ -589,7 +653,7 @@
 
       routePolyline = new naver.maps.Polyline({
         map,
-        path: normalizedPath,
+        path: smoothPath,
         strokeColor: '#ef4444',
         strokeWeight: 8,
         strokeOpacity: 0.96
@@ -602,6 +666,7 @@
       const normalizedPath = normalizePath(points);
       detailPathPoints = [...normalizedPath];
       pathPoints = [...normalizedPath];
+      const smoothPath = getSmoothPath(normalizedPath);
       clearRoutePolylines();
       resetMetricAnimation();
 
@@ -620,7 +685,7 @@
 
         routePolyline = new naver.maps.Polyline({
           map,
-          path: [normalizedPath[0]],
+          path: [smoothPath[0]]
           strokeColor: '#ef4444',
           strokeWeight: 8,
           strokeOpacity: 0.96
@@ -632,10 +697,10 @@
         let stepIndex = 1;
         routeAnimTimer = setInterval(() => {
           if (!routePolyline) return;
-          routePolyline.setPath(normalizedPath.slice(0, stepIndex + 1));
+          routePolyline.setPath(smoothPath.slice(0, stepIndex + 1));
           stepIndex += 1;
 
-          if (stepIndex >= normalizedPath.length) {
+          if (stepIndex >= smoothPath.length) {
             stopRouteAnimation();
             updateRouteSummary();
             revealMetricAnimation();
@@ -723,24 +788,22 @@
         });
 
         naver.maps.Event.addListener(marker, 'drag', function(e) {
-          mainControlPoints[i] = e.coord;
-          rebuildDetailPathFromMainControls();
-          renderStaticRoute(detailPathPoints);
-          createDetailHandles();
-        });
+        moveMainControlPoint(i, e.coord);
+        renderStaticRoute(detailPathPoints);
+        createDetailHandles();
+      });
 
-        naver.maps.Event.addListener(marker, 'dragend', function(e) {
-          mainControlPoints[i] = e.coord;
-          rebuildDetailPathFromMainControls();
-          renderStaticRoute(detailPathPoints);
-          updateRouteSummary();
-          refreshEditMarkers();
-          createDetailHandles();
-        });
+      naver.maps.Event.addListener(marker, 'dragend', function(e) {
+        moveMainControlPoint(i, e.coord);
+        renderStaticRoute(detailPathPoints);
+        updateRouteSummary();
+        refreshEditMarkers();
+        createDetailHandles();
+      });
 
-        editMarkers.push(marker);
-      }
+      editMarkers.push(marker);
     }
+  }
 
     function toggleEditRoute() {
       if (pathPoints.length < 3) {
@@ -909,10 +972,17 @@
 
         naver.maps.Event.addListener(marker, 'dragstart', function(e) {
           detailPathPoints.splice(i + 1, 0, e.coord);
-          pathPoints = [...detailPathPoints];
-          renderStaticRoute(detailPathPoints);
-          refreshEditMarkers();
-        });
+
+        for (let k = 0; k < mainPointIndices.length; k++) {
+          if (mainPointIndices[k] >= i + 1) {
+            mainPointIndices[k] += 1;
+          }
+        }
+
+        pathPoints = [...detailPathPoints];
+        renderStaticRoute(detailPathPoints);
+        refreshEditMarkers();
+      });
 
         naver.maps.Event.addListener(marker, 'drag', function(e) {
           detailPathPoints[i + 1] = e.coord;
