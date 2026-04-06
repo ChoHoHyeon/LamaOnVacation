@@ -37,8 +37,16 @@
     .badge { display: inline-block; font-size: 12px; background: #eef2ff; color: #3730a3; padding: 4px 8px; border-radius: 999px; margin-bottom: 12px; }
     .warning { background: #fff7ed; border: 1px solid #fdba74; color: #9a3412; padding: 12px; border-radius: 10px; font-size: 13px; line-height: 1.5; margin-top: 12px; }
     .btn-group { display: flex; gap: 8px; margin-top: 10px; }
-    .metrics-animated { opacity: 0; transform: translateY(10px); transition: opacity .35s ease, transform .35s ease; }
-    .metrics-animated.show { opacity: 1; transform: translateY(0); }
+    .metrics-animated {
+      opacity: 1;
+      transform: translateY(0);
+      transition: opacity .35s ease, transform .35s ease;
+    }
+
+    .metrics-animated.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
     .route-status {
       position: absolute; top: 18px; left: 50%; transform: translateX(-50%) translateY(-8px);
       background: rgba(17, 24, 39, 0.88); color: #fff; padding: 10px 14px; border-radius: 999px;
