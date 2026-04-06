@@ -363,16 +363,24 @@
       };
     }
 
-    function createDetailPointIcon() {
+    function createDetailPointIcon(level = 1) {
+      let color = '#2563eb';   // 파랑
+      if (level >= 2) color = '#7dd3fc';   // 하늘색
+      if (level >= 3) color = '#7dd3fc';   // 마지막도 하늘색 유지
+
       return {
-        content: `<div style="width:14px;height:14px;background:#2563eb;border:2px solid white;border-radius:50%;box-shadow:0 1px 6px rgba(0,0,0,.25);opacity:0.95;"></div>`,
+        content: `<div style="width:14px;height:14px;background:${color};border:2px solid white;border-radius:50%;box-shadow:0 1px 6px rgba(0,0,0,.25);opacity:0.95;"></div>`,
         anchor: new naver.maps.Point(7, 7)
       };
     }
 
-    function createDetailHandleIcon() {
+    function createDetailHandleIcon(level = 1) {
+      let color = '#93c5fd';   // 기본 하늘 계열
+      if (level >= 2) color = '#bae6fd';
+      if (level >= 3) color = '#bae6fd';
+
       return {
-        content: `<div style="width:12px;height:12px;background:#93c5fd;border:2px solid white;border-radius:50%;box-shadow:0 1px 5px rgba(0,0,0,.18);opacity:0.9;"></div>`,
+        content: `<div style="width:12px;height:12px;background:${color};border:2px solid white;border-radius:50%;box-shadow:0 1px 5px rgba(0,0,0,.18);opacity:0.9;"></div>`,
         anchor: new naver.maps.Point(6, 6)
       };
     }
@@ -529,6 +537,7 @@
         id: `main-${index + 1}`,
         type: 'main',
         label: String(index + 1),
+        level: 0,
         coord: interpolateLatLng(startPoint, goalPoint, ratio)
       }));
     }
@@ -690,12 +699,14 @@
 
           mainMarkers.push(marker);
         } else {
+          if (!point.level) point.level = 1;
+          
           const marker = new naver.maps.Marker({
             position: coord,
             map,
             draggable: true,
-            title: '세부 조정 포인트',
-            icon: createDetailPointIcon()
+            title: `세부 조정 포인트 (단계 ${point.level || 1})`,
+            icon: createDetailPointIcon(point.level || 1)
           });
 
           naver.maps.Event.addListener(marker, 'drag', function(e) {
@@ -718,55 +729,73 @@
     }
 
     function createDetailHandles() {
-      detailHandleMarkers.forEach(marker => marker.setMap(null));
-      detailHandleMarkers = [];
-      if (!isEditMode) return;
+  detailHandleMarkers.forEach(marker => marker.setMap(null));
+  detailHandleMarkers = [];
+  if (!isEditMode) return;
 
-      const fullPoints = getControlPoints();
-      if (fullPoints.length < 2) return;
+  const fullPoints = getControlPoints();
+  if (fullPoints.length < 2) return;
 
-      for (let segmentIndex = 0; segmentIndex < fullPoints.length - 1; segmentIndex++) {
-        const mid = interpolateLatLng(fullPoints[segmentIndex], fullPoints[segmentIndex + 1], 0.5);
-        const insertIndex = segmentIndex;
+  for (let segmentIndex = 0; segmentIndex < fullPoints.length - 1; segmentIndex++) {
+    const leftPoint = segmentIndex === 0 ? null : intermediatePoints[segmentIndex - 1];
+    const rightPoint = segmentIndex >= intermediatePoints.length ? null : intermediatePoints[segmentIndex];
 
-        const marker = new naver.maps.Marker({
-          position: mid,
-          map,
-          draggable: true,
-          title: '새 세부 포인트 추가',
-          icon: createDetailHandleIcon()
-        });
+    let nextLevel = 1;
 
-        let insertedPoint = null;
-
-        naver.maps.Event.addListener(marker, 'dragstart', function(e) {
-          insertedPoint = {
-            id: nextPointId(),
-            type: 'detail',
-            coord: e.coord
-          };
-          intermediatePoints.splice(insertIndex, 0, insertedPoint);
-          renderStaticRoute();
-        });
-
-        naver.maps.Event.addListener(marker, 'drag', function(e) {
-          if (!insertedPoint) return;
-          insertedPoint.coord = e.coord;
-          renderStaticRoute();
-        });
-
-        naver.maps.Event.addListener(marker, 'dragend', function(e) {
-          if (!insertedPoint) return;
-          insertedPoint.coord = e.coord;
-          renderStaticRoute();
-          updateRouteSummary();
-          refreshEditMarkers();
-        });
-
-        detailHandleMarkers.push(marker);
-      }
+    if (leftPoint && rightPoint) {
+      nextLevel = Math.max(leftPoint.level || 1, rightPoint.level || 1) + 1;
+    } else if (leftPoint) {
+      nextLevel = (leftPoint.level || 1) + 1;
+    } else if (rightPoint) {
+      nextLevel = (rightPoint.level || 1) + 1;
+    } else {
+      nextLevel = 1;
     }
 
+    // 최대 3단계까지만 생성 허용
+    if (nextLevel > 3) continue;
+
+    const mid = interpolateLatLng(fullPoints[segmentIndex], fullPoints[segmentIndex + 1], 0.5);
+    const insertIndex = segmentIndex;
+
+    const marker = new naver.maps.Marker({
+      position: mid,
+      map,
+      draggable: true,
+      title: `새 세부 포인트 추가 (단계 ${nextLevel})`,
+      icon: createDetailHandleIcon(nextLevel)
+    });
+
+    let insertedPoint = null;
+
+    naver.maps.Event.addListener(marker, 'dragstart', function(e) {
+      insertedPoint = {
+        id: nextPointId(),
+        type: 'detail',
+        level: nextLevel,
+        coord: e.coord
+      };
+      intermediatePoints.splice(insertIndex, 0, insertedPoint);
+      renderStaticRoute();
+    });
+
+    naver.maps.Event.addListener(marker, 'drag', function(e) {
+      if (!insertedPoint) return;
+      insertedPoint.coord = e.coord;
+      renderStaticRoute();
+    });
+
+    naver.maps.Event.addListener(marker, 'dragend', function(e) {
+      if (!insertedPoint) return;
+      insertedPoint.coord = e.coord;
+      renderStaticRoute();
+      updateRouteSummary();
+      refreshEditMarkers();
+    });
+
+    detailHandleMarkers.push(marker);
+  }
+}
     function drawDrivingRoute() {
       if (!startCoord || !goalCoord) {
         alert('출발지와 목적지를 먼저 검색하세요.');
