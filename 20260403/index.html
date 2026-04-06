@@ -604,44 +604,95 @@
       document.getElementById('coordInfo').value = `${startText} | ${goalText}`;
     }
 
+
+    function normalizeSearchKeyword(text) {
+      return (text || '')
+        .trim()
+        .replace(/\s+/g, ' ')
+        .replace(/[()]/g, '')
+        .replace(/,/g, ' ')
+        .trim();
+    }
+
+
+    
     function searchAddress(address, type) {
-      if (!address.trim()) {
-        alert(type === 'start' ? '거주지 주소를 입력하세요.' : '목적지 주소를 입력하세요.');
-        return;
-      }
+  const rawQuery = (address || '').trim();
+  if (!rawQuery) {
+    alert(type === 'start' ? '거주지 주소를 입력하세요.' : '목적지 주소를 입력하세요.');
+    return;
+  }
 
-      naver.maps.Service.geocode({ query: address }, function(status, response) {
-        if (status !== naver.maps.Service.Status.OK) {
-          alert('주소 검색 중 오류가 발생했습니다.');
-          return;
-        }
+  const normalizedQuery = normalizeSearchKeyword(rawQuery);
 
-        const result = response.v2;
-        if (!result.addresses || result.addresses.length === 0) {
-          alert('검색 결과가 없습니다. 주소를 다시 확인하세요.');
-          return;
-        }
+  const aliasMatch = customPlaceAliases.find(item =>
+    item.keyword.includes(normalizedQuery) ||
+    item.address.includes(normalizedQuery) ||
+    normalizedQuery.includes(item.keyword)
+  );
 
-        const item = result.addresses[0];
-        const lat = parseFloat(item.y);
-        const lng = parseFloat(item.x);
-        const latlng = new naver.maps.LatLng(lat, lng);
-        const addressText = item.roadAddress || item.jibunAddress || address;
+  const tryQueries = [];
+  if (aliasMatch) tryQueries.push(aliasMatch.address);
+  tryQueries.push(rawQuery);
+  if (normalizedQuery !== rawQuery) tryQueries.push(normalizedQuery);
 
-        if (type === 'start') {
-          startCoord = { lat, lng, address: addressText };
-          if (startMarker) startMarker.setMap(null);
-          startMarker = new naver.maps.Marker({ position: latlng, map, title: '출발지', icon: createMarkerIcon('#ef4444') });
-        } else {
-          goalCoord = { lat, lng, address: addressText };
-          if (goalMarker) goalMarker.setMap(null);
-          goalMarker = new naver.maps.Marker({ position: latlng, map, title: '목적지', icon: createMarkerIcon('#ef4444') });
-        }
+  // 중복 제거
+  const uniqueQueries = [...new Set(tryQueries.filter(Boolean))];
 
-        updateCoordInfo();
-        map.setCenter(latlng);
+  function applyGeocodeResult(item, originalQuery) {
+    const lat = parseFloat(item.y);
+    const lng = parseFloat(item.x);
+    const latlng = new naver.maps.LatLng(lat, lng);
+    const addressText = item.roadAddress || item.jibunAddress || originalQuery;
+
+    if (type === 'start') {
+      startCoord = { lat, lng, address: addressText };
+      if (startMarker) startMarker.setMap(null);
+      startMarker = new naver.maps.Marker({
+        position: latlng,
+        map,
+        title: '출발지',
+        icon: createMarkerIcon('#ef4444')
+      });
+    } else {
+      goalCoord = { lat, lng, address: addressText };
+      if (goalMarker) goalMarker.setMap(null);
+      goalMarker = new naver.maps.Marker({
+        position: latlng,
+        map,
+        title: '목적지',
+        icon: createMarkerIcon('#ef4444')
       });
     }
+
+    updateCoordInfo();
+    map.setCenter(latlng);
+  }
+
+  function tryNext(index) {
+    if (index >= uniqueQueries.length) {
+      alert('검색 결과가 없습니다. 도로명주소, 지번주소, 건물명 중 다른 형태로 다시 입력해보세요.');
+      return;
+    }
+
+    const query = uniqueQueries[index];
+
+    naver.maps.Service.geocode({ query }, function(status, response) {
+      if (
+        status === naver.maps.Service.Status.OK &&
+        response.v2 &&
+        response.v2.addresses &&
+        response.v2.addresses.length > 0
+      ) {
+        applyGeocodeResult(response.v2.addresses[0], query);
+      } else {
+        tryNext(index + 1);
+      }
+    });
+  }
+
+  tryNext(0);
+}
 
     function searchStart() { searchAddress(document.getElementById('startAddress').value, 'start'); }
     function searchGoal() { searchAddress(document.getElementById('goalAddress').value, 'goal'); }
@@ -686,7 +737,7 @@
       const query = input.value.trim();
       clearTimeout(suggestTimer);
 
-      if (query.length < 1) {
+      if (query.length < 2) {
         hideSuggestions(type);
         return;
       }
