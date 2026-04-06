@@ -10,7 +10,7 @@
     body { margin: 0; font-family: "Malgun Gothic", Arial, sans-serif; background: #f5f7fb; color: #222; }
     .app { display: grid; grid-template-columns: 420px 1fr; min-height: 100vh; }
     .panel { background: #fff; border-right: 1px solid #e5e7eb; padding: 20px; overflow-y: auto; }
-    .map-wrap { position: relative; }
+    .map-wrap { position: relative; background: #eef2f7; }
     #map { width: 100%; height: 100vh; }
     h1 { margin: 0 0 16px; font-size: 24px; }
     h2 { margin: 24px 0 12px; font-size: 18px; border-left: 4px solid #22c55e; padding-left: 8px; }
@@ -37,10 +37,59 @@
     .badge { display: inline-block; font-size: 12px; background: #eef2ff; color: #3730a3; padding: 4px 8px; border-radius: 999px; margin-bottom: 12px; }
     .warning { background: #fff7ed; border: 1px solid #fdba74; color: #9a3412; padding: 12px; border-radius: 10px; font-size: 13px; line-height: 1.5; margin-top: 12px; }
     .btn-group { display: flex; gap: 8px; margin-top: 10px; }
+
+    .metrics-animated {
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity .35s ease, transform .35s ease;
+    }
+    .metrics-animated.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .route-status {
+      position: absolute;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-8px);
+      background: rgba(17, 24, 39, 0.88);
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      box-shadow: 0 10px 25px rgba(0,0,0,.18);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .25s ease, transform .25s ease;
+      z-index: 30;
+      white-space: nowrap;
+    }
+    .route-status.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .map-hint {
+      position: absolute;
+      bottom: 18px;
+      left: 18px;
+      background: rgba(255,255,255,.92);
+      color: #374151;
+      font-size: 12px;
+      padding: 9px 12px;
+      border-radius: 12px;
+      box-shadow: 0 10px 24px rgba(0,0,0,.08);
+      z-index: 20;
+      backdrop-filter: blur(6px);
+    }
+
     @media (max-width: 960px) {
       .app { grid-template-columns: 1fr; }
       .panel { border-right: none; border-bottom: 1px solid #e5e7eb; }
       #map { height: 60vh; }
+      .route-status { max-width: calc(100% - 24px); overflow: hidden; text-overflow: ellipsis; }
     }
   </style>
   <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=s95475emm3&submodules=geocoder"></script>
@@ -92,7 +141,7 @@
         <button class="btn-sub" type="button" onclick="resetEditRoute()">편집 초기화</button>
       </div>
 
-      <div class="result-box">
+      <div id="routeSummaryBox" class="result-box metrics-animated">
         <div class="result-item"><span>거리</span><strong id="distanceText">-</strong></div>
         <div class="result-item"><span>예상 시간</span><strong id="durationText">-</strong></div>
         <div class="result-item"><span>통행료</span><strong id="tollText">-</strong></div>
@@ -138,7 +187,7 @@
         <button class="btn-calc" type="button" onclick="calculateFuelCost()">유류비 계산하기</button>
       </div>
 
-      <div class="result-box">
+      <div id="fuelSummaryBox" class="result-box metrics-animated">
         <div class="result-item"><span>1회 이동 거리 기준</span><strong id="tripDistanceText">-</strong></div>
         <div class="result-item"><span>예상 사용 연료량</span><strong id="usedFuelText">-</strong></div>
         <div class="result-item"><span>예상 유류비</span><strong id="fuelCostText">-</strong></div>
@@ -178,16 +227,18 @@
 
       <div class="warning">
         현재 버전은 <b>서버 없이 동작하는 간편형</b>입니다.<br />
-        - 자동차 경로 표시면 기본 편집 포인트 2개가 포함된 경로가 생성됩니다.<br />
-        - <b>선편집</b>을 누르면 편집 포인트 2개가 나타나고, 드래그해서 꺾인 경로 형태로 조정할 수 있습니다.<br />
-        - <b>편집완료</b>를 누르면 편집 포인트가 사라집니다.<br />
-        - <b>편집 초기화</b>를 누르면 기본 포인트 2개 위치로 되돌아갑니다.<br />
+        - 자동차 경로 표시는 <b>기본 편집 포인트 3개</b>가 포함된 부드러운 경로로 생성됩니다.<br />
+        - <b>선편집</b>을 누르면 편집 포인트가 나타나고, 드래그해서 경로를 조정할 수 있습니다.<br />
+        - <b>선편집 상태에서 빨간 경로선을 더블클릭</b>하면 해당 위치 근처 구간에 새 포인트가 추가됩니다.<br />
+        - 추가 포인트는 드래그 가능하며, <b>편집 초기화</b>를 누르면 기본 포인트 3개 상태로 되돌아갑니다.<br />
         - 시간은 평균 속도 기준 <b>추정값</b>, 통행료는 <b>0원</b>으로 표시됩니다.
       </div>
     </aside>
 
     <section class="map-wrap">
       <div id="map"></div>
+      <div id="routeStatus" class="route-status">경로를 계산 중입니다...</div>
+      <div class="map-hint">선편집 중에는 빨간 경로선을 더블클릭해서 새 포인트를 추가할 수 있습니다.</div>
     </section>
   </div>
 
@@ -196,6 +247,7 @@
     let startMarker = null;
     let goalMarker = null;
     let routePolyline = null;
+    let routeShadowPolyline = null;
     let startCoord = null;
     let goalCoord = null;
     let currentRouteDistanceKm = 0;
@@ -204,6 +256,10 @@
     let isEditMode = false;
     let editMarkers = [];
     let suggestTimer = null;
+    let routeAnimTimer = null;
+
+    const DEFAULT_INTERMEDIATE_POINT_COUNT = 3;
+    const ROUTE_DETOUR_FACTOR = 1.08;
 
     const customPlaceAliases = [
       { keyword: '달성군청', address: '대구광역시 달성군 논공읍 달성군청로 33', label: '달성군청' },
@@ -223,6 +279,50 @@
 
     function formatNumber(value) {
       return Number(value || 0).toLocaleString('ko-KR');
+    }
+
+    function showRouteStatus(message) {
+      const el = document.getElementById('routeStatus');
+      if (!el) return;
+      el.textContent = message;
+      el.classList.add('show');
+    }
+
+    function hideRouteStatus() {
+      const el = document.getElementById('routeStatus');
+      if (!el) return;
+      el.classList.remove('show');
+    }
+
+    function resetMetricAnimation() {
+      document.querySelectorAll('.metrics-animated').forEach((el) => {
+        el.classList.remove('show');
+      });
+    }
+
+    function revealMetricAnimation() {
+      const routeBox = document.getElementById('routeSummaryBox');
+      const fuelBox = document.getElementById('fuelSummaryBox');
+      if (routeBox) {
+        setTimeout(() => routeBox.classList.add('show'), 70);
+      }
+      if (fuelBox) {
+        setTimeout(() => fuelBox.classList.add('show'), 180);
+      }
+    }
+
+    function createPointIcon(index) {
+      return {
+        content: `<div style="width:22px;height:22px;background:#f59e0b;border:2px solid white;border-radius:50%;box-shadow:0 0 8px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:700;">${index}</div>`,
+        anchor: new naver.maps.Point(11, 11)
+      };
+    }
+
+    function createMarkerIcon(color) {
+      return {
+        content: `<div style="width:16px;height:16px;background:${color};border:2px solid white;border-radius:50%;box-shadow:0 0 6px rgba(0,0,0,.25);"></div>`,
+        anchor: new naver.maps.Point(8, 8)
+      };
     }
 
     function updateCoordInfo() {
@@ -262,10 +362,7 @@
             position: latlng,
             map,
             title: '출발지',
-            icon: {
-              content: '<div style="width:16px;height:16px;background:#ef4444;border:2px solid white;border-radius:50%;box-shadow:0 0 6px rgba(0,0,0,.25);"></div>',
-              anchor: new naver.maps.Point(8, 8)
-            }
+            icon: createMarkerIcon('#ef4444')
           });
         } else {
           goalCoord = { lat, lng, address: addressText };
@@ -274,10 +371,7 @@
             position: latlng,
             map,
             title: '목적지',
-            icon: {
-              content: '<div style="width:16px;height:16px;background:#ef4444;border:2px solid white;border-radius:50%;box-shadow:0 0 6px rgba(0,0,0,.25);"></div>',
-              anchor: new naver.maps.Point(8, 8)
-            }
+            icon: createMarkerIcon('#ef4444')
           });
         }
 
@@ -367,38 +461,46 @@
       }, 250);
     }
 
+    function normalizePoint(point) {
+      if (point instanceof naver.maps.LatLng) return point;
+      const lat = typeof point.lat === 'function' ? point.lat() : (point.y ?? point.lat);
+      const lng = typeof point.lng === 'function' ? point.lng() : (point.x ?? point.lng);
+      return new naver.maps.LatLng(lat, lng);
+    }
+
+    function normalizePath(points) {
+      return points.map(normalizePoint);
+    }
+
+    function interpolateLatLng(startPoint, endPoint, ratio) {
+      const start = normalizePoint(startPoint);
+      const end = normalizePoint(endPoint);
+      return new naver.maps.LatLng(
+        start.lat() + (end.lat() - start.lat()) * ratio,
+        start.lng() + (end.lng() - start.lng()) * ratio
+      );
+    }
+
     function buildDefaultPath() {
       const startPoint = new naver.maps.LatLng(startCoord.lat, startCoord.lng);
       const goalPoint = new naver.maps.LatLng(goalCoord.lat, goalCoord.lng);
-      const p1 = new naver.maps.LatLng(
-        startCoord.lat + (goalCoord.lat - startCoord.lat) / 3,
-        startCoord.lng + (goalCoord.lng - startCoord.lng) / 3
-      );
-      const p2 = new naver.maps.LatLng(
-        startCoord.lat + (goalCoord.lat - startCoord.lat) * 2 / 3,
-        startCoord.lng + (goalCoord.lng - startCoord.lng) * 2 / 3
-      );
-      pathPoints = [startPoint, p1, p2, goalPoint];
-    }
+      const innerPoints = [];
 
-    function drawDrivingRoute() {
-      if (!startCoord || !goalCoord) {
-        alert('출발지와 목적지를 먼저 검색하세요.');
-        return;
+      for (let i = 1; i <= DEFAULT_INTERMEDIATE_POINT_COUNT; i++) {
+        const ratio = i / (DEFAULT_INTERMEDIATE_POINT_COUNT + 1);
+        innerPoints.push(interpolateLatLng(startPoint, goalPoint, ratio));
       }
 
-      isEditMode = false;
-      document.getElementById('editRouteBtn').textContent = '선편집';
-      clearEditMarkers();
-      buildDefaultPath();
-      drawCustomRoute();
+      pathPoints = [startPoint, ...innerPoints, goalPoint];
     }
 
     function getDistanceMeters(p1, p2) {
-      const lat1 = typeof p1.lat === 'function' ? p1.lat() : (p1.y ?? p1.lat);
-      const lng1 = typeof p1.lng === 'function' ? p1.lng() : (p1.x ?? p1.lng);
-      const lat2 = typeof p2.lat === 'function' ? p2.lat() : (p2.y ?? p2.lat);
-      const lng2 = typeof p2.lng === 'function' ? p2.lng() : (p2.x ?? p2.lng);
+      const point1 = normalizePoint(p1);
+      const point2 = normalizePoint(p2);
+      const lat1 = point1.lat();
+      const lng1 = point1.lng();
+      const lat2 = point2.lat();
+      const lng2 = point2.lng();
 
       const R = 6371000;
       const toRad = deg => deg * Math.PI / 180;
@@ -414,45 +516,125 @@
       return R * c;
     }
 
-    function drawCustomRoute() {
-      if (pathPoints.length < 2) return;
+    function getBoundsFromPath(points) {
+      const bounds = new naver.maps.LatLngBounds();
+      normalizePath(points).forEach(point => bounds.extend(point));
+      return bounds;
+    }
 
+    function stopRouteAnimation() {
+      if (routeAnimTimer) {
+        clearInterval(routeAnimTimer);
+        routeAnimTimer = null;
+      }
+    }
+
+    function clearRoutePolylines() {
+      stopRouteAnimation();
       if (routePolyline) {
         routePolyline.setMap(null);
+        routePolyline = null;
       }
+      if (routeShadowPolyline) {
+        routeShadowPolyline.setMap(null);
+        routeShadowPolyline = null;
+      }
+    }
 
-      // pathPoints 안의 점들을 naver.maps.LatLng 형태로 정규화
-      const normalizedPath = pathPoints.map(point => {
-        if (point instanceof naver.maps.LatLng) return point;
-        const lat = typeof point.lat === 'function' ? point.lat() : (point.y ?? point.lat);
-        const lng = typeof point.lng === 'function' ? point.lng() : (point.x ?? point.lng);
-        return new naver.maps.LatLng(lat, lng);
+    function attachRouteEditDblClick() {
+      if (!routePolyline) return;
+      naver.maps.Event.addListener(routePolyline, 'dblclick', function(e) {
+        if (!isEditMode || pathPoints.length < 2) return;
+        if (!e || !e.coord) return;
+        insertPointAtNearestSegment(e.coord);
       });
+    }
+
+    function renderStaticRoute(points) {
+      const normalizedPath = normalizePath(points);
       pathPoints = normalizedPath;
+      clearRoutePolylines();
+
+      routeShadowPolyline = new naver.maps.Polyline({
+        map,
+        path: normalizedPath,
+        strokeColor: 'rgba(15, 23, 42, 0.20)',
+        strokeWeight: 12,
+        strokeOpacity: 1
+      });
 
       routePolyline = new naver.maps.Polyline({
-        map: map,
-        path: pathPoints,
+        map,
+        path: normalizedPath,
         strokeColor: '#ef4444',
         strokeWeight: 8,
-        strokeOpacity: 0.95
+        strokeOpacity: 0.96
       });
+
+      attachRouteEditDblClick();
+    }
+
+    function animateRoute(points) {
+      const normalizedPath = normalizePath(points);
+      pathPoints = normalizedPath;
+      clearRoutePolylines();
+      resetMetricAnimation();
+
+      const bounds = getBoundsFromPath(normalizedPath);
+      map.fitBounds(bounds);
+      showRouteStatus('경로를 계산 중입니다...');
+
+      setTimeout(() => {
+        routeShadowPolyline = new naver.maps.Polyline({
+          map,
+          path: normalizedPath,
+          strokeColor: 'rgba(15, 23, 42, 0.16)',
+          strokeWeight: 12,
+          strokeOpacity: 1
+        });
+
+        routePolyline = new naver.maps.Polyline({
+          map,
+          path: [normalizedPath[0]],
+          strokeColor: '#ef4444',
+          strokeWeight: 8,
+          strokeOpacity: 0.96
+        });
+
+        attachRouteEditDblClick();
+        showRouteStatus('자동차 경로를 표시하는 중입니다...');
+
+        let stepIndex = 1;
+        routeAnimTimer = setInterval(() => {
+          if (!routePolyline) return;
+          routePolyline.setPath(normalizedPath.slice(0, stepIndex + 1));
+          stepIndex += 1;
+
+          if (stepIndex >= normalizedPath.length) {
+            stopRouteAnimation();
+            updateRouteSummary();
+            revealMetricAnimation();
+            showRouteStatus('경로 표시가 완료되었습니다.');
+            setTimeout(() => hideRouteStatus(), 900);
+          }
+        }, 120);
+      }, 320);
+    }
+
+    function updateRouteSummary() {
+      if (pathPoints.length < 2) return;
 
       let totalDistanceM = 0;
       for (let i = 0; i < pathPoints.length - 1; i++) {
         totalDistanceM += getDistanceMeters(pathPoints[i], pathPoints[i + 1]);
       }
 
-      totalDistanceM *= 1.08;
+      totalDistanceM *= ROUTE_DETOUR_FACTOR;
       currentRouteDistanceKm = totalDistanceM / 1000;
 
       const avgSpeedKmH = 40;
       const durationMin = Math.max(1, Math.round((currentRouteDistanceKm / avgSpeedKmH) * 60));
       const tollFare = 0;
-
-      const bounds = new naver.maps.LatLngBounds();
-      pathPoints.forEach(point => bounds.extend(point));
-      map.fitBounds(bounds);
 
       const distanceEl = document.getElementById('distanceText');
       const durationEl = document.getElementById('durationText');
@@ -482,35 +664,48 @@
       }
     }
 
+    function drawDrivingRoute() {
+      if (!startCoord || !goalCoord) {
+        alert('출발지와 목적지를 먼저 검색하세요.');
+        return;
+      }
+
+      isEditMode = false;
+      document.getElementById('editRouteBtn').textContent = '선편집';
+      clearEditMarkers();
+      buildDefaultPath();
+      animateRoute(pathPoints);
+    }
+
     function clearEditMarkers() {
       editMarkers.forEach(marker => marker.setMap(null));
       editMarkers = [];
     }
 
-    function createEditMarkers() {
+    function refreshEditMarkers() {
+      if (!isEditMode) return;
       clearEditMarkers();
-      if (pathPoints.length < 4) return;
+      if (pathPoints.length < 3) return;
 
-      for (let i = 1; i <= 2; i++) {
+      for (let i = 1; i < pathPoints.length - 1; i++) {
         const marker = new naver.maps.Marker({
           position: pathPoints[i],
           map,
           draggable: true,
           title: `편집 포인트 ${i}`,
-          icon: {
-            content: `<div style="width:20px;height:20px;background:#f59e0b;border:2px solid white;border-radius:50%;box-shadow:0 0 6px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:700;">${i}</div>`,
-            anchor: new naver.maps.Point(10, 10)
-          }
+          icon: createPointIcon(i)
         });
 
         naver.maps.Event.addListener(marker, 'drag', function(e) {
           pathPoints[i] = e.coord;
-          drawCustomRoute();
+          renderStaticRoute(pathPoints);
         });
 
         naver.maps.Event.addListener(marker, 'dragend', function(e) {
           pathPoints[i] = e.coord;
-          drawCustomRoute();
+          renderStaticRoute(pathPoints);
+          refreshEditMarkers();
+          updateRouteSummary();
         });
 
         editMarkers.push(marker);
@@ -518,7 +713,7 @@
     }
 
     function toggleEditRoute() {
-      if (pathPoints.length < 4) {
+      if (pathPoints.length < 3) {
         alert('먼저 자동차 경로 표시를 눌러 기본 경로를 만들어주세요.');
         return;
       }
@@ -527,13 +722,68 @@
       const btn = document.getElementById('editRouteBtn');
 
       if (isEditMode) {
-        createEditMarkers();
+        renderStaticRoute(pathPoints);
+        refreshEditMarkers();
+        updateRouteSummary();
         btn.textContent = '편집완료';
+        showRouteStatus('선편집 모드입니다. 빨간 경로선을 더블클릭하면 새 포인트가 추가됩니다.');
+        setTimeout(() => hideRouteStatus(), 1400);
       } else {
         clearEditMarkers();
         btn.textContent = '선편집';
-        drawCustomRoute();
+        renderStaticRoute(pathPoints);
+        updateRouteSummary();
       }
+    }
+
+    function distancePointToSegmentMeters(point, segStart, segEnd) {
+      const p = normalizePoint(point);
+      const a = normalizePoint(segStart);
+      const b = normalizePoint(segEnd);
+
+      const avgLat = (a.lat() + b.lat() + p.lat()) / 3;
+      const cosLat = Math.cos(avgLat * Math.PI / 180);
+      const toXY = (latlng) => ({
+        x: latlng.lng() * 111320 * cosLat,
+        y: latlng.lat() * 110540
+      });
+
+      const pp = toXY(p);
+      const aa = toXY(a);
+      const bb = toXY(b);
+      const abx = bb.x - aa.x;
+      const aby = bb.y - aa.y;
+      const apx = pp.x - aa.x;
+      const apy = pp.y - aa.y;
+      const abLenSq = abx * abx + aby * aby || 1;
+      const t = Math.max(0, Math.min(1, (apx * abx + apy * aby) / abLenSq));
+      const projX = aa.x + abx * t;
+      const projY = aa.y + aby * t;
+      const dx = pp.x - projX;
+      const dy = pp.y - projY;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    function insertPointAtNearestSegment(coord) {
+      if (pathPoints.length < 2) return;
+      const clickedPoint = normalizePoint(coord);
+      let nearestIndex = 0;
+      let nearestDistance = Infinity;
+
+      for (let i = 0; i < pathPoints.length - 1; i++) {
+        const segmentDistance = distancePointToSegmentMeters(clickedPoint, pathPoints[i], pathPoints[i + 1]);
+        if (segmentDistance < nearestDistance) {
+          nearestDistance = segmentDistance;
+          nearestIndex = i;
+        }
+      }
+
+      pathPoints.splice(nearestIndex + 1, 0, clickedPoint);
+      renderStaticRoute(pathPoints);
+      updateRouteSummary();
+      refreshEditMarkers();
+      showRouteStatus('새 편집 포인트가 추가되었습니다.');
+      setTimeout(() => hideRouteStatus(), 850);
     }
 
     function resetEditRoute() {
@@ -543,11 +793,18 @@
       }
 
       buildDefaultPath();
-      clearEditMarkers();
+      renderStaticRoute(pathPoints);
+      updateRouteSummary();
+
       if (isEditMode) {
-        createEditMarkers();
+        refreshEditMarkers();
+      } else {
+        clearEditMarkers();
       }
-      drawCustomRoute();
+
+      showRouteStatus('편집 경로가 기본 상태로 초기화되었습니다.');
+      setTimeout(() => hideRouteStatus(), 900);
+      revealMetricAnimation();
     }
 
     function calculateFuelCost() {
@@ -577,6 +834,7 @@
       document.getElementById('tripDistanceText').textContent = `${currentRouteDistanceKm.toFixed(2)} km`;
       document.getElementById('usedFuelText').textContent = fuelType === '전기' ? `${usedFuel.toFixed(2)} kWh` : `${usedFuel.toFixed(2)} L`;
       document.getElementById('fuelCostText').textContent = `${formatNumber(Math.round(currentFuelCost))} 원`;
+      revealMetricAnimation();
     }
 
     function countWeekdaysInclusive(startDate, endDate) {
