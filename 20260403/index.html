@@ -136,8 +136,11 @@
     }
 
     .result-grid-2 {
-      border-top: 1px solid #e5e7eb;
-      padding-top: 6px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      text-align: center;
+      margin-top: 6px;
+      gap: 8px;
     }
     .result-col {
       padding: 6px 4px;
@@ -335,11 +338,11 @@
       <!-- 2부제 / 5부제 -->
       <div class="result-grid-2">
         <div class="result-col">
-          <div class="label">2부제</div>
+          <div class="label">2부제 적용일수</div>
           <div class="value" id="rule2DaysText">-</div>
         </div>
         <div class="result-col">
-          <div class="label">5부제</div>
+          <div class="label">5부제 적용일수</div>
           <div class="value" id="rule5DaysText">-</div>
         </div>
       </div>
@@ -347,11 +350,11 @@
       <!-- 절감 -->
       <div class="result-grid-2">
       <div class="result-col">
-      <div class="label">절감(2부제)</div>
+      <div class="label">2부제 절감액)</div>
       <div class="value" id="saving2Text">-</div>
       </div>
     <div class="result-col">
-      <div class="label">절감(5부제)</div>
+      <div class="label">5부제 절감액</div>
       <div class="value" id="saving5Text">-</div>
     </div>
   </div>
