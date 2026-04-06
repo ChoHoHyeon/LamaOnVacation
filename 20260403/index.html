@@ -255,6 +255,7 @@
     let pathPoints = [];
     let isEditMode = false;
     let editMarkers = [];
+    let detailMarkers = []; 
     let suggestTimer = null;
     let routeAnimTimer = null;
 
@@ -709,6 +710,7 @@
         });
 
         editMarkers.push(marker);
+        createDetailHandles(); 
       }
     }
 
@@ -724,12 +726,14 @@
       if (isEditMode) {
         renderStaticRoute(pathPoints);
         refreshEditMarkers();
+        createDetailHandles();
         updateRouteSummary();
         btn.textContent = '편집완료';
         showRouteStatus('선편집 모드입니다. 빨간 경로선을 더블클릭하면 새 포인트가 추가됩니다.');
         setTimeout(() => hideRouteStatus(), 1400);
       } else {
         clearEditMarkers();
+        clearDetailMarkers(); 
         btn.textContent = '선편집';
         renderStaticRoute(pathPoints);
         updateRouteSummary();
@@ -793,6 +797,7 @@
       }
 
       buildDefaultPath();
+      clearDetailMarkers(); 
       renderStaticRoute(pathPoints);
       updateRouteSummary();
 
@@ -849,6 +854,40 @@
       return count;
     }
 
+    function clearDetailMarkers(){
+  detailMarkers.forEach(m=>m.setMap(null));
+  detailMarkers=[];
+}
+
+  function createDetailHandles(){
+    clearDetailMarkers();
+    if(!isEditMode) return;
+
+    for(let i=0;i<pathPoints.length-1;i++){
+      const mid = interpolateLatLng(pathPoints[i], pathPoints[i+1], 0.5);
+
+      const marker = new naver.maps.Marker({
+        position: mid,
+        map,
+        draggable:true,
+        icon:{
+          content:`<div style="width:14px;height:14px;background:#60a5fa;border:2px solid white;border-radius:50%;opacity:0.7"></div>`,
+          anchor:new naver.maps.Point(7,7)
+        }
+      });
+
+      naver.maps.Event.addListener(marker,'drag',function(e){
+        pathPoints.splice(i+1,0,e.coord);
+        renderStaticRoute(pathPoints);
+        refreshEditMarkers();
+        createDetailHandles();
+      });
+
+      detailMarkers.push(marker);
+    }
+  }
+
+    
     function calculateSaving() {
       if (!currentFuelCost || currentFuelCost <= 0) {
         alert('먼저 유류비를 계산하세요.');
