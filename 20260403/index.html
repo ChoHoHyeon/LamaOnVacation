@@ -108,9 +108,7 @@
       </div>
 
       <div id="routeSummaryBox" class="result-box metrics-animated">
-        <div class="result-item"><span>거리</span><strong id="distanceText">-</strong></div>
-        <div class="result-item"><span>예상 시간</span><strong id="durationText">-</strong></div>
-        <div class="result-item"><span>통행료</span><strong id="tollText">-</strong></div>
+        <div class="result-item"><span>거리</span><strong id="distanceText">-</strong></div>        
       </div>
 
       <h2>2. 유류비 계산</h2>
@@ -654,8 +652,6 @@
       const tollFare = 0;
 
       document.getElementById('distanceText').textContent = `${currentRouteDistanceKm.toFixed(2)} km`;
-      document.getElementById('durationText').textContent = `${durationMin} 분 (추정)`;
-      document.getElementById('tollText').textContent = `${formatNumber(tollFare)} 원`;
       document.getElementById('tripDistanceText').textContent = `${currentRouteDistanceKm.toFixed(2)} km`;
 
       const efficiency = parseFloat(document.getElementById('efficiency').value);
