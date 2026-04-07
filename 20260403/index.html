@@ -97,7 +97,6 @@
       gap: 10px;
     }
 
-    
     .compact-field {
       margin-bottom: 8px;
     }
@@ -187,69 +186,64 @@
       margin-bottom: 10px;
     }
 
-   
-.rule-top-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin: 10px 0 14px;
-  flex-wrap: wrap;
-}
+    .rule-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin: 10px 0 14px;
+      flex-wrap: wrap;
+    }
 
-.rule-check-group {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  flex-wrap: wrap;
-}
+    .rule-check-group {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
 
-.rule-check-group label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  margin: 0;
-}
+    .rule-check-group label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      margin: 0;
+    }
 
-.digit-inline {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+    .digit-inline {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
 
-   
-.digit-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: #111827;
-  white-space: nowrap;
-}
+    .digit-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #111827;
+      white-space: nowrap;
+    }
 
-.digit-inline select {
-  width: 72px;
-  min-width: 0;
-}
+    .digit-inline select {
+      width: 72px;
+      min-width: 0;
+    }
 
-.date-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 12px;
-}
+    .date-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
 
-.date-row .field {
-  margin-bottom: 0;
-}
+    .date-row .field {
+      margin-bottom: 0;
+    }
 
-.date-row input[type="date"] {
-  width: 100%;
-  min-width: 0;
-}
-
-
-    
+    .date-row input[type="date"] {
+      width: 100%;
+      min-width: 0;
+    }
   </style>
   <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=s95475emm3&submodules=geocoder"></script>
 </head>
@@ -265,7 +259,7 @@
           <label for="startAddress">거주지 주소</label>
           <div class="row" style="position:relative;">
             <div style="flex:1; position:relative;">
-              <input id="startAddress" type="text" placeholder="예: 대구광역시 달서구 ..." autocomplete="off" oninput="handleAddressInput('start')" onfocus="handleAddressInput('start')" />
+              <input id="startAddress" type="text" placeholder="예: 대구광역시 달서구 감삼로 123" autocomplete="off" oninput="handleAddressInput('start')" onfocus="handleAddressInput('start')" />
               <div id="startSuggestions" style="display:none; position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #d1d5db; border-radius:10px; margin-top:4px; box-shadow:0 8px 20px rgba(0,0,0,.08); z-index:1000; max-height:220px; overflow-y:auto;"></div>
             </div>
             <button class="btn-search" type="button" onclick="searchStart()">검색</button>
@@ -276,7 +270,7 @@
           <label for="goalAddress">목적지 주소</label>
           <div class="row" style="position:relative;">
             <div style="flex:1; position:relative;">
-              <input id="goalAddress" type="text" placeholder="예: 달성군청" autocomplete="off" oninput="handleAddressInput('goal')" onfocus="handleAddressInput('goal')" />
+              <input id="goalAddress" type="text" placeholder="예: 죽전역 또는 달성군청" autocomplete="off" oninput="handleAddressInput('goal')" onfocus="handleAddressInput('goal')" />
               <div id="goalSuggestions" style="display:none; position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #d1d5db; border-radius:10px; margin-top:4px; box-shadow:0 8px 20px rgba(0,0,0,.08); z-index:1000; max-height:220px; overflow-y:auto;"></div>
             </div>
             <button class="btn-search" type="button" onclick="searchGoal()">검색</button>
@@ -356,84 +350,83 @@
         </div>
       </div>
 
-<div class="section-card">
-  <h2>3. 2부제 / 5부제 절감비용 계산</h2>
+      <div class="section-card">
+        <h2>3. 2부제 / 5부제 절감비용 계산</h2>
 
-  <div class="desc">
-    <b>평일 기준</b> <b>1일 유류비(왕복) </b> 기준으로 산정합니다.
-  </div>
+        <div class="desc">
+          <b>평일 기준</b> <b>1일 유류비(왕복) </b> 기준으로 산정합니다.
+        </div>
 
-  <!-- 🔥 상단 조건 영역 -->
-  <div class="rule-top-row">
-  <div class="rule-check-group">
-    <label><input type="checkbox" id="rule2" /> 2부제</label>
-    <label><input type="checkbox" id="rule5" /> 5부제</label>
-  </div>
+        <div class="rule-top-row">
+          <div class="rule-check-group">
+            <label><input type="checkbox" id="rule2" /> 2부제</label>
+            <label><input type="checkbox" id="rule5" /> 5부제</label>
+          </div>
 
-  <div class="digit-inline">
-    <span class="digit-label">자동차 끝번호</span>
-    <select id="carLastDigit">
-      <option value="">선택</option>
-      <option value="0">0</option>
-      <option value="1">1</option>
-      <option value="2">2</option>
-      <option value="3">3</option>
-      <option value="4">4</option>
-      <option value="5">5</option>
-      <option value="6">6</option>
-      <option value="7">7</option>
-      <option value="8">8</option>
-      <option value="9">9</option>
-    </select>
-  </div>
-</div>
+          <div class="digit-inline">
+            <span class="digit-label">자동차 끝번호</span>
+            <select id="carLastDigit">
+              <option value="">선택</option>
+              <option value="0">0</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+              <option value="7">7</option>
+              <option value="8">8</option>
+              <option value="9">9</option>
+            </select>
+          </div>
+        </div>
 
-<div class="date-row">
-  <div class="field compact-field">
-    <label for="startDate">시작 날짜</label>
-    <input id="startDate" type="date" />
-  </div>
+        <div class="date-row">
+          <div class="field compact-field">
+            <label for="startDate">시작 날짜</label>
+            <input id="startDate" type="date" />
+          </div>
 
-  <div class="field compact-field">
-    <label for="endDate">종료 날짜</label>
-    <input id="endDate" type="date" />
-  </div>
-</div>
+          <div class="field compact-field">
+            <label for="endDate">종료 날짜</label>
+            <input id="endDate" type="date" />
+          </div>
+        </div>
 
-  <div class="field">
-    <button class="btn-calc" type="button" onclick="calculateSaving()">절감비용 계산하기</button>
-  </div>
+        <div class="field">
+          <button class="btn-calc" type="button" onclick="calculateSaving()">절감비용 계산하기</button>
+        </div>
 
-  <div class="result-box">
-    <div class="result-single">
-      <div class="label">평일수</div>
-      <div class="value" id="weekdayCountText">-</div>
-    </div>
+        <div class="result-box">
+          <div class="result-single">
+            <div class="label">평일수</div>
+            <div class="value" id="weekdayCountText">-</div>
+          </div>
 
-    <div class="result-grid-2">
-      <div class="result-col">
-        <div class="label">2부제 적용일수</div>
-        <div class="value" id="rule2DaysText">-</div>
+          <div class="result-grid-2">
+            <div class="result-col">
+              <div class="label">2부제 적용일수</div>
+              <div class="value" id="rule2DaysText">-</div>
+            </div>
+            <div class="result-col">
+              <div class="label">5부제 적용일수</div>
+              <div class="value" id="rule5DaysText">-</div>
+            </div>
+          </div>
+
+          <div class="result-grid-2">
+            <div class="result-col">
+              <div class="label">2부제 절감액</div>
+              <div class="value" id="saving2Text">-</div>
+            </div>
+            <div class="result-col">
+              <div class="label">5부제 절감액</div>
+              <div class="value" id="saving5Text">-</div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="result-col">
-        <div class="label">5부제 적용일수</div>
-        <div class="value" id="rule5DaysText">-</div>
-      </div>
-    </div>
-
-    <div class="result-grid-2">
-      <div class="result-col">
-        <div class="label">2부제 절감액</div>
-        <div class="value" id="saving2Text">-</div>
-      </div>
-      <div class="result-col">
-        <div class="label">5부제 절감액</div>
-        <div class="value" id="saving5Text">-</div>
-      </div>
-    </div>
-  </div>
-</div>
- </aside>
+    </aside>
 
     <section class="map-wrap">
       <div id="map"></div>
@@ -466,17 +459,19 @@
     const DEFAULT_MAIN_RATIOS = [0.25, 0.5, 0.75];
 
     async function fetchLocalSearchResults(query) {
-      const res = await fetch(`/api/local-search?q=${encodeURIComponent(query)}`);
-      if (!res.ok) return [];
-
-      const data = await res.json();
-      if (!data.items) return [];
-
-      return data.items.map(item => ({
-        label: stripHtml(item.title || ''),
-        address: item.roadAddress || item.address || '',
-        sub: [item.category, item.roadAddress || item.address].filter(Boolean).join(' · ')
-      })).filter(item => item.address);
+      try {
+        const res = await fetch(`/api/local-search?q=${encodeURIComponent(query)}`);
+        if (!res.ok) return [];
+        const data = await res.json();
+        if (!data.items) return [];
+        return data.items.map(item => ({
+          label: stripHtml(item.title || ''),
+          address: item.roadAddress || item.address || '',
+          sub: [item.category, item.roadAddress || item.address].filter(Boolean).join(' · ')
+        })).filter(item => item.address);
+      } catch (e) {
+        return [];
+      }
     }
 
     function stripHtml(text) {
@@ -484,24 +479,29 @@
       div.innerHTML = text || '';
       return div.textContent || div.innerText || '';
     }
-    
+
     const customPlaceAliases = [
       { keyword: '달성군청', address: '대구광역시 달성군 논공읍 달성군청로 33', label: '달성군청' },
       { keyword: '달성군청역', address: '대구광역시 달성군 논공읍 달성군청로 33 인근', label: '달성군청역 인근' },
       { keyword: '상인화성파크드림', address: '대구광역시 달서구 송현로7길 9 상인화성파크드림', label: '상인화성파크드림' },
       { keyword: '대구수목원', address: '대구광역시 달서구 화암로 342', label: '대구수목원' },
       { keyword: '대구교도소', address: '대구광역시 달성군 하빈면 하빈로 455', label: '대구교도소' },
-      { keyword: '현풍테크노폴리스', address: '대구광역시 달성군 유가읍 테크노대로 일원', label: '현풍테크노폴리스' }
+      { keyword: '현풍테크노폴리스', address: '대구광역시 달성군 유가읍 테크노대로 일원', label: '현풍테크노폴리스' },
+
+      { keyword: '죽전역', address: '대구광역시 달서구 와룡로 169', label: '죽전역' },
+      { keyword: '감삼역', address: '대구광역시 달서구 달구벌대로 1545', label: '감삼역' },
+      { keyword: '용산역', address: '대구광역시 달서구 달구벌대로 1476', label: '용산역' },
+      { keyword: '두류역', address: '대구광역시 달서구 달구벌대로 1760', label: '두류역' },
+
+      { keyword: '감삼동', address: '대구광역시 달서구 감삼동', label: '감삼동' },
+      { keyword: '달서구청', address: '대구광역시 달서구 학산로 45', label: '달서구청' },
+      { keyword: '계명대학교 동산병원', address: '대구광역시 달서구 달구벌대로 1035', label: '계명대학교 동산병원' },
+
+      { keyword: '감삼로 123', address: '대구광역시 달서구 감삼로 123', label: '감삼로 123' },
+      { keyword: '감삼북로 56', address: '대구광역시 달서구 감삼북로 56', label: '감삼북로 56' },
+      { keyword: '와룡로 169', address: '대구광역시 달서구 와룡로 169', label: '와룡로 169' }
     ];
 
-
-
-
-
-
-
-
-    
     function initMap() {
       map = new naver.maps.Map('map', {
         center: new naver.maps.LatLng(35.8714, 128.6014),
@@ -610,7 +610,6 @@
       return result;
     }
 
-  
     function getCurvePointOnSegment(points, index, t = 0.5) {
       const pts = normalizePath(points);
       if (pts.length < 2 || index < 0 || index >= pts.length - 1) {
@@ -642,7 +641,6 @@
       return new naver.maps.LatLng(lat, lng);
     }
 
-   
     function createMarkerIcon(color) {
       return {
         content: `<div style="width:16px;height:16px;background:${color};border:2px solid white;border-radius:50%;box-shadow:0 0 6px rgba(0,0,0,.25);"></div>`,
@@ -706,7 +704,6 @@
       document.getElementById('coordInfo').value = `${startText} | ${goalText}`;
     }
 
-
     function normalizeSearchKeyword(text) {
       return (text || '')
         .trim()
@@ -716,85 +713,133 @@
         .trim();
     }
 
-    
-   function searchAddress(address, type) {
-  const rawQuery = (address || '').trim();
-  if (!rawQuery) {
-    alert(type === 'start' ? '거주지 주소를 입력하세요.' : '목적지 주소를 입력하세요.');
-    return;
-  }
+    function normalizeAddressQuery(q) {
+      let query = (q || '').trim();
+      if (!query) return '';
 
-  const normalizedQuery = normalizeSearchKeyword(rawQuery);
+      query = query.replace(/\s+/g, ' ').trim();
 
-  const aliasMatch = customPlaceAliases.find(item =>
-    item.keyword.includes(normalizedQuery) ||
-    item.address.includes(normalizedQuery) ||
-    normalizedQuery.includes(item.keyword)
-  );
-
-  const tryQueries = [];
-  if (aliasMatch) tryQueries.push(aliasMatch.address);
-  tryQueries.push(rawQuery);
-  if (normalizedQuery !== rawQuery) tryQueries.push(normalizedQuery);
-
-  const uniqueQueries = [...new Set(tryQueries.filter(Boolean))];
-
-  function applyGeocodeResult(item, originalQuery) {
-    const lat = parseFloat(item.y);
-    const lng = parseFloat(item.x);
-    const latlng = new naver.maps.LatLng(lat, lng);
-    const addressText = item.roadAddress || item.jibunAddress || originalQuery;
-
-    if (type === 'start') {
-      startCoord = { lat, lng, address: addressText };
-      if (startMarker) startMarker.setMap(null);
-      startMarker = new naver.maps.Marker({
-        position: latlng,
-        map,
-        title: '출발지',
-        icon: createMarkerIcon('#ef4444')
-      });
-    } else {
-      goalCoord = { lat, lng, address: addressText };
-      if (goalMarker) goalMarker.setMap(null);
-      goalMarker = new naver.maps.Marker({
-        position: latlng,
-        map,
-        title: '목적지',
-        icon: createMarkerIcon('#ef4444')
-      });
-    }
-
-    updateCoordInfo();
-    map.setCenter(latlng);
-  }
-
-  function tryNext(index) {
-    if (index >= uniqueQueries.length) {
-      alert('검색 결과가 없습니다. 자동완성 목록에서 선택하거나 도로명/건물명을 더 구체적으로 입력해보세요.');
-      return;
-    }
-
-    const query = uniqueQueries[index];
-
-    naver.maps.Service.geocode({ query }, function(status, response) {
-      if (
-        status === naver.maps.Service.Status.OK &&
-        response.v2 &&
-        response.v2.addresses &&
-        response.v2.addresses.length > 0
-      ) {
-        applyGeocodeResult(response.v2.addresses[0], query);
-      } else {
-        tryNext(index + 1);
+      if (!query.includes('대구') && (query.includes('달서구') || query.includes('달성군') || query.includes('수성구') || query.includes('중구') || query.includes('동구') || query.includes('북구') || query.includes('서구') || query.includes('남구'))) {
+        query = '대구광역시 ' + query;
       }
-    });
-  }
 
-  tryNext(0);
-}
+      if (query === '달성군청') query = '대구광역시 달성군 논공읍 달성군청로 33';
+      if (query === '죽전역') query = '대구광역시 달서구 와룡로 169';
+      if (query === '감삼역') query = '대구광역시 달서구 달구벌대로 1545';
+      if (query === '용산역') query = '대구광역시 달서구 달구벌대로 1476';
+      if (query === '두류역') query = '대구광역시 달서구 달구벌대로 1760';
+      if (query === '달서구청') query = '대구광역시 달서구 학산로 45';
+      if (query === '계명대학교 동산병원') query = '대구광역시 달서구 달구벌대로 1035';
 
-    
+      return query;
+    }
+
+    function buildSearchCandidates(rawAddress) {
+      const rawQuery = (rawAddress || '').trim();
+      const normalizedRaw = normalizeSearchKeyword(rawQuery);
+      const correctedQuery = normalizeAddressQuery(rawQuery);
+      const normalizedCorrected = normalizeSearchKeyword(correctedQuery);
+
+      const tryQueries = [];
+
+      const aliasMatches = customPlaceAliases.filter(item => {
+        const keyword = normalizeSearchKeyword(item.keyword);
+        const address = normalizeSearchKeyword(item.address);
+
+        return (
+          keyword.includes(normalizedRaw) ||
+          address.includes(normalizedRaw) ||
+          normalizedRaw.includes(keyword) ||
+          keyword.includes(normalizedCorrected) ||
+          address.includes(normalizedCorrected) ||
+          normalizedCorrected.includes(keyword)
+        );
+      });
+
+      aliasMatches.forEach(item => tryQueries.push(item.address));
+      tryQueries.push(rawQuery);
+      tryQueries.push(correctedQuery);
+      tryQueries.push(normalizedRaw);
+      tryQueries.push(normalizedCorrected);
+
+      if (/^(달서구|달성군|수성구|중구|동구|북구|서구|남구)\s/.test(rawQuery) && !rawQuery.includes('대구')) {
+        tryQueries.push('대구광역시 ' + rawQuery);
+      }
+
+      if (/동$/.test(rawQuery) && !rawQuery.includes('대구')) {
+        tryQueries.push('대구광역시 ' + rawQuery);
+      }
+
+      return [...new Set(tryQueries.map(v => (v || '').trim()).filter(Boolean))];
+    }
+
+    function searchAddress(address, type) {
+      const rawInput = (address || '').trim();
+
+      if (!rawInput) {
+        alert(type === 'start' ? '거주지 주소를 입력하세요.' : '목적지 주소를 입력하세요.');
+        return;
+      }
+
+      const tryQueries = buildSearchCandidates(rawInput);
+
+      function applyGeocodeResult(item, originalQuery) {
+        const lat = parseFloat(item.y);
+        const lng = parseFloat(item.x);
+        const latlng = new naver.maps.LatLng(lat, lng);
+        const addressText = item.roadAddress || item.jibunAddress || originalQuery;
+
+        if (type === 'start') {
+          startCoord = { lat, lng, address: addressText };
+          if (startMarker) startMarker.setMap(null);
+          startMarker = new naver.maps.Marker({
+            position: latlng,
+            map,
+            title: '출발지',
+            icon: createMarkerIcon('#ef4444')
+          });
+          document.getElementById('startAddress').value = addressText;
+        } else {
+          goalCoord = { lat, lng, address: addressText };
+          if (goalMarker) goalMarker.setMap(null);
+          goalMarker = new naver.maps.Marker({
+            position: latlng,
+            map,
+            title: '목적지',
+            icon: createMarkerIcon('#ef4444')
+          });
+          document.getElementById('goalAddress').value = addressText;
+        }
+
+        updateCoordInfo();
+        map.setCenter(latlng);
+      }
+
+      function tryNext(index) {
+        if (index >= tryQueries.length) {
+          alert('검색 결과가 없습니다.\n예: 대구광역시 달서구 감삼로 123\n또는 죽전역, 달성군청처럼 더 구체적으로 입력해보세요.');
+          return;
+        }
+
+        const query = tryQueries[index];
+
+        naver.maps.Service.geocode({ query }, function(status, response) {
+          if (
+            status === naver.maps.Service.Status.OK &&
+            response.v2 &&
+            response.v2.addresses &&
+            response.v2.addresses.length > 0
+          ) {
+            applyGeocodeResult(response.v2.addresses[0], query);
+          } else {
+            tryNext(index + 1);
+          }
+        });
+      }
+
+      tryNext(0);
+    }
+
     function searchStart() { searchAddress(document.getElementById('startAddress').value, 'start'); }
     function searchGoal() { searchAddress(document.getElementById('goalAddress').value, 'goal'); }
 
@@ -835,22 +880,33 @@
 
     async function handleAddressInput(type) {
       const input = document.getElementById(type === 'start' ? 'startAddress' : 'goalAddress');
-      const query = input.value.trim();
+      const rawQuery = input.value.trim();
       clearTimeout(suggestTimer);
 
-      if (query.length < 1) {
+      if (rawQuery.length < 1) {
         hideSuggestions(type);
         return;
       }
 
       suggestTimer = setTimeout(async () => {
+        const correctedQuery = normalizeAddressQuery(rawQuery);
+        const normalizedRaw = normalizeSearchKeyword(rawQuery);
+        const normalizedCorrected = normalizeSearchKeyword(correctedQuery);
+
         const localMatches = customPlaceAliases
-          .filter(item =>
-            item.keyword.includes(query) ||
-            item.address.includes(query) ||
-            query.includes(item.keyword)
-          )
-          .slice(0, 5)
+          .filter(item => {
+            const keyword = normalizeSearchKeyword(item.keyword);
+            const address = normalizeSearchKeyword(item.address);
+            return (
+              keyword.includes(normalizedRaw) ||
+              address.includes(normalizedRaw) ||
+              normalizedRaw.includes(keyword) ||
+              keyword.includes(normalizedCorrected) ||
+              address.includes(normalizedCorrected) ||
+              normalizedCorrected.includes(keyword)
+            );
+          })
+          .slice(0, 8)
           .map(item => ({
             label: item.label,
             address: item.address,
@@ -858,10 +914,8 @@
           }));
 
         let apiResults = [];
-        try {
-          apiResults = await fetchLocalSearchResults(query);
-        } catch (e) {
-          console.error('지역 검색 실패:', e);
+        if (rawQuery.length >= 2) {
+          apiResults = await fetchLocalSearchResults(correctedQuery);
         }
 
         const merged = [];
@@ -876,7 +930,7 @@
         });
 
         renderSuggestions(type, merged.slice(0, 8));
-      }, 200);
+      }, 180);
     }
 
     function buildDefaultRouteState() {
@@ -998,10 +1052,6 @@
       }
       totalDistanceM *= ROUTE_DETOUR_FACTOR;
       currentRouteDistanceKm = totalDistanceM / 1000;
-
-      const avgSpeedKmH = 40;
-      const durationMin = Math.max(1, Math.round((currentRouteDistanceKm / avgSpeedKmH) * 60));
-      const tollFare = 0;
 
       document.getElementById('distanceText').textContent = `${currentRouteDistanceKm.toFixed(2)} km`;
       document.getElementById('tripDistanceText').textContent = `${currentRouteDistanceKm.toFixed(2)} km`;
@@ -1232,18 +1282,6 @@
       document.getElementById('usedFuelText').textContent = fuelType === '전기' ? `${usedFuel.toFixed(2)} kWh` : `${usedFuel.toFixed(2)} L`;
       document.getElementById('fuelCostText').textContent = `${formatNumber(Math.round(currentFuelCost))} 원`;
       revealMetricAnimation();
-    }
-
-    function countWeekdaysInclusive(startDate, endDate) {
-      let count = 0;
-      const current = new Date(startDate);
-      const end = new Date(endDate);
-      while (current <= end) {
-        const day = current.getDay();
-        if (day >= 1 && day <= 5) count++;
-        current.setDate(current.getDate() + 1);
-      }
-      return count;
     }
 
     function isRule2Restricted(date, lastDigit) {
