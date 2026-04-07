@@ -311,8 +311,11 @@
           <div class="field compact-field">
             <label for="fuelPrice">현재 연료 가격</label>
             <input id="fuelPrice" type="number" min="0" step="1" value="1700" placeholder="원/L 또는 원/kWh" />
+  
+            <button type="button" onclick="loadFuelPrice()" class="btn-sub" style="margin-top:6px;">
+              현재 유가 불러오기
+            </button>
           </div>
-        </div>
 
         <div class="compact-check">
           <label>
