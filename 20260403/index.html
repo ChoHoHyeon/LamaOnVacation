@@ -311,11 +311,8 @@
           <div class="field compact-field">
             <label for="fuelPrice">현재 연료 가격</label>
             <input id="fuelPrice" type="number" min="0" step="1" value="1700" placeholder="원/L 또는 원/kWh" />
-  
-            <button type="button" onclick="loadFuelPrice()" class="btn-sub" style="margin-top:6px;">
-              현재 유가 불러오기
-            </button>
           </div>
+        </div>
 
         <div class="compact-check">
           <label>
@@ -1577,58 +1574,6 @@
       document.getElementById('saving5Text').textContent = useRule5 ? `${formatNumber(Math.round(saving5))} 원` : '-';
     }
 
-
-async function loadFuelPrice() {
-  const API_KEY = "F260407810"; // 너 키
-
-  try {
-    const url = `https://www.opinet.co.kr/api/avgAllPrice.do?out=json&certkey=${API_KEY}`;
-
-    const res = await fetch(url);
-    const data = await res.json();
-
-    console.log("오피넷 응답:", data);
-
-    const oils = data?.RESULT?.OIL || [];
-
-    const fuelType = document.getElementById("fuelType").value;
-
-    const prodMap = {
-      "휘발유": "B027",
-      "경유": "D047",
-      "LPG": "K015"
-    };
-
-    const prodCd = prodMap[fuelType];
-    const target = oils.find(o => o.PRODCD === prodCd);
-
-    if (!target) {
-      alert("유가 데이터를 찾지 못했습니다.");
-      return;
-    }
-
-    document.getElementById("fuelPrice").value = Math.round(Number(target.PRICE));
-
-    alert(`${fuelType} 현재 평균가 불러오기 성공`);
-  } catch (err) {
-    console.error("오피넷 실패:", err);
-    alert("❌ API 호출 실패 (CORS일 가능성 매우 높음)");
-  }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
     function bindAddressInput(type) {
       const input = document.getElementById(type === 'start' ? 'startAddress' : 'goalAddress');
       input.addEventListener('input', () => handleAddressInput(type));
