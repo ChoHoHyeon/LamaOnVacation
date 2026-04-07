@@ -18,7 +18,7 @@
     .panel { background: #fff; border-right: 1px solid #e5e7eb; padding: 20px; overflow-y: auto; }
     .map-wrap { position: relative; background: #eef2f7; }
     #map { width: 100%; height: 100vh; }
-    h1 { margin: 0 0 16px; font-size: 24px; text-align: center; font-weight: 700; letter-spacing: -0.3px; color: #111827;}
+    h1 { margin: 0 0 16px; font-size: 24px; text-align: center; font-weight: 700; letter-spacing: -0.3px; color: #111827; }
     h2 { margin: 2px 0 10px; font-size: 18px; border-left: 4px solid #22c55e; padding-left: 8px; }
     .desc { font-size: 13px; line-height: 1.55; color: #555; margin-bottom: 14px; }
     .field { margin-bottom: 12px; }
@@ -45,12 +45,6 @@
 
     .result-item { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px dashed #e5e7eb; font-size: 14px; }
     .result-item:last-child { border-bottom: none; }
-    .muted { color: #6b7280; font-size: 12px; }
-    .hr { height: 1px; background: #e5e7eb; margin: 18px 0; }
-    .checkbox-group { display: flex; gap: 16px; flex-wrap: wrap; margin: 8px 0 14px; }
-    .checkbox-group label { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; }
-    .badge { display: inline-block; font-size: 12px; background: #eef2ff; color: #3730a3; padding: 4px 8px; border-radius: 999px; margin-bottom: 12px; }
-    .warning { background: #fff7ed; border: 1px solid #fdba74; color: #9a3412; padding: 12px; border-radius: 10px; font-size: 13px; line-height: 1.5; margin-top: 12px; }
     .btn-group { display: flex; gap: 8px; margin-top: 10px; }
 
     .metrics-animated {
@@ -58,7 +52,6 @@
       transform: translateY(0);
       transition: opacity .35s ease, transform .35s ease;
     }
-
     .metrics-animated.show {
       opacity: 1;
       transform: translateY(0);
@@ -75,7 +68,7 @@
     .map-hint {
       position: absolute; bottom: 18px; left: 18px; background: rgba(255,255,255,.92);
       color: #374151; font-size: 12px; padding: 9px 12px; border-radius: 12px;
-      box-shadow: 0 10px 24px rgba(0,0,0,.08); z-index: 20; backdrop-filter: blur(6px); max-width: 360px;
+      box-shadow: 0 10px 24px rgba(0,0,0,.08); z-index: 20; backdrop-filter: blur(6px); max-width: 400px;
     }
 
     @media (max-width: 960px) {
@@ -91,20 +84,8 @@
       gap: 10px;
     }
 
-    .form-grid-3 {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 10px;
-    }
-
-    .compact-field {
-      margin-bottom: 8px;
-    }
-
-    .compact-check {
-      margin-top: 6px;
-    }
-
+    .compact-field { margin-bottom: 8px; }
+    .compact-check { margin-top: 6px; }
     .compact-check label {
       display: flex;
       align-items: center;
@@ -115,10 +96,7 @@
     }
 
     @media (max-width: 960px) {
-      .form-grid-2 {
-        grid-template-columns: 1fr;
-        gap: 8px;
-      }
+      .form-grid-2 { grid-template-columns: 1fr; gap: 8px; }
     }
 
     .section-card {
@@ -127,9 +105,7 @@
       padding: 14px 16px 16px;
       margin-bottom: 18px;
       border: 1px solid rgba(0, 0, 0, 0.06);
-      box-shadow:
-        0 2px 6px rgba(0, 0, 0, 0.04),
-        0 8px 20px rgba(0, 0, 0, 0.06);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04), 0 8px 20px rgba(0, 0, 0, 0.06);
     }
 
     .result-grid {
@@ -140,51 +116,13 @@
       align-items: start;
     }
 
-    .result-col {
-      padding: 6px 4px;
-    }
-
-    .result-col .label {
-      font-size: 12px;
-      color: #6b7280;
-      margin-bottom: 4px;
-    }
-
-    .result-col .value {
-      font-size: 16px;
-      font-weight: 700;
-      color: #111827;
-      line-height: 1.2;
-    }
-
-    .result-single {
-      text-align: center;
-      margin-bottom: 8px;
-    }
-
-    .result-grid-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      text-align: center;
-      margin-top: 6px;
-      gap: 8px;
-    }
-
-    .result-single .label {
-      font-size: 12px;
-      color: #6b7280;
-      margin-bottom: 2px;
-    }
-
-    .result-single .value {
-      font-size: 16px;
-      font-weight: 700;
-      color: #111827;
-    }
-
-    .button-group {
-      margin-bottom: 10px;
-    }
+    .result-col { padding: 6px 4px; }
+    .result-col .label { font-size: 12px; color: #6b7280; margin-bottom: 4px; }
+    .result-col .value { font-size: 16px; font-weight: 700; color: #111827; line-height: 1.2; }
+    .result-single { text-align: center; margin-bottom: 8px; }
+    .result-grid-2 { display: grid; grid-template-columns: 1fr 1fr; text-align: center; margin-top: 6px; gap: 8px; }
+    .result-single .label { font-size: 12px; color: #6b7280; margin-bottom: 2px; }
+    .result-single .value { font-size: 16px; font-weight: 700; color: #111827; }
 
     .rule-top-row {
       display: flex;
@@ -236,13 +174,42 @@
       margin-bottom: 12px;
     }
 
-    .date-row .field {
-      margin-bottom: 0;
+    .date-row .field { margin-bottom: 0; }
+    .date-row input[type="date"] { width: 100%; min-width: 0; }
+
+    .suggestion-box {
+      display: none;
+      position: absolute;
+      top: 100%; left: 0; right: 0;
+      background: #fff;
+      border: 1px solid #d1d5db;
+      border-radius: 12px;
+      margin-top: 4px;
+      box-shadow: 0 12px 24px rgba(0,0,0,.10);
+      z-index: 1000;
+      max-height: 260px;
+      overflow-y: auto;
     }
 
-    .date-row input[type="date"] {
-      width: 100%;
-      min-width: 0;
+    .suggestion-item {
+      padding: 10px 12px;
+      border-bottom: 1px solid #f1f5f9;
+      cursor: pointer;
+    }
+    .suggestion-item:last-child { border-bottom: none; }
+    .suggestion-item:hover,
+    .suggestion-item.active { background: #f8fafc; }
+    .suggestion-title { font-size: 14px; color: #111827; }
+    .suggestion-sub { font-size: 12px; color: #6b7280; margin-top: 2px; }
+    .tip-box {
+      margin-top: 10px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1d4ed8;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 12px;
+      line-height: 1.55;
     }
   </style>
   <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=s95475emm3&submodules=geocoder"></script>
@@ -259,8 +226,8 @@
           <label for="startAddress">거주지 주소</label>
           <div class="row" style="position:relative;">
             <div style="flex:1; position:relative;">
-              <input id="startAddress" type="text" placeholder="예: 대구광역시 달서구 감삼로 123" autocomplete="off" oninput="handleAddressInput('start')" onfocus="handleAddressInput('start')" />
-              <div id="startSuggestions" style="display:none; position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #d1d5db; border-radius:10px; margin-top:4px; box-shadow:0 8px 20px rgba(0,0,0,.08); z-index:1000; max-height:220px; overflow-y:auto;"></div>
+              <input id="startAddress" type="text" placeholder="예: 서울 강남구 테헤란로 152 / 잠실역 / 성남시 분당구 정자동" autocomplete="off" />
+              <div id="startSuggestions" class="suggestion-box"></div>
             </div>
             <button class="btn-search" type="button" onclick="searchStart()">검색</button>
           </div>
@@ -270,11 +237,17 @@
           <label for="goalAddress">목적지 주소</label>
           <div class="row" style="position:relative;">
             <div style="flex:1; position:relative;">
-              <input id="goalAddress" type="text" placeholder="예: 죽전역 또는 달성군청" autocomplete="off" oninput="handleAddressInput('goal')" onfocus="handleAddressInput('goal')" />
-              <div id="goalSuggestions" style="display:none; position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #d1d5db; border-radius:10px; margin-top:4px; box-shadow:0 8px 20px rgba(0,0,0,.08); z-index:1000; max-height:220px; overflow-y:auto;"></div>
+              <input id="goalAddress" type="text" placeholder="예: 부산역 / 서울시청 / 대전 유성구 대학로 99" autocomplete="off" />
+              <div id="goalSuggestions" class="suggestion-box"></div>
             </div>
             <button class="btn-search" type="button" onclick="searchGoal()">검색</button>
           </div>
+        </div>
+
+        <div class="tip-box">
+          부분 입력 시 선택지가 뜨도록 강화했지만, 현재 구조는 네이버 지도 앱의 지역검색 API를 직접 쓰는 방식이 아니라서<br>
+          <b>건물명·상호명 검색은 네이버 지도 앱 수준까지 완전히 같아질 수는 없습니다.</b><br>
+          그래도 도로명/지번/역명/청사명/행정구역 검색은 기존보다 훨씬 잘 잡히도록 보정했습니다.
         </div>
 
         <div class="field" style="display:none;">
@@ -282,7 +255,7 @@
           <input id="coordInfo" type="text" readonly value="출발지와 목적지를 검색하면 표시됩니다." />
         </div>
 
-        <div class="field">
+        <div class="field" style="margin-top:12px;">
           <button class="btn-route" type="button" onclick="drawDrivingRoute()">자동차 경로 표시</button>
         </div>
 
@@ -354,7 +327,7 @@
         <h2>3. 2부제 / 5부제 절감비용 계산</h2>
 
         <div class="desc">
-          <b>평일 기준</b> <b>1일 유류비(왕복) </b> 기준으로 산정합니다.
+          <b>평일 기준</b> <b>1일 유류비(왕복)</b> 기준으로 산정합니다.
         </div>
 
         <div class="rule-top-row">
@@ -386,7 +359,6 @@
             <label for="startDate">시작 날짜</label>
             <input id="startDate" type="date" />
           </div>
-
           <div class="field compact-field">
             <label for="endDate">종료 날짜</label>
             <input id="endDate" type="date" />
@@ -457,55 +429,50 @@
 
     const ROUTE_DETOUR_FACTOR = 1.05;
     const DEFAULT_MAIN_RATIOS = [0.25, 0.5, 0.75];
+    const inputState = {
+      start: { activeIndex: -1, items: [] },
+      goal: { activeIndex: -1, items: [] }
+    };
 
-    async function fetchLocalSearchResults(query) {
-      try {
-        const res = await fetch(`/api/local-search?q=${encodeURIComponent(query)}`);
-        if (!res.ok) return [];
-        const data = await res.json();
-        if (!data.items) return [];
-        return data.items.map(item => ({
-          label: stripHtml(item.title || ''),
-          address: item.roadAddress || item.address || '',
-          sub: [item.category, item.roadAddress || item.address].filter(Boolean).join(' · ')
-        })).filter(item => item.address);
-      } catch (e) {
-        return [];
-      }
-    }
+    const REGION_PREFIX_MAP = {
+      '서울': '서울특별시', '서울시': '서울특별시',
+      '부산': '부산광역시', '부산시': '부산광역시',
+      '대구': '대구광역시', '대구시': '대구광역시',
+      '인천': '인천광역시', '인천시': '인천광역시',
+      '광주': '광주광역시', '광주시': '광주광역시',
+      '대전': '대전광역시', '대전시': '대전광역시',
+      '울산': '울산광역시', '울산시': '울산광역시',
+      '세종': '세종특별자치시', '세종시': '세종특별자치시',
+      '경기': '경기도', '강원': '강원특별자치도', '충북': '충청북도', '충남': '충청남도',
+      '전북': '전북특별자치도', '전남': '전라남도', '경북': '경상북도', '경남': '경상남도', '제주': '제주특별자치도'
+    };
 
-    function stripHtml(text) {
-      const div = document.createElement('div');
-      div.innerHTML = text || '';
-      return div.textContent || div.innerText || '';
-    }
-
-    const customPlaceAliases = [
-      { keyword: '달성군청', address: '대구광역시 달성군 논공읍 달성군청로 33', label: '달성군청' },
-      { keyword: '달성군청역', address: '대구광역시 달성군 논공읍 달성군청로 33 인근', label: '달성군청역 인근' },
-      { keyword: '상인화성파크드림', address: '대구광역시 달서구 송현로7길 9 상인화성파크드림', label: '상인화성파크드림' },
-      { keyword: '대구수목원', address: '대구광역시 달서구 화암로 342', label: '대구수목원' },
-      { keyword: '대구교도소', address: '대구광역시 달성군 하빈면 하빈로 455', label: '대구교도소' },
-      { keyword: '현풍테크노폴리스', address: '대구광역시 달성군 유가읍 테크노대로 일원', label: '현풍테크노폴리스' },
-
-      { keyword: '죽전역', address: '대구광역시 달서구 와룡로 169', label: '죽전역' },
-      { keyword: '감삼역', address: '대구광역시 달서구 달구벌대로 1545', label: '감삼역' },
-      { keyword: '용산역', address: '대구광역시 달서구 달구벌대로 1476', label: '용산역' },
-      { keyword: '두류역', address: '대구광역시 달서구 달구벌대로 1760', label: '두류역' },
-
-      { keyword: '감삼동', address: '대구광역시 달서구 감삼동', label: '감삼동' },
-      { keyword: '달서구청', address: '대구광역시 달서구 학산로 45', label: '달서구청' },
-      { keyword: '계명대학교 동산병원', address: '대구광역시 달서구 달구벌대로 1035', label: '계명대학교 동산병원' },
-
-      { keyword: '감삼로 123', address: '대구광역시 달서구 감삼로 123', label: '감삼로 123' },
-      { keyword: '감삼북로 56', address: '대구광역시 달서구 감삼북로 56', label: '감삼북로 56' },
-      { keyword: '와룡로 169', address: '대구광역시 달서구 와룡로 169', label: '와룡로 169' }
+    const PLACE_ALIASES = [
+      { keyword: '서울시청', address: '서울특별시 중구 세종대로 110', label: '서울시청' },
+      { keyword: '부산시청', address: '부산광역시 연제구 중앙대로 1001', label: '부산시청' },
+      { keyword: '대구시청', address: '대구광역시 북구 연암로 40', label: '대구시청' },
+      { keyword: '인천시청', address: '인천광역시 남동구 정각로 29', label: '인천시청' },
+      { keyword: '광주시청', address: '광주광역시 서구 내방로 111', label: '광주시청' },
+      { keyword: '대전시청', address: '대전광역시 서구 둔산로 100', label: '대전시청' },
+      { keyword: '울산시청', address: '울산광역시 남구 중앙로 201', label: '울산시청' },
+      { keyword: '세종시청', address: '세종특별자치시 한누리대로 2130', label: '세종시청' },
+      { keyword: '서울역', address: '서울특별시 용산구 한강대로 405', label: '서울역' },
+      { keyword: '용산역', address: '서울특별시 용산구 한강대로23길 55', label: '용산역' },
+      { keyword: '강남역', address: '서울특별시 강남구 강남대로 396', label: '강남역' },
+      { keyword: '잠실역', address: '서울특별시 송파구 올림픽로 265', label: '잠실역' },
+      { keyword: '부산역', address: '부산광역시 동구 중앙대로 206', label: '부산역' },
+      { keyword: '대전역', address: '대전광역시 동구 중앙로 215', label: '대전역' },
+      { keyword: '동대구역', address: '대구광역시 동구 동대구로 550', label: '동대구역' },
+      { keyword: '수원역', address: '경기도 수원시 팔달구 덕영대로 924', label: '수원역' },
+      { keyword: '인천공항', address: '인천광역시 중구 공항로 272', label: '인천국제공항' },
+      { keyword: '김포공항', address: '서울특별시 강서구 하늘길 112', label: '김포공항' },
+      { keyword: '제주공항', address: '제주특별자치도 제주시 공항로 2', label: '제주공항' }
     ];
 
     function initMap() {
       map = new naver.maps.Map('map', {
-        center: new naver.maps.LatLng(35.8714, 128.6014),
-        zoom: 11
+        center: new naver.maps.LatLng(36.5, 127.8),
+        zoom: 7
       });
     }
 
@@ -537,13 +504,8 @@
       );
     }
 
-    function getStartLatLng() {
-      return new naver.maps.LatLng(startCoord.lat, startCoord.lng);
-    }
-
-    function getGoalLatLng() {
-      return new naver.maps.LatLng(goalCoord.lat, goalCoord.lng);
-    }
+    function getStartLatLng() { return new naver.maps.LatLng(startCoord.lat, startCoord.lng); }
+    function getGoalLatLng() { return new naver.maps.LatLng(goalCoord.lat, goalCoord.lng); }
 
     function getControlPoints() {
       if (!startCoord || !goalCoord) return [];
@@ -588,56 +550,26 @@
           const t2 = t * t;
           const t3 = t2 * t;
 
-          const lat = 0.5 * (
-            (2 * p1.lat()) +
-            (-p0.lat() + p2.lat()) * t +
-            (2 * p0.lat() - 5 * p1.lat() + 4 * p2.lat() - p3.lat()) * t2 +
-            (-p0.lat() + 3 * p1.lat() - 3 * p2.lat() + p3.lat()) * t3
-          );
-
-          const lng = 0.5 * (
-            (2 * p1.lng()) +
-            (-p0.lng() + p2.lng()) * t +
-            (2 * p0.lng() - 5 * p1.lng() + 4 * p2.lng() - p3.lng()) * t2 +
-            (-p0.lng() + 3 * p1.lng() - 3 * p2.lng() + p3.lng()) * t3
-          );
-
+          const lat = 0.5 * ((2 * p1.lat()) + (-p0.lat() + p2.lat()) * t + (2 * p0.lat() - 5 * p1.lat() + 4 * p2.lat() - p3.lat()) * t2 + (-p0.lat() + 3 * p1.lat() - 3 * p2.lat() + p3.lat()) * t3);
+          const lng = 0.5 * ((2 * p1.lng()) + (-p0.lng() + p2.lng()) * t + (2 * p0.lng() - 5 * p1.lng() + 4 * p2.lng() - p3.lng()) * t2 + (-p0.lng() + 3 * p1.lng() - 3 * p2.lng() + p3.lng()) * t3);
           result.push(new naver.maps.LatLng(lat, lng));
         }
       }
-
       result.push(pts[pts.length - 1]);
       return result;
     }
 
     function getCurvePointOnSegment(points, index, t = 0.5) {
       const pts = normalizePath(points);
-      if (pts.length < 2 || index < 0 || index >= pts.length - 1) {
-        return null;
-      }
-
+      if (pts.length < 2 || index < 0 || index >= pts.length - 1) return null;
       const p0 = pts[Math.max(0, index - 1)];
       const p1 = pts[index];
       const p2 = pts[index + 1];
       const p3 = pts[Math.min(pts.length - 1, index + 2)];
-
       const t2 = t * t;
       const t3 = t2 * t;
-
-      const lat = 0.5 * (
-        (2 * p1.lat()) +
-        (-p0.lat() + p2.lat()) * t +
-        (2 * p0.lat() - 5 * p1.lat() + 4 * p2.lat() - p3.lat()) * t2 +
-        (-p0.lat() + 3 * p1.lat() - 3 * p2.lat() + p3.lat()) * t3
-      );
-
-      const lng = 0.5 * (
-        (2 * p1.lng()) +
-        (-p0.lng() + p2.lng()) * t +
-        (2 * p0.lng() - 5 * p1.lng() + 4 * p2.lng() - p3.lng()) * t2 +
-        (-p0.lng() + 3 * p1.lng() - 3 * p2.lng() + p3.lng()) * t3
-      );
-
+      const lat = 0.5 * ((2 * p1.lat()) + (-p0.lat() + p2.lat()) * t + (2 * p0.lat() - 5 * p1.lat() + 4 * p2.lat() - p3.lat()) * t2 + (-p0.lat() + 3 * p1.lat() - 3 * p2.lat() + p3.lat()) * t3);
+      const lng = 0.5 * ((2 * p1.lng()) + (-p0.lng() + p2.lng()) * t + (2 * p0.lng() - 5 * p1.lng() + 4 * p2.lng() - p3.lng()) * t2 + (-p0.lng() + 3 * p1.lng() - 3 * p2.lng() + p3.lng()) * t3);
       return new naver.maps.LatLng(lat, lng);
     }
 
@@ -659,7 +591,6 @@
       let color = '#2563eb';
       if (level >= 2) color = '#7dd3fc';
       if (level >= 3) color = '#7dd3fc';
-
       return {
         content: `<div style="width:14px;height:14px;background:${color};border:2px solid white;border-radius:50%;box-shadow:0 1px 6px rgba(0,0,0,.25);opacity:0.95;"></div>`,
         anchor: new naver.maps.Point(7, 7)
@@ -670,7 +601,6 @@
       let color = '#93c5fd';
       if (level >= 2) color = '#bae6fd';
       if (level >= 3) color = '#bae6fd';
-
       return {
         content: `<div style="width:12px;height:12px;background:${color};border:2px solid white;border-radius:50%;box-shadow:0 1px 5px rgba(0,0,0,.18);opacity:0.9;"></div>`,
         anchor: new naver.maps.Point(6, 6)
@@ -683,14 +613,8 @@
       el.classList.add('show');
     }
 
-    function hideRouteStatus() {
-      document.getElementById('routeStatus').classList.remove('show');
-    }
-
-    function resetMetricAnimation() {
-      document.querySelectorAll('.metrics-animated').forEach((el) => el.classList.remove('show'));
-    }
-
+    function hideRouteStatus() { document.getElementById('routeStatus').classList.remove('show'); }
+    function resetMetricAnimation() { document.querySelectorAll('.metrics-animated').forEach((el) => el.classList.remove('show')); }
     function revealMetricAnimation() {
       const routeBox = document.getElementById('routeSummaryBox');
       const fuelBox = document.getElementById('fuelSummaryBox');
@@ -708,121 +632,85 @@
       return (text || '')
         .trim()
         .replace(/\s+/g, ' ')
-        .replace(/[()]/g, '')
+        .replace(/[()\[\]{}]/g, '')
         .replace(/,/g, ' ')
         .trim();
     }
 
-    function normalizeAddressQuery(q) {
-      let query = (q || '').trim();
-      if (!query) return '';
-
-      query = query.replace(/\s+/g, ' ').trim();
-
-      if (!query.includes('대구') && (query.includes('달서구') || query.includes('달성군') || query.includes('수성구') || query.includes('중구') || query.includes('동구') || query.includes('북구') || query.includes('서구') || query.includes('남구'))) {
-        query = '대구광역시 ' + query;
-      }
-
-      if (query === '달성군청') query = '대구광역시 달성군 논공읍 달성군청로 33';
-      if (query === '죽전역') query = '대구광역시 달서구 와룡로 169';
-      if (query === '감삼역') query = '대구광역시 달서구 달구벌대로 1545';
-      if (query === '용산역') query = '대구광역시 달서구 달구벌대로 1476';
-      if (query === '두류역') query = '대구광역시 달서구 달구벌대로 1760';
-      if (query === '달서구청') query = '대구광역시 달서구 학산로 45';
-      if (query === '계명대학교 동산병원') query = '대구광역시 달서구 달구벌대로 1035';
-
-      return query;
+    function stripSpecialForComparison(text) {
+      return normalizeSearchKeyword(text).replace(/\s/g, '').toLowerCase();
     }
 
-    function buildSearchCandidates(rawAddress) {
-      const rawQuery = (rawAddress || '').trim();
-      const normalizedRaw = normalizeSearchKeyword(rawQuery);
-      const correctedQuery = normalizeAddressQuery(rawQuery);
-      const normalizedCorrected = normalizeSearchKeyword(correctedQuery);
+    function expandRegionPrefix(query) {
+      const text = normalizeSearchKeyword(query);
+      if (!text) return text;
+      const firstToken = text.split(' ')[0];
+      const mapped = REGION_PREFIX_MAP[firstToken];
+      if (!mapped) return text;
+      return text.replace(firstToken, mapped);
+    }
 
-      const tryQueries = [];
+    function buildLooseVariants(query) {
+      const text = normalizeSearchKeyword(query);
+      if (!text) return [];
+      const variants = [text, expandRegionPrefix(text)];
 
-      const aliasMatches = customPlaceAliases.filter(item => {
-        const keyword = normalizeSearchKeyword(item.keyword);
-        const address = normalizeSearchKeyword(item.address);
+      if (/시청$/.test(text) && !/특별시청|광역시청/.test(text)) {
+        const cityHallBase = text.replace(/시청$/, '시청');
+        variants.push(cityHallBase);
+      }
 
-        return (
-          keyword.includes(normalizedRaw) ||
-          address.includes(normalizedRaw) ||
-          normalizedRaw.includes(keyword) ||
-          keyword.includes(normalizedCorrected) ||
-          address.includes(normalizedCorrected) ||
-          normalizedCorrected.includes(keyword)
-        );
+      if (/역$/.test(text)) variants.push(text);
+      if (/구청$|군청$|시청$|도청$/.test(text)) variants.push(text);
+
+      const compact = text.replace(/\s/g, '');
+      if (compact !== text) variants.push(compact);
+
+      const spaced = compact
+        .replace(/(특별시|광역시|특별자치시|특별자치도|도)(?=[가-힣])/g, '$1 ')
+        .replace(/(시|군|구)(?=[가-힣])/g, '$1 ')
+        .replace(/(읍|면|동|리|로|길)(?=[0-9가-힣])/g, '$1 ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      if (spaced && spaced !== text) variants.push(spaced);
+
+      return [...new Set(variants.filter(Boolean))];
+    }
+
+    function findAliasMatches(query) {
+      const q = stripSpecialForComparison(query);
+      if (!q) return [];
+      return PLACE_ALIASES.filter(item => {
+        const keyword = stripSpecialForComparison(item.keyword);
+        const address = stripSpecialForComparison(item.address);
+        const label = stripSpecialForComparison(item.label || '');
+        return keyword.includes(q) || address.includes(q) || label.includes(q) || q.includes(keyword);
       });
-
-      aliasMatches.forEach(item => tryQueries.push(item.address));
-      tryQueries.push(rawQuery);
-      tryQueries.push(correctedQuery);
-      tryQueries.push(normalizedRaw);
-      tryQueries.push(normalizedCorrected);
-
-      if (/^(달서구|달성군|수성구|중구|동구|북구|서구|남구)\s/.test(rawQuery) && !rawQuery.includes('대구')) {
-        tryQueries.push('대구광역시 ' + rawQuery);
-      }
-
-      if (/동$/.test(rawQuery) && !rawQuery.includes('대구')) {
-        tryQueries.push('대구광역시 ' + rawQuery);
-      }
-
-      return [...new Set(tryQueries.map(v => (v || '').trim()).filter(Boolean))];
     }
 
-    function searchAddress(address, type) {
-      const rawInput = (address || '').trim();
+    function buildSearchCandidates(rawInput) {
+      const input = normalizeSearchKeyword(rawInput);
+      if (!input) return [];
+      const variants = buildLooseVariants(input);
+      const aliasMatches = findAliasMatches(input);
+      const queries = [];
 
-      if (!rawInput) {
-        alert(type === 'start' ? '거주지 주소를 입력하세요.' : '목적지 주소를 입력하세요.');
-        return;
+      aliasMatches.forEach(item => queries.push(item.address));
+      variants.forEach(v => queries.push(v));
+
+      if (/^[가-힣]+구\s+[가-힣]+로$/.test(input) || /^[가-힣]+시\s+[가-힣]+로$/.test(input)) {
+        queries.push(input + ' 1');
       }
 
-      const tryQueries = buildSearchCandidates(rawInput);
-
-      function applyGeocodeResult(item, originalQuery) {
-        const lat = parseFloat(item.y);
-        const lng = parseFloat(item.x);
-        const latlng = new naver.maps.LatLng(lat, lng);
-        const addressText = item.roadAddress || item.jibunAddress || originalQuery;
-
-        if (type === 'start') {
-          startCoord = { lat, lng, address: addressText };
-          if (startMarker) startMarker.setMap(null);
-          startMarker = new naver.maps.Marker({
-            position: latlng,
-            map,
-            title: '출발지',
-            icon: createMarkerIcon('#ef4444')
-          });
-          document.getElementById('startAddress').value = addressText;
-        } else {
-          goalCoord = { lat, lng, address: addressText };
-          if (goalMarker) goalMarker.setMap(null);
-          goalMarker = new naver.maps.Marker({
-            position: latlng,
-            map,
-            title: '목적지',
-            icon: createMarkerIcon('#ef4444')
-          });
-          document.getElementById('goalAddress').value = addressText;
-        }
-
-        updateCoordInfo();
-        map.setCenter(latlng);
+      if (/^[가-힣]+동$/.test(input)) {
+        queries.push(input);
       }
 
-      function tryNext(index) {
-        if (index >= tryQueries.length) {
-          alert('검색 결과가 없습니다.\n예: 대구광역시 달서구 감삼로 123\n또는 죽전역, 달성군청처럼 더 구체적으로 입력해보세요.');
-          return;
-        }
+      return [...new Set(queries.filter(Boolean))];
+    }
 
-        const query = tryQueries[index];
-
+    function geocodeQuery(query) {
+      return new Promise((resolve) => {
         naver.maps.Service.geocode({ query }, function(status, response) {
           if (
             status === naver.maps.Service.Status.OK &&
@@ -830,23 +718,70 @@
             response.v2.addresses &&
             response.v2.addresses.length > 0
           ) {
-            applyGeocodeResult(response.v2.addresses[0], query);
+            resolve(response.v2.addresses);
           } else {
-            tryNext(index + 1);
+            resolve([]);
           }
+        });
+      });
+    }
+
+    function summarizeAddressItem(item, fallbackQuery = '') {
+      const road = item.roadAddress || '';
+      const jibun = item.jibunAddress || '';
+      return {
+        label: road || jibun || fallbackQuery,
+        address: road || jibun || fallbackQuery,
+        sub: road && jibun ? `지번: ${jibun}` : (jibun || '')
+      };
+    }
+
+    async function getSuggestionItems(rawInput) {
+      const input = normalizeSearchKeyword(rawInput);
+      if (!input) return [];
+
+      const queries = buildSearchCandidates(input).slice(0, 5);
+      const aliasMatches = findAliasMatches(input).slice(0, 6).map(item => ({
+        label: item.label,
+        address: item.address,
+        sub: `추천 장소 · ${item.address}`
+      }));
+
+      const geocodeResults = [];
+      for (const q of queries) {
+        const addresses = await geocodeQuery(q);
+        addresses.slice(0, 5).forEach(item => {
+          geocodeResults.push(summarizeAddressItem(item, q));
         });
       }
 
-      tryNext(0);
-    }
+      const merged = [];
+      const seen = new Set();
+      [...aliasMatches, ...geocodeResults].forEach(item => {
+        const key = `${item.label}|${item.address}`;
+        if (!seen.has(key) && item.address) {
+          seen.add(key);
+          merged.push(item);
+        }
+      });
 
-    function searchStart() { searchAddress(document.getElementById('startAddress').value, 'start'); }
-    function searchGoal() { searchAddress(document.getElementById('goalAddress').value, 'goal'); }
+      if (merged.length === 0 && input.length >= 2) {
+        merged.push({
+          label: `입력값으로 검색: ${input}`,
+          address: input,
+          sub: '검색 버튼을 누르거나 선택해서 바로 검색'
+        });
+      }
+
+      return merged.slice(0, 8);
+    }
 
     function hideSuggestions(type) {
       const box = document.getElementById(type === 'start' ? 'startSuggestions' : 'goalSuggestions');
       box.style.display = 'none';
       box.innerHTML = '';
+      inputState[type].activeIndex = -1;
+      inputState[type].items = [];
     }
 
     function selectSuggestion(type, address) {
@@ -858,24 +793,53 @@
 
     function renderSuggestions(type, items) {
       const box = document.getElementById(type === 'start' ? 'startSuggestions' : 'goalSuggestions');
+      inputState[type].items = items;
+      inputState[type].activeIndex = -1;
+
       if (!items || items.length === 0) {
         hideSuggestions(type);
         return;
       }
 
-      box.innerHTML = items.map(item => {
-        const chosen = item.address;
-        const safeAddress = chosen.replace(/'/g, "\\'");
-        const title = item.label || chosen;
+      box.innerHTML = items.map((item, index) => {
+        const safeAddress = JSON.stringify(item.address);
+        const title = item.label || item.address;
         const sub = item.sub || '';
         return `
-          <div onclick="selectSuggestion('${type}', '${safeAddress}')" style="padding:10px 12px; border-bottom:1px solid #f1f5f9; cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
-            <div style="font-size:14px; color:#111827;">${title}</div>
-            ${sub ? `<div style="font-size:12px; color:#6b7280; margin-top:2px;">${sub}</div>` : ''}
+          <div class="suggestion-item" data-index="${index}" onclick="selectSuggestion('${type}', ${safeAddress})">
+            <div class="suggestion-title">${title}</div>
+            ${sub ? `<div class="suggestion-sub">${sub}</div>` : ''}
           </div>
         `;
       }).join('');
       box.style.display = 'block';
+    }
+
+    function moveSuggestionFocus(type, direction) {
+      const items = inputState[type].items;
+      const box = document.getElementById(type === 'start' ? 'startSuggestions' : 'goalSuggestions');
+      if (!items.length || box.style.display === 'none') return;
+
+      inputState[type].activeIndex += direction;
+      if (inputState[type].activeIndex < 0) inputState[type].activeIndex = items.length - 1;
+      if (inputState[type].activeIndex >= items.length) inputState[type].activeIndex = 0;
+
+      [...box.querySelectorAll('.suggestion-item')].forEach(el => el.classList.remove('active'));
+      const active = box.querySelector(`.suggestion-item[data-index="${inputState[type].activeIndex}"]`);
+      if (active) {
+        active.classList.add('active');
+        active.scrollIntoView({ block: 'nearest' });
+      }
+    }
+
+    function chooseActiveSuggestion(type) {
+      const items = inputState[type].items;
+      const index = inputState[type].activeIndex;
+      if (index >= 0 && items[index]) {
+        selectSuggestion(type, items[index].address);
+        return true;
+      }
+      return false;
     }
 
     async function handleAddressInput(type) {
@@ -889,54 +853,60 @@
       }
 
       suggestTimer = setTimeout(async () => {
-        const correctedQuery = normalizeAddressQuery(rawQuery);
-        const normalizedRaw = normalizeSearchKeyword(rawQuery);
-        const normalizedCorrected = normalizeSearchKeyword(correctedQuery);
-
-        const localMatches = customPlaceAliases
-          .filter(item => {
-            const keyword = normalizeSearchKeyword(item.keyword);
-            const address = normalizeSearchKeyword(item.address);
-            return (
-              keyword.includes(normalizedRaw) ||
-              address.includes(normalizedRaw) ||
-              normalizedRaw.includes(keyword) ||
-              keyword.includes(normalizedCorrected) ||
-              address.includes(normalizedCorrected) ||
-              normalizedCorrected.includes(keyword)
-            );
-          })
-          .slice(0, 8)
-          .map(item => ({
-            label: item.label,
-            address: item.address,
-            sub: `추천 장소 · ${item.address}`
-          }));
-
-        let apiResults = [];
-        if (rawQuery.length >= 2) {
-          apiResults = await fetchLocalSearchResults(correctedQuery);
-        }
-
-        const merged = [];
-        const seen = new Set();
-
-        [...localMatches, ...apiResults].forEach(item => {
-          const key = `${item.label}|${item.address}`;
-          if (!seen.has(key) && item.address) {
-            seen.add(key);
-            merged.push(item);
-          }
-        });
-
-        renderSuggestions(type, merged.slice(0, 8));
+        const items = await getSuggestionItems(rawQuery);
+        renderSuggestions(type, items);
       }, 180);
     }
+
+    function applyGeocodeResult(item, type, originalQuery) {
+      const lat = parseFloat(item.y);
+      const lng = parseFloat(item.x);
+      const latlng = new naver.maps.LatLng(lat, lng);
+      const addressText = item.roadAddress || item.jibunAddress || originalQuery;
+
+      if (type === 'start') {
+        startCoord = { lat, lng, address: addressText };
+        if (startMarker) startMarker.setMap(null);
+        startMarker = new naver.maps.Marker({ position: latlng, map, title: '출발지', icon: createMarkerIcon('#ef4444') });
+        document.getElementById('startAddress').value = addressText;
+      } else {
+        goalCoord = { lat, lng, address: addressText };
+        if (goalMarker) goalMarker.setMap(null);
+        goalMarker = new naver.maps.Marker({ position: latlng, map, title: '목적지', icon: createMarkerIcon('#ef4444') });
+        document.getElementById('goalAddress').value = addressText;
+      }
+
+      updateCoordInfo();
+      map.setCenter(latlng);
+    }
+
+    async function searchAddress(address, type) {
+      const rawInput = normalizeSearchKeyword(address);
+      if (!rawInput) {
+        alert(type === 'start' ? '거주지 주소를 입력하세요.' : '목적지 주소를 입력하세요.');
+        return;
+      }
+
+      hideSuggestions(type);
+      const tryQueries = buildSearchCandidates(rawInput);
+
+      for (const query of tryQueries) {
+        const results = await geocodeQuery(query);
+        if (results.length > 0) {
+          applyGeocodeResult(results[0], type, query);
+          return;
+        }
+      }
+
+      alert('검색 결과가 없습니다.\n도로명 + 건물번호, 지번주소, 역명, 관공서명처럼 조금 더 구체적으로 입력해보세요.');
+    }
+
+    function searchStart() { searchAddress(document.getElementById('startAddress').value, 'start'); }
+    function searchGoal() { searchAddress(document.getElementById('goalAddress').value, 'goal'); }
 
     function buildDefaultRouteState() {
       const startPoint = getStartLatLng();
       const goalPoint = getGoalLatLng();
-
       intermediatePoints = DEFAULT_MAIN_RATIOS.map((ratio, index) => ({
         id: `main-${index + 1}`,
         type: 'main',
@@ -964,22 +934,16 @@
 
     function clearRoutePolylines() {
       stopRouteAnimation();
-      if (routePolyline) {
-        routePolyline.setMap(null);
-        routePolyline = null;
-      }
-      if (routeShadowPolyline) {
-        routeShadowPolyline.setMap(null);
-        routeShadowPolyline = null;
-      }
+      if (routePolyline) { routePolyline.setMap(null); routePolyline = null; }
+      if (routeShadowPolyline) { routeShadowPolyline.setMap(null); routeShadowPolyline = null; }
     }
 
     function renderStaticRoute() {
       const controlPoints = getControlPoints();
       if (controlPoints.length < 2) return;
       const smoothPath = getSmoothPath(controlPoints);
-
       clearRoutePolylines();
+
       routeShadowPolyline = new naver.maps.Polyline({
         map,
         path: smoothPath,
@@ -1001,7 +965,6 @@
       const controlPoints = getControlPoints();
       if (controlPoints.length < 2) return;
       const smoothPath = getSmoothPath(controlPoints);
-
       clearRoutePolylines();
       resetMetricAnimation();
 
@@ -1139,16 +1102,10 @@
         const rightPoint = segmentIndex >= intermediatePoints.length ? null : intermediatePoints[segmentIndex];
 
         let nextLevel = 1;
-
-        if (leftPoint && rightPoint) {
-          nextLevel = Math.max(leftPoint.level || 1, rightPoint.level || 1) + 1;
-        } else if (leftPoint) {
-          nextLevel = (leftPoint.level || 1) + 1;
-        } else if (rightPoint) {
-          nextLevel = (rightPoint.level || 1) + 1;
-        } else {
-          nextLevel = 1;
-        }
+        if (leftPoint && rightPoint) nextLevel = Math.max(leftPoint.level || 1, rightPoint.level || 1) + 1;
+        else if (leftPoint) nextLevel = (leftPoint.level || 1) + 1;
+        else if (rightPoint) nextLevel = (rightPoint.level || 1) + 1;
+        else nextLevel = 1;
 
         if (nextLevel > 3) continue;
 
@@ -1166,12 +1123,7 @@
         let insertedPoint = null;
 
         naver.maps.Event.addListener(marker, 'dragstart', function(e) {
-          insertedPoint = {
-            id: nextPointId(),
-            type: 'detail',
-            level: nextLevel,
-            coord: e.coord
-          };
+          insertedPoint = { id: nextPointId(), type: 'detail', level: nextLevel, coord: e.coord };
           intermediatePoints.splice(insertIndex, 0, insertedPoint);
           renderStaticRoute();
         });
@@ -1199,7 +1151,6 @@
         alert('출발지와 목적지를 먼저 검색하세요.');
         return;
       }
-
       isEditMode = false;
       document.getElementById('editRouteBtn').textContent = '선편집';
       clearAllEditMarkers();
@@ -1241,11 +1192,8 @@
       renderStaticRoute();
       updateRouteSummary();
 
-      if (isEditMode) {
-        refreshEditMarkers();
-      } else {
-        clearAllEditMarkers();
-      }
+      if (isEditMode) refreshEditMarkers();
+      else clearAllEditMarkers();
 
       showRouteStatus('편집 경로가 기본 상태로 초기화되었습니다.');
       setTimeout(() => hideRouteStatus(), 900);
@@ -1273,7 +1221,6 @@
 
       const isRoundTrip = document.getElementById('roundTrip').checked;
       const appliedDistanceKm = isRoundTrip ? currentRouteDistanceKm * 2 : currentRouteDistanceKm;
-
       const usedFuel = appliedDistanceKm / efficiency;
       currentFuelCost = usedFuel * fuelPrice;
 
@@ -1286,22 +1233,12 @@
 
     function isRule2Restricted(date, lastDigit) {
       const dayOfMonth = date.getDate();
-      const dateParity = dayOfMonth % 2;
-      const carParity = lastDigit % 2;
-      return dateParity === carParity;
+      return (dayOfMonth % 2) === (lastDigit % 2);
     }
 
     function isRule5Restricted(date, lastDigit) {
       const day = date.getDay();
-
-      const ruleMap = {
-        1: [1, 6],
-        2: [2, 7],
-        3: [3, 8],
-        4: [4, 9],
-        5: [5, 0]
-      };
-
+      const ruleMap = { 1: [1, 6], 2: [2, 7], 3: [3, 8], 4: [4, 9], 5: [5, 0] };
       if (!ruleMap[day]) return false;
       return ruleMap[day].includes(lastDigit);
     }
@@ -1318,56 +1255,28 @@
       const useRule5 = document.getElementById('rule5').checked;
       const carLastDigitValue = document.getElementById('carLastDigit').value;
 
-      if (!startDate || !endDate) {
-        alert('시작 날짜와 종료 날짜를 선택하세요.');
-        return;
-      }
-
-      if (startDate > endDate) {
-        alert('종료 날짜는 시작 날짜보다 같거나 뒤여야 합니다.');
-        return;
-      }
-
-      if (!useRule2 && !useRule5) {
-        alert('2부제 또는 5부제 중 하나 이상 선택하세요.');
-        return;
-      }
-
-      if (carLastDigitValue === '') {
-        alert('자동차 끝번호를 선택하세요.');
-        return;
-      }
+      if (!startDate || !endDate) { alert('시작 날짜와 종료 날짜를 선택하세요.'); return; }
+      if (startDate > endDate) { alert('종료 날짜는 시작 날짜보다 같거나 뒤여야 합니다.'); return; }
+      if (!useRule2 && !useRule5) { alert('2부제 또는 5부제 중 하나 이상 선택하세요.'); return; }
+      if (carLastDigitValue === '') { alert('자동차 끝번호를 선택하세요.'); return; }
 
       const carLastDigit = parseInt(carLastDigitValue, 10);
-
-      let weekdays = 0;
-      let rule2Days = 0;
-      let rule5Days = 0;
-
+      let weekdays = 0, rule2Days = 0, rule5Days = 0;
       const current = new Date(startDate);
       const end = new Date(endDate);
 
       while (current <= end) {
         const day = current.getDay();
-
         if (day >= 1 && day <= 5) {
           weekdays++;
-
-          if (useRule2 && isRule2Restricted(current, carLastDigit)) {
-            rule2Days++;
-          }
-
-          if (useRule5 && isRule5Restricted(current, carLastDigit)) {
-            rule5Days++;
-          }
+          if (useRule2 && isRule2Restricted(current, carLastDigit)) rule2Days++;
+          if (useRule5 && isRule5Restricted(current, carLastDigit)) rule5Days++;
         }
-
         current.setDate(current.getDate() + 1);
       }
 
       const isRoundTrip = document.getElementById('roundTrip').checked;
       const dailyCommuteFuelCost = isRoundTrip ? currentFuelCost : currentFuelCost * 2;
-
       const saving2 = rule2Days * dailyCommuteFuelCost;
       const saving5 = rule5Days * dailyCommuteFuelCost;
 
@@ -1378,23 +1287,46 @@
       document.getElementById('saving5Text').textContent = useRule5 ? `${formatNumber(Math.round(saving5))} 원` : '-';
     }
 
+    function bindAddressInput(type) {
+      const input = document.getElementById(type === 'start' ? 'startAddress' : 'goalAddress');
+      input.addEventListener('input', () => handleAddressInput(type));
+      input.addEventListener('focus', () => handleAddressInput(type));
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          moveSuggestionFocus(type, 1);
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          moveSuggestionFocus(type, -1);
+        } else if (e.key === 'Enter') {
+          if (chooseActiveSuggestion(type)) {
+            e.preventDefault();
+          } else {
+            e.preventDefault();
+            searchAddress(input.value, type);
+          }
+        } else if (e.key === 'Escape') {
+          hideSuggestions(type);
+        }
+      });
+    }
+
     document.addEventListener('click', function(e) {
       const startInput = document.getElementById('startAddress');
       const goalInput = document.getElementById('goalAddress');
       const startBox = document.getElementById('startSuggestions');
       const goalBox = document.getElementById('goalSuggestions');
-
       if (!startInput.contains(e.target) && !startBox.contains(e.target)) hideSuggestions('start');
       if (!goalInput.contains(e.target) && !goalBox.contains(e.target)) hideSuggestions('goal');
     });
 
     document.getElementById('roundTrip').addEventListener('change', function() {
-      if (currentRouteDistanceKm > 0) {
-        calculateFuelCost();
-      }
+      if (currentRouteDistanceKm > 0) calculateFuelCost();
     });
 
     initMap();
+    bindAddressInput('start');
+    bindAddressInput('goal');
   </script>
 </body>
 </html>
