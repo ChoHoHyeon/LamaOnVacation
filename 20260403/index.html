@@ -356,10 +356,6 @@
         </div>
       </div>
 
-
-
-
-
 <div class="section-card">
   <h2>3. 2부제 / 5부제 절감비용 계산</h2>
 
@@ -469,6 +465,26 @@
     const ROUTE_DETOUR_FACTOR = 1.05;
     const DEFAULT_MAIN_RATIOS = [0.25, 0.5, 0.75];
 
+    async function fetchLocalSearchResults(query) {
+      const res = await fetch(`/api/local-search?q=${encodeURIComponent(query)}`);
+      if (!res.ok) return [];
+
+      const data = await res.json();
+      if (!data.items) return [];
+
+      return data.items.map(item => ({
+        label: stripHtml(item.title || ''),
+        address: item.roadAddress || item.address || '',
+        sub: [item.category, item.roadAddress || item.address].filter(Boolean).join(' · ')
+      })).filter(item => item.address);
+    }
+
+    function stripHtml(text) {
+      const div = document.createElement('div');
+      div.innerHTML = text || '';
+      return div.textContent || div.innerText || '';
+    }
+    
     const customPlaceAliases = [
       { keyword: '달성군청', address: '대구광역시 달성군 논공읍 달성군청로 33', label: '달성군청' },
       { keyword: '달성군청역', address: '대구광역시 달성군 논공읍 달성군청로 33 인근', label: '달성군청역 인근' },
@@ -478,6 +494,14 @@
       { keyword: '현풍테크노폴리스', address: '대구광역시 달성군 유가읍 테크노대로 일원', label: '현풍테크노폴리스' }
     ];
 
+
+
+
+
+
+
+
+    
     function initMap() {
       map = new naver.maps.Map('map', {
         center: new naver.maps.LatLng(35.8714, 128.6014),
@@ -692,9 +716,8 @@
         .trim();
     }
 
-
     
-    function searchAddress(address, type) {
+   function searchAddress(address, type) {
   const rawQuery = (address || '').trim();
   if (!rawQuery) {
     alert(type === 'start' ? '거주지 주소를 입력하세요.' : '목적지 주소를 입력하세요.');
@@ -714,7 +737,6 @@
   tryQueries.push(rawQuery);
   if (normalizedQuery !== rawQuery) tryQueries.push(normalizedQuery);
 
-  // 중복 제거
   const uniqueQueries = [...new Set(tryQueries.filter(Boolean))];
 
   function applyGeocodeResult(item, originalQuery) {
@@ -749,7 +771,7 @@
 
   function tryNext(index) {
     if (index >= uniqueQueries.length) {
-      alert('검색 결과가 없습니다. 도로명주소, 지번주소, 건물명 중 다른 형태로 다시 입력해보세요.');
+      alert('검색 결과가 없습니다. 자동완성 목록에서 선택하거나 도로명/건물명을 더 구체적으로 입력해보세요.');
       return;
     }
 
@@ -772,6 +794,7 @@
   tryNext(0);
 }
 
+    
     function searchStart() { searchAddress(document.getElementById('startAddress').value, 'start'); }
     function searchGoal() { searchAddress(document.getElementById('goalAddress').value, 'goal'); }
 
@@ -810,44 +833,50 @@
       box.style.display = 'block';
     }
 
-    function handleAddressInput(type) {
+    async function handleAddressInput(type) {
       const input = document.getElementById(type === 'start' ? 'startAddress' : 'goalAddress');
       const query = input.value.trim();
       clearTimeout(suggestTimer);
 
-      if (query.length < 2) {
+      if (query.length < 1) {
         hideSuggestions(type);
         return;
       }
 
-      suggestTimer = setTimeout(() => {
+      suggestTimer = setTimeout(async () => {
         const localMatches = customPlaceAliases
-          .filter(item => item.keyword.includes(query) || item.address.includes(query) || query.includes(item.keyword))
+          .filter(item =>
+            item.keyword.includes(query) ||
+            item.address.includes(query) ||
+            query.includes(item.keyword)
+          )
           .slice(0, 5)
-          .map(item => ({ label: item.label, address: item.address, sub: `추천 장소 · ${item.address}` }));
+          .map(item => ({
+            label: item.label,
+            address: item.address,
+            sub: `추천 장소 · ${item.address}`
+          }));
 
-        naver.maps.Service.geocode({ query }, function(status, response) {
-          let apiResults = [];
-          if (status === naver.maps.Service.Status.OK && response.v2 && response.v2.addresses) {
-            apiResults = response.v2.addresses.slice(0, 5).map(item => ({
-              label: item.roadAddress || item.jibunAddress || query,
-              address: item.roadAddress || item.jibunAddress || query,
-              sub: item.roadAddress && item.jibunAddress ? `지번: ${item.jibunAddress}` : ''
-            }));
+        let apiResults = [];
+        try {
+          apiResults = await fetchLocalSearchResults(query);
+        } catch (e) {
+          console.error('지역 검색 실패:', e);
+        }
+
+        const merged = [];
+        const seen = new Set();
+
+        [...localMatches, ...apiResults].forEach(item => {
+          const key = `${item.label}|${item.address}`;
+          if (!seen.has(key) && item.address) {
+            seen.add(key);
+            merged.push(item);
           }
-
-          const merged = [];
-          const seen = new Set();
-          [...localMatches, ...apiResults].forEach(item => {
-            if (!seen.has(item.address)) {
-              seen.add(item.address);
-              merged.push(item);
-            }
-          });
-
-          renderSuggestions(type, merged.slice(0, 8));
         });
-      }, 250);
+
+        renderSuggestions(type, merged.slice(0, 8));
+      }, 200);
     }
 
     function buildDefaultRouteState() {
