@@ -1037,7 +1037,7 @@
       : '';
 
     // 화면상 번호: 최신이 1번
-    const displayNumber = index + 1;
+    const displayNumber = state.trips.length - index;
 
     return `
       <article class="trip-card${activeClass}" draggable="true" data-id="${escapeHtml(trip.id)}">
