@@ -302,6 +302,14 @@
       line-height: 1.3;
     }
 
+    .trip-number {
+      display: inline-block;
+      min-width: 22px;
+      color: #2563eb;
+      font-weight: 900;
+      margin-right: 4px;
+    }
+    
     .trip-sub {
       margin-top: 3px;
       font-size: 12px;
@@ -1007,55 +1015,80 @@
       }
 
       function renderTripList() {
-        const list = dom.tripList;
+  const list = dom.tripList;
 
-        if (state.trips.length === 0) {
-          list.innerHTML = `
-            <div class="empty">
-              아직 기록된 여행지가 없어요.<br>
-              왼쪽 입력창에서 첫 여행지를 추가해보세요.
+  if (state.trips.length === 0) {
+    list.innerHTML = `
+      <div class="empty">
+        아직 기록된 여행지가 없어요.<br>
+        왼쪽 입력창에서 첫 여행지를 추가해보세요.
+      </div>
+    `;
+    return;
+  }
+
+  // 최신 입력이 위로 오도록 렌더링용 배열만 역순 복사
+  const renderTrips = [...state.trips].reverse();
+
+  list.innerHTML = renderTrips.map((trip, index) => {
+    const activeClass = trip.id === state.activeId ? ' active' : '';
+    const noteHtml = trip.memo
+      ? `<div class="trip-note">${escapeHtml(trip.memo)}</div>`
+      : '';
+
+    // 화면상 번호: 최신이 1번
+    const displayNumber = index + 1;
+
+    return `
+      <article class="trip-card${activeClass}" draggable="true" data-id="${escapeHtml(trip.id)}">
+        <div class="trip-head">
+          <div>
+            <div class="trip-title">
+              <span class="trip-number">${displayNumber}.</span>
+              ${escapeHtml(trip.city)}, ${escapeHtml(trip.country)}
             </div>
-          `;
-          return;
-        }
+            <div class="trip-sub">${escapeHtml(formatDate(trip.visitedAt))}</div>
+          </div>
+          <div class="chip">${trip.visible ? '표시 중' : '숨김'}</div>
+        </div>
 
-        list.innerHTML = state.trips.map(trip => {
-          const activeClass = trip.id === state.activeId ? ' active' : '';
-          const noteHtml = trip.memo ? `<div class="trip-note">${escapeHtml(trip.memo)}</div>` : '';
+        <div class="trip-meta">
+          <span class="chip">위도 ${trip.lat.toFixed(3)}</span>
+          <span class="chip">경도 ${trip.lng.toFixed(3)}</span>
+        </div>
 
-          return `
-            <article class="trip-card${activeClass}" draggable="true" data-id="${escapeHtml(trip.id)}">
-              <div class="trip-head">
-                <div>
-                  <div class="trip-title">${escapeHtml(trip.city)}, ${escapeHtml(trip.country)}</div>
-                  <div class="trip-sub">${escapeHtml(formatDate(trip.visitedAt))}</div>
-                </div>
-                <div class="chip">${trip.visible ? '표시 중' : '숨김'}</div>
-              </div>
+        ${noteHtml}
 
-              <div class="trip-meta">
-                <span class="chip">위도 ${trip.lat.toFixed(3)}</span>
-                <span class="chip">경도 ${trip.lng.toFixed(3)}</span>
-              </div>
+        <div class="trip-actions">
+          <label class="toggle">
+            <input type="checkbox" data-action="toggle" data-id="${escapeHtml(trip.id)}" ${trip.visible ? 'checked' : ''} />
+            지도 표시
+          </label>
 
-              ${noteHtml}
+          <div class="actions">
+            <button class="btn small" type="button" data-action="focus" data-id="${escapeHtml(trip.id)}">이동</button>
+            <button class="btn small danger" type="button" data-action="delete" data-id="${escapeHtml(trip.id)}">삭제</button>
+          </div>
+        </div>
+      </article>
+    `;
+  }).join('');
+}
 
-              <div class="trip-actions">
-                <label class="toggle">
-                  <input type="checkbox" data-action="toggle" data-id="${escapeHtml(trip.id)}" ${trip.visible ? 'checked' : ''} />
-                  지도 표시
-                </label>
 
-                <div class="actions">
-                  <button class="btn small" type="button" data-action="focus" data-id="${escapeHtml(trip.id)}">이동</button>
-                  <button class="btn small danger" type="button" data-action="delete" data-id="${escapeHtml(trip.id)}">삭제</button>
-                </div>
-              </div>
-            </article>
-          `;
-        }).join('');
-      }
 
+
+
+
+
+
+
+
+
+
+
+
+      
       function initGlobe() {
   const globe = Globe()(dom.globeViz)
     .globeImageUrl(EARTH_TEXTURE)
