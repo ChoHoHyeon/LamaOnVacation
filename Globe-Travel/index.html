@@ -4,18 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>여행 지구본 기록 웹앱</title>
-
-  <!--
-    단일 파일 버전
-    - 원래는 index.html / style.css / app.js 로 분리하기 좋도록 섹션을 나눠 작성했습니다.
-    - GitHub Pages에 바로 올릴 수 있도록 CSS/JS를 모두 이 파일에 포함했습니다.
-  -->
-
   <style>
-    /* =========================
-       style.css 영역 시작
-       ========================= */
-
     :root {
       --bg: #f6f7fb;
       --panel: #ffffff;
@@ -23,16 +12,13 @@
       --text: #1f2937;
       --muted: #6b7280;
       --primary: #2563eb;
-      --primary-soft: #e8f0ff;
       --danger: #ef4444;
       --success: #16a34a;
       --shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
       --radius: 18px;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     html, body {
       margin: 0;
@@ -44,9 +30,7 @@
       color: var(--text);
     }
 
-    body {
-      overflow: hidden;
-    }
+    body { overflow: hidden; }
 
     .app {
       display: grid;
@@ -64,6 +48,7 @@
       min-width: 320px;
       height: 100vh;
       overflow: hidden;
+      z-index: 2;
     }
 
     .sidebar-inner {
@@ -160,9 +145,7 @@
       min-width: 0;
     }
 
-    .field.full {
-      grid-column: 1 / -1;
-    }
+    .field.full { grid-column: 1 / -1; }
 
     label {
       font-size: 12px;
@@ -170,14 +153,9 @@
       font-weight: 600;
     }
 
-    input,
-    textarea,
-    button {
-      font: inherit;
-    }
+    input, textarea, button { font: inherit; }
 
-    input,
-    textarea {
+    input, textarea {
       width: 100%;
       border: 1px solid var(--line);
       border-radius: 12px;
@@ -188,8 +166,7 @@
       transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
 
-    input:focus,
-    textarea:focus {
+    input:focus, textarea:focus {
       border-color: #93c5fd;
       box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
     }
@@ -200,8 +177,7 @@
       line-height: 1.45;
     }
 
-    .actions,
-    .toolbar {
+    .actions, .toolbar {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
@@ -219,13 +195,8 @@
       user-select: none;
     }
 
-    .btn:hover {
-      background: #f8fafc;
-    }
-
-    .btn:active {
-      transform: translateY(1px);
-    }
+    .btn:hover { background: #f8fafc; }
+    .btn:active { transform: translateY(1px); }
 
     .btn.primary {
       background: var(--primary);
@@ -233,17 +204,8 @@
       color: #fff;
     }
 
-    .btn.primary:hover {
-      background: #1d4ed8;
-    }
-
-    .btn.ghost {
-      background: #fff;
-    }
-
-    .btn.danger {
-      color: var(--danger);
-    }
+    .btn.primary:hover { background: #1d4ed8; }
+    .btn.danger { color: var(--danger); }
 
     .btn.small {
       padding: 8px 10px;
@@ -258,13 +220,8 @@
       margin-top: 6px;
     }
 
-    .status.ok {
-      color: var(--success);
-    }
-
-    .status.error {
-      color: var(--danger);
-    }
+    .status.ok { color: var(--success); }
+    .status.error { color: var(--danger); }
 
     .list-panel {
       display: flex;
@@ -279,10 +236,7 @@
       padding-right: 2px;
     }
 
-    .list-wrap::-webkit-scrollbar {
-      width: 10px;
-    }
-
+    .list-wrap::-webkit-scrollbar { width: 10px; }
     .list-wrap::-webkit-scrollbar-thumb {
       background: #d8deea;
       border-radius: 999px;
@@ -328,9 +282,7 @@
       box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
     }
 
-    .trip-card.dragging {
-      opacity: 0.45;
-    }
+    .trip-card.dragging { opacity: 0.45; }
 
     .trip-card.active {
       border-color: #93c5fd;
@@ -408,11 +360,22 @@
       min-width: 0;
       min-height: 0;
       background: linear-gradient(180deg, #f8fbff 0%, #eef3fb 100%);
+      overflow: hidden;
+    }
+
+    .globe-stage {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
     }
 
     #globeViz {
+      position: absolute;
+      inset: 0;
       width: 100%;
       height: 100%;
+      will-change: transform;
+      transform: translateX(0px);
     }
 
     .globe-overlay {
@@ -460,9 +423,7 @@
     }
 
     @media (max-width: 960px) {
-      body {
-        overflow: auto;
-      }
+      body { overflow: auto; }
 
       .app {
         grid-template-columns: 1fr;
@@ -478,14 +439,8 @@
         border-bottom: 1px solid var(--line);
       }
 
-      .globe-area {
-        min-height: 55vh;
-      }
+      .globe-area { min-height: 55vh; }
     }
-
-    /* =========================
-       style.css 영역 끝
-       ========================= */
   </style>
 </head>
 <body>
@@ -587,7 +542,9 @@
     </aside>
 
     <main class="globe-area">
-      <div id="globeViz" aria-label="지구본"></div>
+      <div class="globe-stage">
+        <div id="globeViz" aria-label="지구본"></div>
+      </div>
 
       <div class="globe-overlay">
         <div class="globe-badge" id="focusInfo">
@@ -598,48 +555,34 @@
     </main>
   </div>
 
-  <!--
-    외부 CDN
-    - globe.gl은 ThreeJS 기반 3D 지구본 컴포넌트입니다.
-    - earth-day.jpg는 사용자가 요청한 텍스처를 그대로 사용했습니다.
-  -->
   <script src="https://unpkg.com/globe.gl"></script>
 
   <script>
-    /* =========================
-       app.js 영역 시작
-       ========================= */
-
     (() => {
       'use strict';
 
-      // -----------------------------
-      // 상수 / 전역 상태
-      // -----------------------------
-      const STORAGE_KEY = 'travel_globe_records_v1';
+      const STORAGE_KEY = 'travel_globe_records_v2';
       const FILE_SCHEMA_VERSION = 1;
       const EARTH_TEXTURE = 'https://unpkg.com/three-globe/example/img/earth-day.jpg';
 
-      // 한 번만 렌더링을 예약하기 위한 플래그
       let listRenderScheduled = false;
       let globeRenderScheduled = false;
+      let resizeScheduled = false;
+      let layoutTimer = null;
 
-      // ring 애니메이션 중복 제거용 타이머 보관
       const ringTimers = new Map();
 
-      // 앱 상태
       const state = {
         trips: [],
         activeId: null,
         draggingId: null,
         globe: null,
         globeReady: false,
-        currentRings: []
+        currentRings: [],
+        globeShiftX: 0,
+        globeAltitudeBase: 2.2
       };
 
-      // -----------------------------
-      // DOM 캐시
-      // -----------------------------
       const dom = {
         tripForm: document.getElementById('tripForm'),
         cityInput: document.getElementById('cityInput'),
@@ -652,6 +595,7 @@
         statusText: document.getElementById('statusText'),
         tripList: document.getElementById('tripList'),
         globeViz: document.getElementById('globeViz'),
+        globeArea: document.querySelector('.globe-area'),
         downloadBtn: document.getElementById('downloadBtn'),
         uploadBtn: document.getElementById('uploadBtn'),
         fileInput: document.getElementById('fileInput'),
@@ -662,9 +606,6 @@
         focusInfo: document.getElementById('focusInfo')
       };
 
-      // -----------------------------
-      // 유틸
-      // -----------------------------
       function uid() {
         return 'trip_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
       }
@@ -704,10 +645,8 @@
         try {
           const raw = localStorage.getItem(STORAGE_KEY);
           if (!raw) return [];
-
           const parsed = JSON.parse(raw);
           if (!parsed || !Array.isArray(parsed.trips)) return [];
-
           return sanitizeTrips(parsed.trips);
         } catch (error) {
           console.error('localStorage 불러오기 실패:', error);
@@ -744,8 +683,7 @@
       }
 
       function formatDate(dateString) {
-        if (!dateString) return '방문일 미입력';
-        return dateString;
+        return dateString || '방문일 미입력';
       }
 
       function updateQueryPreview() {
@@ -782,65 +720,41 @@
         scheduleListRender();
       }
 
-      // -----------------------------
-      // 지오코딩
-      // -----------------------------
-      // -----------------------------
-// 지오코딩
-// -----------------------------
-function normalizeLatLng(lat, lng) {
-  let nLat = Number(lat);
-  let nLng = Number(lng);
+      function normalizeLatLng(lat, lng) {
+        let nLat = Number(lat);
+        let nLng = Number(lng);
 
-  if (!Number.isFinite(nLat) || !Number.isFinite(nLng)) {
-    throw new Error('좌표값이 올바르지 않습니다.');
-  }
+        if (!Number.isFinite(nLat) || !Number.isFinite(nLng)) {
+          throw new Error('좌표값이 올바르지 않습니다.');
+        }
 
-  // 위도 범위 보정
-  nLat = Math.max(-90, Math.min(90, nLat));
+        nLat = Math.max(-90, Math.min(90, nLat));
+        while (nLng > 180) nLng -= 360;
+        while (nLng < -180) nLng += 360;
 
-  // 경도 범위 보정 (-180 ~ 180)
-  while (nLng > 180) nLng -= 360;
-  while (nLng < -180) nLng += 360;
+        return { lat: nLat, lng: nLng };
+      }
 
-  return { lat: nLat, lng: nLng };
-}
+      function scoreGeocodeResult(item, city, country) {
+        const display = String(item.display_name || '').toLowerCase();
+        const name = String(item.name || '').toLowerCase();
+        const type = String(item.type || '').toLowerCase();
+        const cls = String(item.class || '').toLowerCase();
 
-function scoreGeocodeResult(item, city, country) {
-  const display = String(item.display_name || '').toLowerCase();
-  const name = String(item.name || '').toLowerCase();
-  const type = String(item.type || '').toLowerCase();
-  const cls = String(item.class || '').toLowerCase();
+        const cityLc = city.toLowerCase();
+        const countryLc = country.toLowerCase();
 
-  const cityLc = city.toLowerCase();
-  const countryLc = country.toLowerCase();
+        let score = 0;
+        if (display.includes(cityLc)) score += 50;
+        if (display.includes(countryLc)) score += 30;
+        if (name === cityLc) score += 35;
+        if (['city', 'town', 'village', 'municipality', 'administrative'].includes(type)) score += 20;
+        if (cls === 'place' || cls === 'boundary') score += 10;
+        if (Number.isFinite(Number(item.importance))) score += Number(item.importance) * 20;
 
-  let score = 0;
+        return score;
+      }
 
-  if (display.includes(cityLc)) score += 50;
-  if (display.includes(countryLc)) score += 30;
-  if (name === cityLc) score += 35;
-
-  // 도시성 결과 우선
-  if (['city', 'town', 'village', 'municipality', 'administrative'].includes(type)) {
-    score += 20;
-  }
-  if (cls === 'place' || cls === 'boundary') {
-    score += 10;
-  }
-
-  // nominatim importance 반영
-  if (Number.isFinite(Number(item.importance))) {
-    score += Number(item.importance) * 20;
-  }
-
-  return score;
-}
-
-// -----------------------------
-// 지오코딩
-// -----------------------------
-      
       async function geocodePlace(city, country) {
         const cleanCity = city.trim();
         const cleanCountry = country.trim();
@@ -869,9 +783,9 @@ function scoreGeocodeResult(item, city, country) {
           throw new Error('해당 위치를 찾지 못했습니다. 도시명/국가명을 다시 확인해주세요.');
         }
 
-        // 가장 적합한 결과 선택
-        const best = [...data]
-          .sort((a, b) => scoreGeocodeResult(b, cleanCity, cleanCountry) - scoreGeocodeResult(a, cleanCity, cleanCountry))[0];
+        const best = [...data].sort((a, b) => {
+          return scoreGeocodeResult(b, cleanCity, cleanCountry) - scoreGeocodeResult(a, cleanCity, cleanCountry);
+        })[0];
 
         const normalized = normalizeLatLng(best.lat, best.lon);
 
@@ -882,9 +796,6 @@ function scoreGeocodeResult(item, city, country) {
         };
       }
 
-      // -----------------------------
-      // 상태 변경 함수
-      // -----------------------------
       function addTrip(trip) {
         state.trips.push(trip);
         saveToLocal();
@@ -897,9 +808,7 @@ function scoreGeocodeResult(item, city, country) {
         const idx = state.trips.findIndex(item => item.id === id);
         if (idx < 0) return;
 
-        // ring 타이머 정리
         clearRingTimer(id);
-
         state.trips.splice(idx, 1);
         if (state.activeId === id) state.activeId = null;
 
@@ -920,7 +829,6 @@ function scoreGeocodeResult(item, city, country) {
         const trip = state.trips.find(item => item.id === id);
         if (!trip) return;
         trip.visible = visible;
-
         saveToLocal();
         scheduleListRender();
         scheduleGlobeRender();
@@ -942,10 +850,7 @@ function scoreGeocodeResult(item, city, country) {
       }
 
       function replaceTrips(nextTrips) {
-        // 기존 ring 타이머 모두 제거
-        for (const id of ringTimers.keys()) {
-          clearRingTimer(id);
-        }
+        for (const id of ringTimers.keys()) clearRingTimer(id);
 
         state.trips = sanitizeTrips(nextTrips);
         state.activeId = null;
@@ -961,9 +866,6 @@ function scoreGeocodeResult(item, city, country) {
         `;
       }
 
-      // -----------------------------
-      // 리스트 렌더링
-      // -----------------------------
       function scheduleListRender() {
         if (listRenderScheduled) return;
         listRenderScheduled = true;
@@ -987,12 +889,9 @@ function scoreGeocodeResult(item, city, country) {
           return;
         }
 
-        // 카드 전체를 문자열로 생성 후 한 번에 교체해 불필요한 DOM 조작 최소화
         list.innerHTML = state.trips.map(trip => {
           const activeClass = trip.id === state.activeId ? ' active' : '';
-          const noteHtml = trip.memo
-            ? `<div class="trip-note">${escapeHtml(trip.memo)}</div>`
-            : '';
+          const noteHtml = trip.memo ? `<div class="trip-note">${escapeHtml(trip.memo)}</div>` : '';
 
           return `
             <article class="trip-card${activeClass}" draggable="true" data-id="${escapeHtml(trip.id)}">
@@ -1027,88 +926,59 @@ function scoreGeocodeResult(item, city, country) {
         }).join('');
       }
 
-      // -----------------------------
-      // 지구본 렌더링
-      // -----------------------------
       function initGlobe() {
-  const globe = Globe()(dom.globeViz)
-    .globeImageUrl(EARTH_TEXTURE)
-    .backgroundColor('rgba(0,0,0,0)')
-    .showAtmosphere(true)
-    .atmosphereAltitude(0.12)
-    .atmosphereColor('#9ec5ff')
-    .globeCurvatureResolution(6)
-    .pointAltitude(0.03)
-    .pointRadius(0.5)
-    .pointResolution(12)
-    .pointsMerge(false)
-    .pointsTransitionDuration(0)
-    .labelSize(0.8)
-    .labelsTransitionDuration(0)
-    .ringMaxRadius(5)
-    .ringPropagationSpeed(3)
-    .ringRepeatPeriod(900)
-    .pointColor(item => item.visible ? '#2563eb' : '#cbd5e1')
-    .pointLabel(item => `
-      <div style="padding:6px 8px;">
-        <strong>${escapeHtml(item.city)}, ${escapeHtml(item.country)}</strong><br>
-        <span>${escapeHtml(formatDate(item.visitedAt))}</span>
-      </div>
-    `)
-    .onPointClick(point => {
-      focusTrip(point.id, true);
-    })
-    .showPointerCursor(obj => !!obj)
-    .onGlobeReady(() => {
-      state.globeReady = true;
-      scheduleGlobeRender();
-    });
-
-  // 성능 최적화: DPR 제한
-  const renderer = globe.renderer();
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
-
-  // OrbitControls 튜닝
-  const controls = globe.controls();
-  controls.enablePan = false;
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.08;
-  controls.minDistance = 140;
-  controls.maxDistance = 360;
-  controls.rotateSpeed = 0.75;
-  controls.zoomSpeed = 0.8;
-
-  // 초기 시점
-  globe.pointOfView({ lat: 20, lng: 20, altitude: 2.2 }, 0);
-
-  state.globe = globe;
-  resizeGlobe();
-  scheduleGlobeRender();
-
-
-            // 성능 최적화: 너무 높은 DPR 제한
-            const renderer = globe.renderer();
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
-
-            // OrbitControls 튜닝
-            const controls = globe.controls();
-            controls.enablePan = false;
-            controls.enableDamping = true;
-            controls.dampingFactor = 0.08;
-            controls.minDistance = 140;
-            controls.maxDistance = 360;
-            controls.rotateSpeed = 0.75;
-            controls.zoomSpeed = 0.8;
-
+        const globe = Globe()(dom.globeViz)
+          .globeImageUrl(EARTH_TEXTURE)
+          .backgroundColor('rgba(0,0,0,0)')
+          .showAtmosphere(true)
+          .atmosphereAltitude(0.12)
+          .atmosphereColor('#9ec5ff')
+          .globeCurvatureResolution(6)
+          .pointAltitude(0.03)
+          .pointRadius(0.5)
+          .pointResolution(12)
+          .pointsMerge(false)
+          .pointsTransitionDuration(0)
+          .labelSize(0.8)
+          .labelsTransitionDuration(0)
+          .ringMaxRadius(5)
+          .ringPropagationSpeed(3)
+          .ringRepeatPeriod(900)
+          .pointColor(item => item.visible ? '#2563eb' : '#cbd5e1')
+          .pointLabel(item => `
+            <div style="padding:6px 8px;">
+              <strong>${escapeHtml(item.city)}, ${escapeHtml(item.country)}</strong><br>
+              <span>${escapeHtml(formatDate(item.visitedAt))}</span>
+            </div>
+          `)
+          .onPointClick(point => {
+            focusTrip(point.id, true);
+          })
+          .showPointerCursor(obj => !!obj)
+          .onGlobeReady(() => {
+            state.globeReady = true;
             scheduleGlobeRender();
           });
 
-        // 초기 시점
+        const renderer = globe.renderer();
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+
+        const controls = globe.controls();
+        controls.enablePan = false;
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.08;
+        controls.minDistance = 140;
+        controls.maxDistance = 360;
+        controls.rotateSpeed = 0.75;
+        controls.zoomSpeed = 0.8;
+
         globe.pointOfView({ lat: 20, lng: 20, altitude: 2.2 }, 0);
 
         state.globe = globe;
         resizeGlobe();
-  }  
+        updateResponsiveGlobeLayout(false);
+        scheduleGlobeRender();
+      }
 
       function visibleTrips() {
         return state.trips.filter(item => item.visible);
@@ -1127,44 +997,97 @@ function scoreGeocodeResult(item, city, country) {
 
       function renderGlobeData() {
         if (!state.globe) return;
-
-        const visible = visibleTrips();
-
-        // 포인트 데이터만 갱신
-        state.globe.pointsData(visible);
-
-        // 현재 ring 데이터도 유지
+        state.globe.pointsData(visibleTrips());
         state.globe.ringsData(state.currentRings);
+      }
+
+      function getResponsiveLayoutValues() {
+        const width = dom.globeArea.clientWidth;
+        let shiftX = 0;
+        let altitude = 2.2;
+
+        if (width < 1400) {
+          shiftX = -30;
+          altitude = 2.28;
+        }
+        if (width < 1200) {
+          shiftX = -60;
+          altitude = 2.36;
+        }
+        if (width < 1050) {
+          shiftX = -95;
+          altitude = 2.48;
+        }
+        if (width < 900) {
+          shiftX = -130;
+          altitude = 2.62;
+        }
+        if (width < 760) {
+          shiftX = -165;
+          altitude = 2.78;
+        }
+        if (window.innerWidth <= 960) {
+          shiftX = 0;
+          altitude = 2.15;
+        }
+
+        return { shiftX, altitude };
       }
 
       function resizeGlobe() {
         if (!state.globe) return;
-        const width = dom.globeViz.clientWidth;
-        const height = dom.globeViz.clientHeight;
+        const width = dom.globeArea.clientWidth;
+        const height = dom.globeArea.clientHeight;
         state.globe.width(width).height(height);
       }
 
-      function focusTrip(id, showRing = true) {
+      function updateResponsiveGlobeLayout(recenterActive = true) {
+        if (!state.globe) return;
+
+        const layout = getResponsiveLayoutValues();
+        state.globeShiftX = layout.shiftX;
+        state.globeAltitudeBase = layout.altitude;
+
+        dom.globeViz.style.transform = `translateX(${layout.shiftX}px)`;
+
+        if (recenterActive && state.activeId) {
+          focusTrip(state.activeId, false, 0);
+        } else if (!state.activeId) {
+          state.globe.pointOfView({ lat: 20, lng: 20, altitude: layout.altitude }, 0);
+        }
+      }
+
+      function scheduleResponsiveLayout() {
+        if (resizeScheduled) return;
+        resizeScheduled = true;
+
+        requestAnimationFrame(() => {
+          resizeScheduled = false;
+          resizeGlobe();
+          updateResponsiveGlobeLayout(true);
+        });
+      }
+
+      function focusTrip(id, showRing = true, duration = 1200) {
         const trip = state.trips.find(item => item.id === id);
         if (!trip) return;
 
         setActiveTrip(id);
 
         if (state.globe) {
-          // 너무 정면 한가운데만 맞추면 점이 묻혀 보일 수 있어서
-          // 살짝 위도 보정 + 적당한 확대값 사용
-          const viewLat = Math.max(-85, Math.min(85, trip.lat + 6));
+          const isMobileStack = window.innerWidth <= 960;
+          const baseAltitude = state.globeAltitudeBase || 2.2;
+          const focusAltitude = isMobileStack ? Math.max(1.95, baseAltitude - 0.18) : Math.max(1.6, baseAltitude - 0.55);
+          const viewLat = Math.max(-85, Math.min(85, trip.lat + (isMobileStack ? 3 : 6)));
           const viewLng = trip.lng;
 
           state.globe.pointOfView(
-            { lat: viewLat, lng: viewLng, altitude: 1.6 },
-            1200
+            { lat: viewLat, lng: viewLng, altitude: focusAltitude },
+            duration
           );
         }
 
-        if (showRing) {
-          playRing(trip);
-        }
+        if (showRing) playRing(trip);
       }
 
       function clearRingTimer(id) {
@@ -1176,10 +1099,8 @@ function scoreGeocodeResult(item, city, country) {
       function playRing(trip) {
         if (!state.globe) return;
 
-        // 같은 위치에서 ring 요청이 여러 번 와도 이전 타이머 정리 후 재생
         clearRingTimer(trip.id);
 
-        // 기존 동일 아이디 ring 제거 후 새로 등록
         state.currentRings = state.currentRings.filter(item => item.id !== trip.id);
         state.currentRings.push({ id: trip.id, lat: trip.lat, lng: trip.lng, color: '#60a5fa' });
         state.globe.ringsData(state.currentRings);
@@ -1193,15 +1114,18 @@ function scoreGeocodeResult(item, city, country) {
         ringTimers.set(trip.id, timer);
       }
 
-      // -----------------------------
-      // 이벤트 바인딩
-      // -----------------------------
+      function debounce(fn, delay) {
+        let timer = null;
+        return function debounced(...args) {
+          clearTimeout(timer);
+          timer = setTimeout(() => fn.apply(this, args), delay);
+        };
+      }
+
       function bindEvents() {
-        // 입력창 query 미리보기
         dom.cityInput.addEventListener('input', updateQueryPreview);
         dom.countryInput.addEventListener('input', updateQueryPreview);
 
-        // 폼 제출: 여행지 추가
         dom.tripForm.addEventListener('submit', async event => {
           event.preventDefault();
 
@@ -1220,7 +1144,6 @@ function scoreGeocodeResult(item, city, country) {
 
           try {
             const geo = await geocodePlace(city, country);
-
             const trip = {
               id: uid(),
               city,
@@ -1234,12 +1157,8 @@ function scoreGeocodeResult(item, city, country) {
             };
 
             addTrip(trip);
-
-            // 데이터 반영 직후 한 번 더 안전하게 렌더 후 포커스
             scheduleGlobeRender();
-            setTimeout(() => {
-              focusTrip(trip.id, true);
-            }, 80);
+            setTimeout(() => focusTrip(trip.id, true, 1000), 100);
 
             dom.tripForm.reset();
             updateQueryPreview();
@@ -1258,12 +1177,10 @@ function scoreGeocodeResult(item, city, country) {
           setStatus('입력값을 초기화했습니다.');
         });
 
-        // 리스트 이벤트 위임
         dom.tripList.addEventListener('click', event => {
           const actionTarget = event.target.closest('[data-action]');
           const card = event.target.closest('.trip-card');
 
-          // 카드 빈 영역 클릭 시 포커스 이동
           if (!actionTarget && card) {
             const id = card.dataset.id;
             if (id) focusTrip(id, true);
@@ -1293,7 +1210,6 @@ function scoreGeocodeResult(item, city, country) {
           toggleTripVisibility(id, toggle.checked);
         });
 
-        // HTML5 Drag & Drop
         dom.tripList.addEventListener('dragstart', event => {
           const card = event.target.closest('.trip-card');
           if (!card) return;
@@ -1320,13 +1236,11 @@ function scoreGeocodeResult(item, city, country) {
           const card = event.target.closest('.trip-card');
           if (!card) return;
           event.preventDefault();
-
           const dropId = card.dataset.id;
           const dragId = state.draggingId || event.dataTransfer.getData('text/plain');
           reorderTrips(dragId, dropId);
         });
 
-        // JSON 저장
         dom.downloadBtn.addEventListener('click', () => {
           const payload = {
             version: FILE_SCHEMA_VERSION,
@@ -1337,7 +1251,6 @@ function scoreGeocodeResult(item, city, country) {
           setStatus('JSON 파일로 저장했습니다.', 'ok');
         });
 
-        // JSON 불러오기
         dom.uploadBtn.addEventListener('click', () => {
           dom.fileInput.click();
         });
@@ -1355,6 +1268,10 @@ function scoreGeocodeResult(item, city, country) {
 
             replaceTrips(parsed.trips);
             setStatus('파일을 불러왔습니다.', 'ok');
+
+            if (state.trips.length > 0) {
+              setTimeout(() => focusTrip(state.trips[state.trips.length - 1].id, false, 0), 80);
+            }
           } catch (error) {
             console.error(error);
             setStatus(error.message || '불러오기에 실패했습니다.', 'error');
@@ -1363,7 +1280,6 @@ function scoreGeocodeResult(item, city, country) {
           }
         });
 
-        // 전체 삭제
         dom.clearBtn.addEventListener('click', () => {
           if (!state.trips.length) {
             setStatus('삭제할 기록이 없습니다.');
@@ -1377,21 +1293,16 @@ function scoreGeocodeResult(item, city, country) {
           setStatus('모든 기록을 삭제했습니다.', 'ok');
         });
 
-        // 리사이즈 시 지구본 크기만 조정
-        window.addEventListener('resize', debounce(resizeGlobe, 100), { passive: true });
+        const onResize = debounce(() => {
+          clearTimeout(layoutTimer);
+          layoutTimer = setTimeout(() => {
+            scheduleResponsiveLayout();
+          }, 40);
+        }, 60);
+
+        window.addEventListener('resize', onResize, { passive: true });
       }
 
-      function debounce(fn, delay) {
-        let timer = null;
-        return function debounced(...args) {
-          clearTimeout(timer);
-          timer = setTimeout(() => fn.apply(this, args), delay);
-        };
-      }
-
-      // -----------------------------
-      // 초기화
-      // -----------------------------
       function init() {
         bindEvents();
         initGlobe();
@@ -1403,9 +1314,8 @@ function scoreGeocodeResult(item, city, country) {
         scheduleGlobeRender();
 
         if (state.trips.length > 0) {
-          // 마지막 항목을 기본 포커스로 보여줌
           const lastTrip = state.trips[state.trips.length - 1];
-          setTimeout(() => focusTrip(lastTrip.id, false), 200);
+          setTimeout(() => focusTrip(lastTrip.id, false, 0), 120);
           setStatus('이전 기록을 자동으로 불러왔습니다.', 'ok');
         } else {
           setStatus('새 여행 기록을 추가해보세요.');
@@ -1414,10 +1324,6 @@ function scoreGeocodeResult(item, city, country) {
 
       init();
     })();
-
-    /* =========================
-       app.js 영역 끝
-       ========================= */
   </script>
 </body>
 </html>
