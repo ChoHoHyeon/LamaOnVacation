@@ -686,6 +686,136 @@
         return dateString || '방문일 미입력';
       }
 
+
+
+      function buildTripGroupKey(trip) {
+        return [
+          normalizeText(trip.city).toLowerCase(),
+          normalizeText(trip.country).toLowerCase(),
+          Number(trip.lat).toFixed(4),
+          Number(trip.lng).toFixed(4)
+        ].join('|');
+      }
+
+      function getVisitLevelColor(count) {
+        if (count >= 4) return '#b91c1c';   // 진한 빨강
+        if (count === 3) return '#ef4444';  // 빨강
+        if (count === 2) return '#f59e0b';  // 진한 노랑/주황
+        return '#facc15';                   // 노랑
+      }
+
+      function getVisitLevelRadius(count) {
+        if (count >= 4) return 0.95;
+        if (count === 3) return 0.75;
+        if (count === 2) return 0.58;
+        return 0.42;
+      }
+
+      function sortVisitedDates(dates) {
+        return [...dates].sort((a, b) => {
+          if (!a && !b) return 0;
+          if (!a) return 1;
+          if (!b) return -1;
+          return a.localeCompare(b);
+        });
+      }
+
+      function groupVisibleTrips() {
+        const groups = new Map();
+  
+        state.trips
+          .filter(item => item.visible)
+          .forEach(trip => {
+            const groupKey = buildTripGroupKey(trip);
+
+            if (!groups.has(groupKey)) {
+              groups.set(groupKey, {
+                id: groupKey,
+                groupKey,
+                city: trip.city,
+                country: trip.country,
+                lat: trip.lat,
+                lng: trip.lng,
+                visitCount: 0,
+                visitedDates: [],
+                tripIds: [],
+                latestVisitedAt: '',
+                latestTripId: trip.id
+              });
+            }
+
+            const group = groups.get(groupKey);
+            group.visitCount += 1;
+            group.tripIds.push(trip.id);
+
+            if (trip.visitedAt) {
+              group.visitedDates.push(trip.visitedAt);
+            }
+
+            if (!group.latestVisitedAt || (trip.visitedAt && trip.visitedAt > group.latestVisitedAt)) {
+              group.latestVisitedAt = trip.visitedAt;
+              group.latestTripId = trip.id;
+            }
+          });
+
+        return Array.from(groups.values()).map(group => {
+          group.visitedDates = sortVisitedDates(group.visitedDates);
+          return group;
+        });
+      }
+
+      function setFocusInfoFromGroup(group) {
+        const visitedDatesText = group.visitedDates.length
+          ? group.visitedDates.join(', ')
+          : '방문일 미입력';
+
+        dom.focusInfo.innerHTML = `
+          <strong>${escapeHtml(group.city)}, ${escapeHtml(group.country)}</strong>
+          <div>
+            총 ${group.visitCount}회 방문<br>
+            최근 방문일: ${escapeHtml(group.latestVisitedAt || '미입력')}<br>
+            전체 방문일: ${escapeHtml(visitedDatesText)}<br>
+            좌표: ${group.lat.toFixed(4)}, ${group.lng.toFixed(4)}
+          </div>
+        `;
+      }
+
+      function focusGroup(groupKey, showRing = true) {
+        const groups = groupVisibleTrips();
+        const group = groups.find(item => item.groupKey === groupKey);
+        if (!group) return;
+
+        state.activeId = group.latestTripId;
+        setFocusInfoFromGroup(group);
+        scheduleListRender();
+
+        if (state.globe) {
+          const viewLat = Math.max(-85, Math.min(85, group.lat + 6));
+          const viewLng = group.lng;
+
+          let altitude = 1.6;
+          const globeWidth = dom.globeViz.clientWidth;
+
+          if (globeWidth < 1200) altitude = 1.75;
+          if (globeWidth < 1000) altitude = 1.9;
+          if (globeWidth < 850) altitude = 2.0;
+          if (globeWidth < 700) altitude = 2.1;
+
+          state.globe.pointOfView(
+            { lat: viewLat, lng: viewLng, altitude },
+            1200
+          );
+        }
+
+        if (showRing) {
+          playRing({
+            id: group.groupKey,
+            lat: group.lat,
+            lng: group.lng
+          });
+        }
+      }
+      
       function updateQueryPreview() {
         dom.queryPreview.value = buildQuery(dom.cityInput.value, dom.countryInput.value);
       }
@@ -927,59 +1057,68 @@
       }
 
       function initGlobe() {
-        const globe = Globe()(dom.globeViz)
-          .globeImageUrl(EARTH_TEXTURE)
-          .backgroundColor('rgba(0,0,0,0)')
-          .showAtmosphere(true)
-          .atmosphereAltitude(0.12)
-          .atmosphereColor('#9ec5ff')
-          .globeCurvatureResolution(6)
-          .pointAltitude(0.03)
-          .pointRadius(0.5)
-          .pointResolution(12)
-          .pointsMerge(false)
-          .pointsTransitionDuration(0)
-          .labelSize(0.8)
-          .labelsTransitionDuration(0)
-          .ringMaxRadius(5)
-          .ringPropagationSpeed(3)
-          .ringRepeatPeriod(900)
-          .pointColor(item => item.visible ? '#2563eb' : '#cbd5e1')
-          .pointLabel(item => `
-            <div style="padding:6px 8px;">
-              <strong>${escapeHtml(item.city)}, ${escapeHtml(item.country)}</strong><br>
-              <span>${escapeHtml(formatDate(item.visitedAt))}</span>
-            </div>
-          `)
-          .onPointClick(point => {
-            focusTrip(point.id, true);
-          })
-          .showPointerCursor(obj => !!obj)
-          .onGlobeReady(() => {
-            state.globeReady = true;
-            scheduleGlobeRender();
-          });
+  const globe = Globe()(dom.globeViz)
+    .globeImageUrl(EARTH_TEXTURE)
+    .backgroundColor('rgba(0,0,0,0)')
+    .showAtmosphere(true)
+    .atmosphereAltitude(0.12)
+    .atmosphereColor('#9ec5ff')
+    .globeCurvatureResolution(6)
+    .pointAltitude(0.03)
+    .pointRadius(item => getVisitLevelRadius(item.visitCount || 1))
+    .pointResolution(14)
+    .pointsMerge(false)
+    .pointsTransitionDuration(0)
+    .labelSize(0.9)
+    .labelsTransitionDuration(0)
+    .ringMaxRadius(5)
+    .ringPropagationSpeed(3)
+    .ringRepeatPeriod(900)
+    .pointColor(item => getVisitLevelColor(item.visitCount || 1))
+    .pointLabel(item => {
+      const visitedDatesText = item.visitedDates && item.visitedDates.length
+        ? item.visitedDates.join(', ')
+        : '방문일 미입력';
 
-        const renderer = globe.renderer();
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+      return `
+        <div style="padding:6px 8px;">
+          <strong>${escapeHtml(item.city)}, ${escapeHtml(item.country)}</strong><br>
+          <span>총 ${item.visitCount}회 방문</span><br>
+          <span>최근 방문일: ${escapeHtml(item.latestVisitedAt || '미입력')}</span><br>
+          <span>전체 방문일: ${escapeHtml(visitedDatesText)}</span>
+        </div>
+      `;
+    })
+    .onPointClick(point => {
+      focusGroup(point.groupKey, true);
+    })
+    .showPointerCursor(obj => !!obj)
+    .onGlobeReady(() => {
+      state.globeReady = true;
+      scheduleGlobeRender();
+    });
 
-        const controls = globe.controls();
-        controls.enablePan = false;
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.08;
-        controls.minDistance = 140;
-        controls.maxDistance = 360;
-        controls.rotateSpeed = 0.75;
-        controls.zoomSpeed = 0.8;
+  const renderer = globe.renderer();
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
 
-        globe.pointOfView({ lat: 20, lng: 20, altitude: 2.2 }, 0);
+  const controls = globe.controls();
+  controls.enablePan = false;
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.minDistance = 140;
+  controls.maxDistance = 360;
+  controls.rotateSpeed = 0.75;
+  controls.zoomSpeed = 0.8;
 
-        state.globe = globe;
-        resizeGlobe();
-        updateResponsiveGlobeLayout(false);
-        scheduleGlobeRender();
-      }
+  globe.pointOfView({ lat: 20, lng: 20, altitude: 2.2 }, 0);
 
+  state.globe = globe;
+  resizeGlobe();
+  updateResponsiveGlobeLayout();
+  scheduleGlobeRender();
+}
+
+      
       function visibleTrips() {
         return state.trips.filter(item => item.visible);
       }
@@ -997,7 +1136,10 @@
 
       function renderGlobeData() {
         if (!state.globe) return;
-        state.globe.pointsData(visibleTrips());
+
+        const grouped = groupVisibleTrips();
+
+        state.globe.pointsData(grouped);
         state.globe.ringsData(state.currentRings);
       }
 
@@ -1036,24 +1178,57 @@
 
       function resizeGlobe() {
         if (!state.globe) return;
-        const width = dom.globeArea.clientWidth;
-        const height = dom.globeArea.clientHeight;
+
+        const width = dom.globeViz.clientWidth;
+        const height = dom.globeViz.clientHeight;
+
         state.globe.width(width).height(height);
+        updateResponsiveGlobeLayout();
       }
 
       function updateResponsiveGlobeLayout(recenterActive = true) {
         if (!state.globe) return;
 
-        const layout = getResponsiveLayoutValues();
-        state.globeShiftX = layout.shiftX;
-        state.globeAltitudeBase = layout.altitude;
+        const globeEl = dom.globeViz;
+        const globeWidth = globeEl.clientWidth;
 
-        dom.globeViz.style.transform = `translateX(${layout.shiftX}px)`;
+        let shiftX = 0;
+        let altitude = 2.2;
 
+        if (globeWidth < 1200) {
+          shiftX = -20;
+          altitude = 2.0;
+        }
+        if (globeWidth < 1000) {
+          shiftX = -50;
+          altitude = 1.9;
+        }
+        if (globeWidth < 850) {
+          shiftX = -90;
+          altitude = 1.85;
+        }
+        if (globeWidth < 700) {
+          shiftX = -130;
+          altitude = 1.8;
+        }
+
+        // 위치 이동
+        globeEl.style.transform = `translateX(${shiftX}px)`;
+
+        // 카메라 재조정
         if (recenterActive && state.activeId) {
-          focusTrip(state.activeId, false, 0);
+          const trip = state.trips.find(t => t.id === state.activeId);
+          if (trip) {
+            state.globe.pointOfView(
+              { lat: trip.lat + 6, lng: trip.lng, altitude },
+              800
+            );
+          }
         } else if (!state.activeId) {
-          state.globe.pointOfView({ lat: 20, lng: 20, altitude: layout.altitude }, 0);
+          state.globe.pointOfView(
+            { lat: 20, lng: 20, altitude },
+            0
+          );
         }
       }
 
@@ -1068,26 +1243,33 @@
         });
       }
 
-      function focusTrip(id, showRing = true, duration = 1200) {
+     function focusTrip(id, showRing = true) {
         const trip = state.trips.find(item => item.id === id);
         if (!trip) return;
 
         setActiveTrip(id);
 
         if (state.globe) {
-          const isMobileStack = window.innerWidth <= 960;
-          const baseAltitude = state.globeAltitudeBase || 2.2;
-          const focusAltitude = isMobileStack ? Math.max(1.95, baseAltitude - 0.18) : Math.max(1.6, baseAltitude - 0.55);
-          const viewLat = Math.max(-85, Math.min(85, trip.lat + (isMobileStack ? 3 : 6)));
+          const viewLat = Math.max(-85, Math.min(85, trip.lat + 6));
           const viewLng = trip.lng;
 
+          let altitude = 1.6;
+          const globeWidth = dom.globeViz.clientWidth;
+
+          if (globeWidth < 1200) altitude = 1.75;
+          if (globeWidth < 1000) altitude = 1.9;
+          if (globeWidth < 850) altitude = 2.0;
+          if (globeWidth < 700) altitude = 2.1;
+
           state.globe.pointOfView(
-            { lat: viewLat, lng: viewLng, altitude: focusAltitude },
-            duration
+            { lat: viewLat, lng: viewLng, altitude },
+            1200
           );
         }
 
-        if (showRing) playRing(trip);
+        if (showRing) {
+          playRing(trip);
+        }
       }
 
       function clearRingTimer(id) {
@@ -1300,7 +1482,17 @@
           }, 40);
         }, 60);
 
-        window.addEventListener('resize', onResize, { passive: true });
+        window.addEventListener('resize', debounce(() => {
+        resizeGlobe();
+
+        if (state.activeId) {
+          const activeTrip = state.trips.find(item => item.id === state.activeId);
+          if (activeTrip) {
+            const groupKey = buildTripGroupKey(activeTrip);
+            focusGroup(groupKey, false);
+          }
+        }
+      }, 100), { passive: true });
       }
 
       function init() {
