@@ -1084,7 +1084,7 @@ function scoreGeocodeResult(item, city, country) {
   state.globe = globe;
   resizeGlobe();
   scheduleGlobeRender();
-}
+
 
             // 성능 최적화: 너무 높은 DPR 제한
             const renderer = globe.renderer();
@@ -1108,7 +1108,7 @@ function scoreGeocodeResult(item, city, country) {
 
         state.globe = globe;
         resizeGlobe();
-    
+  }  
 
       function visibleTrips() {
         return state.trips.filter(item => item.visible);
