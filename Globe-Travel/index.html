@@ -1032,36 +1032,40 @@ function scoreGeocodeResult(item, city, country) {
       // -----------------------------
       function initGlobe() {
         const globe = Globe()(dom.globeViz)
-          .globeImageUrl(EARTH_TEXTURE)
-          .backgroundColor('rgba(0,0,0,0)')
-          .showAtmosphere(true)
-          .atmosphereAltitude(0.12)
-          .atmosphereColor('#9ec5ff')
-          .globeCurvatureResolution(6)
-          .pointAltitude(0.03)
-          .pointRadius(0.5)
-          .pointResolution(12)
-          .pointsMerge(false)
-          .pointsTransitionDuration(0)
-          .labelSize(0.8)
-          .labelsTransitionDuration(0)
-          .ringsTransitionDuration(0)
-          .ringMaxRadius(5)
-          .ringPropagationSpeed(3)
-          .ringRepeatPeriod(900)
-          .pointColor(item => item.visible ? '#2563eb' : '#cbd5e1')
-          .pointLabel(item => `
-            <div style="padding:6px 8px;">
-              <strong>${escapeHtml(item.city)}, ${escapeHtml(item.country)}</strong><br>
-              <span>${escapeHtml(formatDate(item.visitedAt))}</span>
-            </div>
-          `)
-          .onPointClick(point => {
-            focusTrip(point.id, true);
-          })
-          .showPointerCursor(obj => !!obj)
-          .onGlobeReady(() => {
-            state.globeReady = true;
+            .globeImageUrl(EARTH_TEXTURE)
+            .backgroundColor('rgba(0,0,0,0)')
+            .showAtmosphere(true)
+            .atmosphereAltitude(0.12)
+            .atmosphereColor('#9ec5ff')
+            .globeCurvatureResolution(6)
+            .pointAltitude(0.03)
+            .pointRadius(0.5)
+            .pointResolution(12)
+            .pointsMerge(false)
+            .pointsTransitionDuration(0)
+            .labelSize(0.8)
+            .labelsTransitionDuration(0)
+            .ringMaxRadius(5)
+            .ringPropagationSpeed(3)
+            .ringRepeatPeriod(900)
+            .pointColor(item => item.visible ? '#2563eb' : '#cbd5e1')
+            .pointLabel(item => `
+              <div style="padding:6px 8px;">
+                <strong>${escapeHtml(item.city)}, ${escapeHtml(item.country)}</strong><br>
+                <span>${escapeHtml(formatDate(item.visitedAt))}</span>
+              </div>
+            `)
+            .onPointClick(point => {
+              focusTrip(point.id, true);
+            })
+            .showPointerCursor(obj => !!obj)
+            .onGlobeReady(() => {
+              state.globeReady = true;
+              scheduleGlobeRender();
+            });
+
+          state.globe = globe;
+        }
 
             // 성능 최적화: 너무 높은 DPR 제한
             const renderer = globe.renderer();
