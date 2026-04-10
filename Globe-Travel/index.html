@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>여행 지구본 기록 웹앱</title>
+
+  <!--
+    단일 파일 버전
+    - 원래는 index.html / style.css / app.js 로 분리하기 좋도록 섹션을 나눠 작성했습니다.
+    - GitHub Pages에 바로 올릴 수 있도록 CSS/JS를 모두 이 파일에 포함했습니다.
+  -->
+
+  <style>
+    /* =========================
+       style.css 영역 시작
+       ========================= */
+
+    :root {
+      --bg: #f6f7fb;
+      --panel: #ffffff;
+      --line: #e7eaf1;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --primary: #2563eb;
+      --primary-soft: #e8f0ff;
+      --danger: #ef4444;
+      --success: #16a34a;
+      --shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    body {
+      overflow: hidden;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      width: 100%;
+      height: 100vh;
+      gap: 0;
+    }
+
+    .sidebar {
+      background: var(--panel);
+      border-right: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      min-width: 320px;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .sidebar-inner {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 16px;
+      min-height: 0;
+      height: 100%;
+    }
+
+    .title-box {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .title-box h1 {
+      font-size: 22px;
+      margin: 0;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .title-box p {
+      margin: 0;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .stat {
+      background: #fbfcff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .panel {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      gap: 12px;
+    }
+
+    .section-title h2 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .section-title span {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .field.full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    input,
+    textarea,
+    button {
+      font: inherit;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 11px 12px;
+      outline: none;
+      background: #fff;
+      color: var(--text);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: #93c5fd;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 78px;
+      line-height: 1.45;
+    }
+
+    .actions,
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .btn {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: transform 0.05s ease, background 0.15s ease, border-color 0.15s ease;
+      user-select: none;
+    }
+
+    .btn:hover {
+      background: #f8fafc;
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    .btn.primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .btn.primary:hover {
+      background: #1d4ed8;
+    }
+
+    .btn.ghost {
+      background: #fff;
+    }
+
+    .btn.danger {
+      color: var(--danger);
+    }
+
+    .btn.small {
+      padding: 8px 10px;
+      font-size: 12px;
+      border-radius: 10px;
+    }
+
+    .status {
+      min-height: 20px;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    .status.ok {
+      color: var(--success);
+    }
+
+    .status.error {
+      color: var(--danger);
+    }
+
+    .list-panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      flex: 1;
+    }
+
+    .list-wrap {
+      min-height: 0;
+      overflow: auto;
+      padding-right: 2px;
+    }
+
+    .list-wrap::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    .list-wrap::-webkit-scrollbar-thumb {
+      background: #d8deea;
+      border-radius: 999px;
+      border: 2px solid transparent;
+      background-clip: padding-box;
+    }
+
+    .trip-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 100%;
+    }
+
+    .empty {
+      display: grid;
+      place-items: center;
+      min-height: 180px;
+      border: 1px dashed #d9e2f0;
+      border-radius: 14px;
+      color: var(--muted);
+      font-size: 14px;
+      background: #fcfdff;
+      text-align: center;
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    .trip-card {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      cursor: grab;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+
+    .trip-card:hover {
+      border-color: #cdd8eb;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+    }
+
+    .trip-card.dragging {
+      opacity: 0.45;
+    }
+
+    .trip-card.active {
+      border-color: #93c5fd;
+      background: #f8fbff;
+    }
+
+    .trip-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .trip-title {
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.3;
+    }
+
+    .trip-sub {
+      margin-top: 3px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .trip-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .chip {
+      background: #f3f6fb;
+      border: 1px solid #e7edf7;
+      border-radius: 999px;
+      padding: 4px 8px;
+      white-space: nowrap;
+    }
+
+    .trip-note {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #374151;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .trip-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      user-select: none;
+      cursor: pointer;
+    }
+
+    .toggle input {
+      width: auto;
+      margin: 0;
+      accent-color: var(--primary);
+    }
+
+    .globe-area {
+      position: relative;
+      min-width: 0;
+      min-height: 0;
+      background: linear-gradient(180deg, #f8fbff 0%, #eef3fb 100%);
+    }
+
+    #globeViz {
+      width: 100%;
+      height: 100%;
+    }
+
+    .globe-overlay {
+      position: absolute;
+      right: 18px;
+      top: 18px;
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .globe-badge {
+      pointer-events: auto;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(226, 232, 240, 0.95);
+      border-radius: 14px;
+      padding: 10px 12px;
+      box-shadow: var(--shadow);
+      min-width: 180px;
+    }
+
+    .globe-badge strong {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+
+    .globe-badge div {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+    }
+
+    @media (max-width: 960px) {
+      body {
+        overflow: auto;
+      }
+
+      .app {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 55vh;
+        height: auto;
+        min-height: 100vh;
+      }
+
+      .sidebar {
+        height: auto;
+        min-width: 0;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .globe-area {
+        min-height: 55vh;
+      }
+    }
+
+    /* =========================
+       style.css 영역 끝
+       ========================= */
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar-inner">
+        <div class="title-box">
+          <h1>여행 지구본 기록</h1>
+          <p>
+            다녀온 도시를 기록하고, 지구본 위에서 다시 꺼내보는 가벼운 여행 아카이브입니다.
+            브라우저에 자동 저장되며, JSON 파일로 저장/불러오기도 가능합니다.
+          </p>
+        </div>
+
+        <section class="stats" aria-label="통계">
+          <div class="stat">
+            <div class="stat-label">방문 국가 수</div>
+            <div class="stat-value" id="statCountries">0</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">방문 도시 수</div>
+            <div class="stat-value" id="statCities">0</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">총 여행 수</div>
+            <div class="stat-value" id="statTrips">0</div>
+          </div>
+        </section>
+
+        <section class="panel" aria-labelledby="addTitle">
+          <div class="section-title">
+            <h2 id="addTitle">여행지 추가</h2>
+            <span>위도/경도 자동 조회</span>
+          </div>
+
+          <form id="tripForm" autocomplete="off">
+            <div class="form-grid">
+              <div class="field">
+                <label for="cityInput">도시명</label>
+                <input id="cityInput" name="city" type="text" placeholder="예: 파리" required />
+              </div>
+
+              <div class="field">
+                <label for="countryInput">국가명</label>
+                <input id="countryInput" name="country" type="text" placeholder="예: 프랑스" required />
+              </div>
+
+              <div class="field">
+                <label for="dateInput">방문일</label>
+                <input id="dateInput" name="visitedAt" type="date" />
+              </div>
+
+              <div class="field">
+                <label for="queryPreview">검색 대상</label>
+                <input id="queryPreview" type="text" placeholder="도시명 + 국가명으로 자동 조회" disabled />
+              </div>
+
+              <div class="field full">
+                <label for="memoInput">메모</label>
+                <textarea id="memoInput" name="memo" placeholder="예: 야경이 정말 좋았고, 다음엔 3박 이상 머물고 싶음"></textarea>
+              </div>
+            </div>
+
+            <div class="actions" style="margin-top: 12px;">
+              <button class="btn primary" type="submit" id="addBtn">추가하기</button>
+              <button class="btn ghost" type="button" id="resetBtn">입력 초기화</button>
+            </div>
+
+            <div id="statusText" class="status" aria-live="polite"></div>
+          </form>
+        </section>
+
+        <section class="panel">
+          <div class="section-title">
+            <h2>저장 / 불러오기</h2>
+            <span>JSON 파일</span>
+          </div>
+
+          <div class="toolbar">
+            <button class="btn" type="button" id="downloadBtn">저장하기</button>
+            <button class="btn" type="button" id="uploadBtn">불러오기</button>
+            <button class="btn danger" type="button" id="clearBtn">전체 삭제</button>
+          </div>
+
+          <input id="fileInput" class="sr-only" type="file" accept="application/json" />
+        </section>
+
+        <section class="panel list-panel">
+          <div class="section-title">
+            <h2>여행 리스트</h2>
+            <span>드래그해서 순서 변경</span>
+          </div>
+
+          <div class="list-wrap">
+            <div id="tripList" class="trip-list"></div>
+          </div>
+        </section>
+      </div>
+    </aside>
+
+    <main class="globe-area">
+      <div id="globeViz" aria-label="지구본"></div>
+
+      <div class="globe-overlay">
+        <div class="globe-badge" id="focusInfo">
+          <strong>선택된 여행지</strong>
+          <div>좌측 리스트 또는 지구본의 점을 클릭해보세요.</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!--
+    외부 CDN
+    - globe.gl은 ThreeJS 기반 3D 지구본 컴포넌트입니다.
+    - earth-day.jpg는 사용자가 요청한 텍스처를 그대로 사용했습니다.
+  -->
+  <script src="https://unpkg.com/globe.gl"></script>
+
+  <script>
+    /* =========================
+       app.js 영역 시작
+       ========================= */
+
+    (() => {
+      'use strict';
+
+      // -----------------------------
+      // 상수 / 전역 상태
+      // -----------------------------
+      const STORAGE_KEY = 'travel_globe_records_v1';
+      const FILE_SCHEMA_VERSION = 1;
+      const EARTH_TEXTURE = 'https://unpkg.com/three-globe/example/img/earth-day.jpg';
+
+      // 한 번만 렌더링을 예약하기 위한 플래그
+      let listRenderScheduled = false;
+      let globeRenderScheduled = false;
+
+      // ring 애니메이션 중복 제거용 타이머 보관
+      const ringTimers = new Map();
+
+      // 앱 상태
+      const state = {
+        trips: [],
+        activeId: null,
+        draggingId: null,
+        globe: null,
+        globeReady: false,
+        currentRings: []
+      };
+
+      // -----------------------------
+      // DOM 캐시
+      // -----------------------------
+      const dom = {
+        tripForm: document.getElementById('tripForm'),
+        cityInput: document.getElementById('cityInput'),
+        countryInput: document.getElementById('countryInput'),
+        dateInput: document.getElementById('dateInput'),
+        memoInput: document.getElementById('memoInput'),
+        queryPreview: document.getElementById('queryPreview'),
+        addBtn: document.getElementById('addBtn'),
+        resetBtn: document.getElementById('resetBtn'),
+        statusText: document.getElementById('statusText'),
+        tripList: document.getElementById('tripList'),
+        globeViz: document.getElementById('globeViz'),
+        downloadBtn: document.getElementById('downloadBtn'),
+        uploadBtn: document.getElementById('uploadBtn'),
+        fileInput: document.getElementById('fileInput'),
+        clearBtn: document.getElementById('clearBtn'),
+        statCountries: document.getElementById('statCountries'),
+        statCities: document.getElementById('statCities'),
+        statTrips: document.getElementById('statTrips'),
+        focusInfo: document.getElementById('focusInfo')
+      };
+
+      // -----------------------------
+      // 유틸
+      // -----------------------------
+      function uid() {
+        return 'trip_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+
+      function normalizeText(value) {
+        return String(value ?? '').trim();
+      }
+
+      function setStatus(message, type = '') {
+        dom.statusText.textContent = message || '';
+        dom.statusText.className = 'status' + (type ? ' ' + type : '');
+      }
+
+      function buildQuery(city, country) {
+        return [normalizeText(city), normalizeText(country)].filter(Boolean).join(', ');
+      }
+
+      function saveToLocal() {
+        const payload = {
+          version: FILE_SCHEMA_VERSION,
+          savedAt: new Date().toISOString(),
+          trips: state.trips
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      }
+
+      function loadFromLocal() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return [];
+
+          const parsed = JSON.parse(raw);
+          if (!parsed || !Array.isArray(parsed.trips)) return [];
+
+          return sanitizeTrips(parsed.trips);
+        } catch (error) {
+          console.error('localStorage 불러오기 실패:', error);
+          return [];
+        }
+      }
+
+      function sanitizeTrips(list) {
+        return list
+          .map(item => ({
+            id: normalizeText(item.id) || uid(),
+            city: normalizeText(item.city),
+            country: normalizeText(item.country),
+            visitedAt: normalizeText(item.visitedAt),
+            memo: normalizeText(item.memo),
+            lat: Number(item.lat),
+            lng: Number(item.lng),
+            visible: item.visible !== false,
+            createdAt: normalizeText(item.createdAt) || new Date().toISOString()
+          }))
+          .filter(item => item.city && item.country && Number.isFinite(item.lat) && Number.isFinite(item.lng));
+      }
+
+      function downloadJson(filename, data) {
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      function formatDate(dateString) {
+        if (!dateString) return '방문일 미입력';
+        return dateString;
+      }
+
+      function updateQueryPreview() {
+        dom.queryPreview.value = buildQuery(dom.cityInput.value, dom.countryInput.value);
+      }
+
+      function updateStats() {
+        const countries = new Set();
+        const cities = new Set();
+
+        state.trips.forEach(item => {
+          countries.add(item.country.toLowerCase());
+          cities.add((item.city + '|' + item.country).toLowerCase());
+        });
+
+        dom.statCountries.textContent = String(countries.size);
+        dom.statCities.textContent = String(cities.size);
+        dom.statTrips.textContent = String(state.trips.length);
+      }
+
+      function setActiveTrip(id) {
+        state.activeId = id;
+        const trip = state.trips.find(item => item.id === id);
+        if (!trip) return;
+
+        dom.focusInfo.innerHTML = `
+          <strong>${escapeHtml(trip.city)}, ${escapeHtml(trip.country)}</strong>
+          <div>
+            방문일: ${escapeHtml(formatDate(trip.visitedAt))}<br>
+            좌표: ${trip.lat.toFixed(4)}, ${trip.lng.toFixed(4)}
+          </div>
+        `;
+
+        scheduleListRender();
+      }
+
+      // -----------------------------
+      // 지오코딩
+      // -----------------------------
+      async function geocodePlace(city, country) {
+        const query = buildQuery(city, country);
+        const url = new URL('https://nominatim.openstreetmap.org/search');
+        url.searchParams.set('format', 'jsonv2');
+        url.searchParams.set('limit', '1');
+        url.searchParams.set('q', query);
+
+        const response = await fetch(url.toString(), {
+          headers: {
+            'Accept': 'application/json',
+            'Accept-Language': 'ko,en;q=0.8'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('좌표 조회 요청 실패');
+        }
+
+        const data = await response.json();
+        if (!Array.isArray(data) || data.length === 0) {
+          throw new Error('해당 위치를 찾지 못했습니다. 도시명/국가명을 다시 확인해주세요.');
+        }
+
+        const first = data[0];
+        return {
+          lat: Number(first.lat),
+          lng: Number(first.lon),
+          displayName: first.display_name || query
+        };
+      }
+
+      // -----------------------------
+      // 상태 변경 함수
+      // -----------------------------
+      function addTrip(trip) {
+        state.trips.push(trip);
+        saveToLocal();
+        updateStats();
+        scheduleListRender();
+        scheduleGlobeRender();
+      }
+
+      function removeTrip(id) {
+        const idx = state.trips.findIndex(item => item.id === id);
+        if (idx < 0) return;
+
+        // ring 타이머 정리
+        clearRingTimer(id);
+
+        state.trips.splice(idx, 1);
+        if (state.activeId === id) state.activeId = null;
+
+        saveToLocal();
+        updateStats();
+        scheduleListRender();
+        scheduleGlobeRender();
+
+        if (!state.trips.length) {
+          dom.focusInfo.innerHTML = `
+            <strong>선택된 여행지</strong>
+            <div>좌측 리스트 또는 지구본의 점을 클릭해보세요.</div>
+          `;
+        }
+      }
+
+      function toggleTripVisibility(id, visible) {
+        const trip = state.trips.find(item => item.id === id);
+        if (!trip) return;
+        trip.visible = visible;
+
+        saveToLocal();
+        scheduleListRender();
+        scheduleGlobeRender();
+      }
+
+      function reorderTrips(dragId, dropId) {
+        if (!dragId || !dropId || dragId === dropId) return;
+
+        const fromIndex = state.trips.findIndex(item => item.id === dragId);
+        const toIndex = state.trips.findIndex(item => item.id === dropId);
+        if (fromIndex < 0 || toIndex < 0) return;
+
+        const [moved] = state.trips.splice(fromIndex, 1);
+        state.trips.splice(toIndex, 0, moved);
+
+        saveToLocal();
+        scheduleListRender();
+        scheduleGlobeRender();
+      }
+
+      function replaceTrips(nextTrips) {
+        // 기존 ring 타이머 모두 제거
+        for (const id of ringTimers.keys()) {
+          clearRingTimer(id);
+        }
+
+        state.trips = sanitizeTrips(nextTrips);
+        state.activeId = null;
+
+        saveToLocal();
+        updateStats();
+        scheduleListRender();
+        scheduleGlobeRender();
+
+        dom.focusInfo.innerHTML = `
+          <strong>선택된 여행지</strong>
+          <div>좌측 리스트 또는 지구본의 점을 클릭해보세요.</div>
+        `;
+      }
+
+      // -----------------------------
+      // 리스트 렌더링
+      // -----------------------------
+      function scheduleListRender() {
+        if (listRenderScheduled) return;
+        listRenderScheduled = true;
+
+        queueMicrotask(() => {
+          listRenderScheduled = false;
+          renderTripList();
+        });
+      }
+
+      function renderTripList() {
+        const list = dom.tripList;
+
+        if (state.trips.length === 0) {
+          list.innerHTML = `
+            <div class="empty">
+              아직 기록된 여행지가 없어요.<br>
+              왼쪽 입력창에서 첫 여행지를 추가해보세요.
+            </div>
+          `;
+          return;
+        }
+
+        // 카드 전체를 문자열로 생성 후 한 번에 교체해 불필요한 DOM 조작 최소화
+        list.innerHTML = state.trips.map(trip => {
+          const activeClass = trip.id === state.activeId ? ' active' : '';
+          const noteHtml = trip.memo
+            ? `<div class="trip-note">${escapeHtml(trip.memo)}</div>`
+            : '';
+
+          return `
+            <article class="trip-card${activeClass}" draggable="true" data-id="${escapeHtml(trip.id)}">
+              <div class="trip-head">
+                <div>
+                  <div class="trip-title">${escapeHtml(trip.city)}, ${escapeHtml(trip.country)}</div>
+                  <div class="trip-sub">${escapeHtml(formatDate(trip.visitedAt))}</div>
+                </div>
+                <div class="chip">${trip.visible ? '표시 중' : '숨김'}</div>
+              </div>
+
+              <div class="trip-meta">
+                <span class="chip">위도 ${trip.lat.toFixed(3)}</span>
+                <span class="chip">경도 ${trip.lng.toFixed(3)}</span>
+              </div>
+
+              ${noteHtml}
+
+              <div class="trip-actions">
+                <label class="toggle">
+                  <input type="checkbox" data-action="toggle" data-id="${escapeHtml(trip.id)}" ${trip.visible ? 'checked' : ''} />
+                  지도 표시
+                </label>
+
+                <div class="actions">
+                  <button class="btn small" type="button" data-action="focus" data-id="${escapeHtml(trip.id)}">이동</button>
+                  <button class="btn small danger" type="button" data-action="delete" data-id="${escapeHtml(trip.id)}">삭제</button>
+                </div>
+              </div>
+            </article>
+          `;
+        }).join('');
+      }
+
+      // -----------------------------
+      // 지구본 렌더링
+      // -----------------------------
+      function initGlobe() {
+        const globe = Globe()(dom.globeViz)
+          .globeImageUrl(EARTH_TEXTURE)
+          .backgroundColor('rgba(0,0,0,0)')
+          .showAtmosphere(true)
+          .atmosphereAltitude(0.12)
+          .atmosphereColor('#9ec5ff')
+          .globeCurvatureResolution(6)
+          .pointAltitude(0.02)
+          .pointRadius(0.28)
+          .pointResolution(8)
+          .pointsMerge(false)
+          .pointsTransitionDuration(0)
+          .labelSize(0.8)
+          .labelsTransitionDuration(0)
+          .ringsTransitionDuration(0)
+          .ringMaxRadius(3.5)
+          .ringPropagationSpeed(2.4)
+          .ringRepeatPeriod(700)
+          .pointColor(item => item.visible ? '#2563eb' : '#cbd5e1')
+          .pointLabel(item => `
+            <div style="padding:6px 8px;">
+              <strong>${escapeHtml(item.city)}, ${escapeHtml(item.country)}</strong><br>
+              <span>${escapeHtml(formatDate(item.visitedAt))}</span>
+            </div>
+          `)
+          .onPointClick(point => {
+            focusTrip(point.id, true);
+          })
+          .showPointerCursor(obj => !!obj)
+          .onGlobeReady(() => {
+            state.globeReady = true;
+
+            // 성능 최적화: 너무 높은 DPR 제한
+            const renderer = globe.renderer();
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+
+            // OrbitControls 튜닝
+            const controls = globe.controls();
+            controls.enablePan = false;
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.08;
+            controls.minDistance = 140;
+            controls.maxDistance = 360;
+            controls.rotateSpeed = 0.75;
+            controls.zoomSpeed = 0.8;
+
+            scheduleGlobeRender();
+          });
+
+        // 초기 시점
+        globe.pointOfView({ lat: 20, lng: 20, altitude: 2.2 }, 0);
+
+        state.globe = globe;
+        resizeGlobe();
+      }
+
+      function visibleTrips() {
+        return state.trips.filter(item => item.visible);
+      }
+
+      function scheduleGlobeRender() {
+        if (!state.globe) return;
+        if (globeRenderScheduled) return;
+
+        globeRenderScheduled = true;
+        queueMicrotask(() => {
+          globeRenderScheduled = false;
+          renderGlobeData();
+        });
+      }
+
+      function renderGlobeData() {
+        if (!state.globe) return;
+
+        const visible = visibleTrips();
+
+        // 포인트 데이터만 갱신
+        state.globe.pointsData(visible);
+
+        // 현재 ring 데이터도 유지
+        state.globe.ringsData(state.currentRings);
+      }
+
+      function resizeGlobe() {
+        if (!state.globe) return;
+        const width = dom.globeViz.clientWidth;
+        const height = dom.globeViz.clientHeight;
+        state.globe.width(width).height(height);
+      }
+
+      function focusTrip(id, showRing = true) {
+        const trip = state.trips.find(item => item.id === id);
+        if (!trip) return;
+
+        setActiveTrip(id);
+
+        if (state.globe) {
+          state.globe.pointOfView(
+            { lat: trip.lat, lng: trip.lng, altitude: 1.35 },
+            1200
+          );
+        }
+
+        if (showRing) {
+          playRing(trip);
+        }
+      }
+
+      function clearRingTimer(id) {
+        if (!ringTimers.has(id)) return;
+        clearTimeout(ringTimers.get(id));
+        ringTimers.delete(id);
+      }
+
+      function playRing(trip) {
+        if (!state.globe) return;
+
+        // 같은 위치에서 ring 요청이 여러 번 와도 이전 타이머 정리 후 재생
+        clearRingTimer(trip.id);
+
+        // 기존 동일 아이디 ring 제거 후 새로 등록
+        state.currentRings = state.currentRings.filter(item => item.id !== trip.id);
+        state.currentRings.push({ id: trip.id, lat: trip.lat, lng: trip.lng, color: '#60a5fa' });
+        state.globe.ringsData(state.currentRings);
+
+        const timer = setTimeout(() => {
+          state.currentRings = state.currentRings.filter(item => item.id !== trip.id);
+          if (state.globe) state.globe.ringsData(state.currentRings);
+          ringTimers.delete(trip.id);
+        }, 1600);
+
+        ringTimers.set(trip.id, timer);
+      }
+
+      // -----------------------------
+      // 이벤트 바인딩
+      // -----------------------------
+      function bindEvents() {
+        // 입력창 query 미리보기
+        dom.cityInput.addEventListener('input', updateQueryPreview);
+        dom.countryInput.addEventListener('input', updateQueryPreview);
+
+        // 폼 제출: 여행지 추가
+        dom.tripForm.addEventListener('submit', async event => {
+          event.preventDefault();
+
+          const city = normalizeText(dom.cityInput.value);
+          const country = normalizeText(dom.countryInput.value);
+          const visitedAt = normalizeText(dom.dateInput.value);
+          const memo = normalizeText(dom.memoInput.value);
+
+          if (!city || !country) {
+            setStatus('도시명과 국가명을 입력해주세요.', 'error');
+            return;
+          }
+
+          dom.addBtn.disabled = true;
+          setStatus('좌표를 조회하는 중입니다...');
+
+          try {
+            const geo = await geocodePlace(city, country);
+
+            const trip = {
+              id: uid(),
+              city,
+              country,
+              visitedAt,
+              memo,
+              lat: geo.lat,
+              lng: geo.lng,
+              visible: true,
+              createdAt: new Date().toISOString()
+            };
+
+            addTrip(trip);
+            focusTrip(trip.id, true);
+
+            dom.tripForm.reset();
+            updateQueryPreview();
+            setStatus(`추가 완료: ${geo.displayName}`, 'ok');
+          } catch (error) {
+            console.error(error);
+            setStatus(error.message || '추가 중 오류가 발생했습니다.', 'error');
+          } finally {
+            dom.addBtn.disabled = false;
+          }
+        });
+
+        dom.resetBtn.addEventListener('click', () => {
+          dom.tripForm.reset();
+          updateQueryPreview();
+          setStatus('입력값을 초기화했습니다.');
+        });
+
+        // 리스트 이벤트 위임
+        dom.tripList.addEventListener('click', event => {
+          const actionTarget = event.target.closest('[data-action]');
+          const card = event.target.closest('.trip-card');
+
+          // 카드 빈 영역 클릭 시 포커스 이동
+          if (!actionTarget && card) {
+            const id = card.dataset.id;
+            if (id) focusTrip(id, true);
+            return;
+          }
+
+          if (!actionTarget) return;
+
+          const action = actionTarget.dataset.action;
+          const id = actionTarget.dataset.id;
+          if (!id) return;
+
+          if (action === 'focus') {
+            focusTrip(id, true);
+          } else if (action === 'delete') {
+            const trip = state.trips.find(item => item.id === id);
+            if (!trip) return;
+            const ok = window.confirm(`"${trip.city}, ${trip.country}" 기록을 삭제할까요?`);
+            if (ok) removeTrip(id);
+          }
+        });
+
+        dom.tripList.addEventListener('change', event => {
+          const toggle = event.target.closest('input[data-action="toggle"]');
+          if (!toggle) return;
+          const id = toggle.dataset.id;
+          toggleTripVisibility(id, toggle.checked);
+        });
+
+        // HTML5 Drag & Drop
+        dom.tripList.addEventListener('dragstart', event => {
+          const card = event.target.closest('.trip-card');
+          if (!card) return;
+          state.draggingId = card.dataset.id;
+          card.classList.add('dragging');
+          event.dataTransfer.effectAllowed = 'move';
+          event.dataTransfer.setData('text/plain', state.draggingId || '');
+        });
+
+        dom.tripList.addEventListener('dragend', event => {
+          const card = event.target.closest('.trip-card');
+          if (card) card.classList.remove('dragging');
+          state.draggingId = null;
+        });
+
+        dom.tripList.addEventListener('dragover', event => {
+          const card = event.target.closest('.trip-card');
+          if (!card) return;
+          event.preventDefault();
+          event.dataTransfer.dropEffect = 'move';
+        });
+
+        dom.tripList.addEventListener('drop', event => {
+          const card = event.target.closest('.trip-card');
+          if (!card) return;
+          event.preventDefault();
+
+          const dropId = card.dataset.id;
+          const dragId = state.draggingId || event.dataTransfer.getData('text/plain');
+          reorderTrips(dragId, dropId);
+        });
+
+        // JSON 저장
+        dom.downloadBtn.addEventListener('click', () => {
+          const payload = {
+            version: FILE_SCHEMA_VERSION,
+            exportedAt: new Date().toISOString(),
+            trips: state.trips
+          };
+          downloadJson('travel-globe-records.json', payload);
+          setStatus('JSON 파일로 저장했습니다.', 'ok');
+        });
+
+        // JSON 불러오기
+        dom.uploadBtn.addEventListener('click', () => {
+          dom.fileInput.click();
+        });
+
+        dom.fileInput.addEventListener('change', async event => {
+          const file = event.target.files && event.target.files[0];
+          if (!file) return;
+
+          try {
+            const text = await file.text();
+            const parsed = JSON.parse(text);
+            if (!parsed || !Array.isArray(parsed.trips)) {
+              throw new Error('올바른 여행 기록 JSON 파일이 아닙니다.');
+            }
+
+            replaceTrips(parsed.trips);
+            setStatus('파일을 불러왔습니다.', 'ok');
+          } catch (error) {
+            console.error(error);
+            setStatus(error.message || '불러오기에 실패했습니다.', 'error');
+          } finally {
+            dom.fileInput.value = '';
+          }
+        });
+
+        // 전체 삭제
+        dom.clearBtn.addEventListener('click', () => {
+          if (!state.trips.length) {
+            setStatus('삭제할 기록이 없습니다.');
+            return;
+          }
+
+          const ok = window.confirm('모든 여행 기록을 삭제할까요? 이 작업은 되돌릴 수 없습니다.');
+          if (!ok) return;
+
+          replaceTrips([]);
+          setStatus('모든 기록을 삭제했습니다.', 'ok');
+        });
+
+        // 리사이즈 시 지구본 크기만 조정
+        window.addEventListener('resize', debounce(resizeGlobe, 100), { passive: true });
+      }
+
+      function debounce(fn, delay) {
+        let timer = null;
+        return function debounced(...args) {
+          clearTimeout(timer);
+          timer = setTimeout(() => fn.apply(this, args), delay);
+        };
+      }
+
+      // -----------------------------
+      // 초기화
+      // -----------------------------
+      function init() {
+        bindEvents();
+        initGlobe();
+
+        state.trips = loadFromLocal();
+        updateStats();
+        updateQueryPreview();
+        scheduleListRender();
+        scheduleGlobeRender();
+
+        if (state.trips.length > 0) {
+          // 마지막 항목을 기본 포커스로 보여줌
+          const lastTrip = state.trips[state.trips.length - 1];
+          setTimeout(() => focusTrip(lastTrip.id, false), 200);
+          setStatus('이전 기록을 자동으로 불러왔습니다.', 'ok');
+        } else {
+          setStatus('새 여행 기록을 추가해보세요.');
+        }
+      }
+
+      init();
+    })();
+
+    /* =========================
+       app.js 영역 끝
+       ========================= */
+  </script>
+</body>
+</html>
