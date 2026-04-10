@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>여행 경로 세계지도 프로토타입</title>
+
+  <!-- Leaflet -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+      background: #f4f6f8;
+      color: #1f2937;
+    }
+
+    #app {
+      display: flex;
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 390px;
+      min-width: 390px;
+      max-width: 390px;
+      height: 100%;
+      overflow-y: auto;
+      background: #ffffff;
+      border-right: 1px solid #e5e7eb;
+      padding: 20px;
+    }
+
+    .title {
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 20px;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      line-height: 1.65;
+      color: #6b7280;
+      margin-bottom: 16px;
+    }
+
+    .notice {
+      background: #fff7e6;
+      border: 1px solid #f4d28d;
+      color: #7a5800;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 13px;
+      line-height: 1.6;
+      margin-bottom: 18px;
+    }
+
+    .section {
+      margin-bottom: 18px;
+      padding: 14px 14px 8px 14px;
+      border: 1px solid #ececec;
+      border-radius: 14px;
+      background: #fafafa;
+    }
+
+    .section h3 {
+      margin: 0 0 12px 0;
+      font-size: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      color: #4b5563;
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 14px;
+      background: #fff;
+      outline: none;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: #ef4444;
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 72px;
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .row > * {
+      flex: 1;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.15s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      opacity: 0.96;
+    }
+
+    .primary {
+      background: #ef4444;
+      color: white;
+    }
+
+    .secondary {
+      background: #111827;
+      color: white;
+    }
+
+    .light {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    .ghost {
+      background: white;
+      color: #333;
+      border: 1px solid #d1d5db;
+    }
+
+    .helper {
+      font-size: 12px;
+      color: #6b7280;
+      line-height: 1.65;
+      margin-top: 6px;
+	  margin-bottom: 1;
+    }
+
+    .status {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #374151;
+      line-height: 1.6;
+      min-height: 1px;
+    }
+
+    .small-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 8px 0;
+      font-size: 13px;
+      color: #333;
+    }
+
+    .small-checkbox input {
+      width: auto;
+      margin: 0;
+    }
+
+    .trip-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .trip-item {
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      background: #fff;
+      padding: 12px;
+    }
+
+    .trip-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+
+    .trip-name {
+      font-size: 15px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .trip-sub {
+      font-size: 12px;
+      color: #666;
+      line-height: 1.55;
+      word-break: break-word;
+    }
+
+    .trip-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .trip-actions button {
+      padding: 6px 10px;
+      border-radius: 10px;
+      font-size: 12px;
+    }
+
+    .map-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 0;
+      background: #dceeff;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+      background: #dceeff;
+    }
+
+    .top-toolbar {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      z-index: 1000;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      background: rgba(255,255,255,0.9);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 14px;
+      padding: 10px;
+    }
+
+    .top-toolbar button {
+      padding: 8px 12px;
+      font-size: 13px;
+      border-radius: 10px;
+    }
+
+    .map-title-box {
+      position: absolute;
+      left: 16px;
+      top: 16px;
+      z-index: 1000;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(6px);
+      border-radius: 14px;
+      padding: 12px 14px;
+      border: 1px solid rgba(0,0,0,0.08);
+      max-width: 460px;
+    }
+
+    .map-title-box h2 {
+      margin: 0 0 4px 0;
+      font-size: 20px;
+    }
+
+    .map-title-box p {
+      margin: 0;
+      font-size: 12px;
+      color: #555;
+      line-height: 1.55;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #fee2e2;
+      color: #991b1b;
+      font-weight: 700;
+      margin-top: 6px;
+    }
+
+    .map-label {
+      background: rgba(255,255,255,0.94);
+      border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      padding: 6px 8px;
+      font-size: 12px;
+      color: #111;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s ease;
+    }
+
+    .map-label .sub {
+      font-size: 11px;
+      color: #666;
+      margin-top: 2px;
+    }
+
+    .map-label.show {
+      opacity: 1;
+    }
+
+    .place-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #ff7a00;
+      border: 3px solid rgba(255,255,255,0.95);
+      box-shadow: 0 0 0 4px rgba(255,122,0,0.25);
+    }
+
+    .transport-label {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #ffffff;
+      color: #111827;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 800;
+      border: 1px solid rgba(0,0,0,0.12);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    }
+
+    .segment-number-badge {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #ef4444;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 800;
+      border: 3px solid rgba(255,255,255,0.96);
+      box-shadow: 0 0 0 4px rgba(239,68,68,0.20);
+    }
+
+    .place-name-label {
+      background: rgba(255,255,255,0.96);
+      border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      padding: 3px 6px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #111827;
+      white-space: nowrap;
+    }
+
+    .stay-badge {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(37,99,235,0.92);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 800;
+      box-shadow: 0 2px 8px rgba(37,99,235,0.25);
+    }
+
+    .leaflet-control-attribution {
+      font-size: 10px;
+    }
+
+    @media (max-width: 960px) {
+      #app {
+        flex-direction: column;
+        height: auto;
+        min-height: 100vh;
+      }
+
+      .sidebar {
+        width: 100%;
+        min-width: 100%;
+        max-width: 100%;
+        height: auto;
+        border-right: 0;
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      .map-wrap {
+        height: 70vh;
+      }
+    }
+
+    @media print {
+      html, body {
+        width: 100%;
+        height: 100%;
+        background: white;
+      }
+
+      .sidebar,
+      .top-toolbar,
+      .leaflet-control-container {
+        display: none !important;
+      }
+
+      #app {
+        display: block;
+        height: auto;
+      }
+
+      .map-wrap {
+        width: 100vw;
+        height: 100vh;
+      }
+
+      #map {
+        width: 100vw;
+        height: 100vh;
+      }
+
+      .map-title-box {
+        background: rgba(255,255,255,0.96);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <aside class="sidebar">
+      <div class="title">여행 경로 세계지도</div>
+      
+
+      <div class="section">
+        <h3>기본 정보</h3>
+        <div style="margin-bottom:8px;">
+          <label for="tripTitle">출력 제목</label>
+          <input id="tripTitle" type="text" placeholder="예: 2026 동유럽 여행 경로" value="나의 여행 경로" />
+        </div>
+        <div>
+          <label for="tripSubtitle">부제 / 설명</label>
+          <textarea id="tripSubtitle" placeholder="예: 부다페스트 → 스플리트 → 두브로브니크"> 예시 2026.4.18.~4.26</textarea>
+        </div>
+        <div class="small-checkbox">
+          <input id="showLabels" type="checkbox" checked />
+          <span>도시명 라벨 표시</span>
+        </div>
+        <div class="small-checkbox">
+          <input id="showLine" type="checkbox" checked />
+          <span>붉은 경로선 표시</span>
+        </div>
+        <div class="small-checkbox">
+          <input id="showNumbers" type="checkbox" checked />
+          <span>순서 번호 표시</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>일정 추가</h3>
+        <div class="row">
+          <div>
+            <label for="fromPlace">출발지</label>
+            <input id="fromPlace" type="text" placeholder="예: Daegu" />
+          </div>
+          <div>
+            <label for="toPlace">도착지</label>
+            <input id="toPlace" type="text" placeholder="예: Istanbul, Cappadocia" />
+          </div>
+        </div>
+        <div class="row">
+			<div>
+				<label for="placeDate">날짜</label>
+				<input id="placeDate" type="text" placeholder="예: 2026-04-19 또는 2026-04-19~2026-04-22" />
+			</div>
+		<div>
+			<label for="dayCount">일수</label>
+			<input id="dayCount" type="number" min="1" step="1" placeholder="자동 계산" />
+		</div>
+	</div>
+        <div style="margin-top:8px;">
+          <label for="placeMemo">간단 메모</label>
+          <input id="placeMemo" type="text" placeholder="예: 첫 도착지 / 투어 및 숙박" />
+        </div>
+        <div class="btn-row">
+          <button class="primary" id="btnAddPlace">일정 추가</button>
+          <button class="ghost" id="btnAddSample">샘플 불러오기</button>
+          <button class="light" id="btnClearAll">전체 삭제</button>
+        </div>
+		<div class="helper">
+		출발지와 도착지가 다르면 이동, 같으면 머무름 처리.<br>
+		일수 자동 계산, 필요하면 직접 수정 가능
+		</div>
+        <div class="status" id="statusText"></div>
+      </div>
+
+      <div class="section">
+        <h3>현재 경로 목록</h3>
+        <div class="trip-list" id="tripList"></div>
+      </div>
+
+      <div class="section">
+        <h3>최소 저장 기능</h3>
+        <div class="btn-row">
+          <button class="secondary" id="btnExportJson">JSON 내보내기</button>
+          <button class="ghost" id="btnImportJson">JSON 불러오기</button>
+          <input id="importFile" type="file" accept="application/json" style="display:none;" />
+        </div>
+        <div class="helper">
+          기본은 비저장형으로 사용하고, 필요한 경우에만 JSON 파일로 경로를 저장/불러오기 할 수 있게 했습니다.
+        </div>
+      </div>
+    </aside>
+
+    <main class="map-wrap">
+      <div class="map-title-box">
+        <h2 id="previewTitle">나의 여행 경로</h2>
+        <p id="previewSubtitle">예시 2026.4.18.~4.26.</p>
+      </div>
+
+      <div class="top-toolbar">
+        <button class="light" id="btnFitRoute">경로 맞춤</button>
+        <button class="ghost" id="btnWorldView">전체 보기</button>
+        <button class="secondary" id="btnImageStyle">이미지 스타일로 생성</button>
+        <button class="primary" id="btnPrint">출력 / PDF 저장</button>
+      </div>
+
+      <div id="map"></div>
+    </main>
+  </div>
+
+  <script>
+    const state = {
+      places: [],
+      map: null,
+      editingIndex: null,
+      markerLayer: null,
+      lineLayer: null,
+      labelLayer: null
+    };
+
+    const els = {
+      tripTitle: document.getElementById('tripTitle'),
+      tripSubtitle: document.getElementById('tripSubtitle'),
+      previewTitle: document.getElementById('previewTitle'),
+      previewSubtitle: document.getElementById('previewSubtitle'),
+      fromPlace: document.getElementById('fromPlace'),
+      toPlace: document.getElementById('toPlace'),
+      placeDate: document.getElementById('placeDate'),
+      placeMemo: document.getElementById('placeMemo'),
+      dayCount: document.getElementById('dayCount'),
+      btnAddPlace: document.getElementById('btnAddPlace'),
+      btnAddSample: document.getElementById('btnAddSample'),
+      btnClearAll: document.getElementById('btnClearAll'),
+      btnPrint: document.getElementById('btnPrint'),
+      btnFitRoute: document.getElementById('btnFitRoute'),
+      btnWorldView: document.getElementById('btnWorldView'),
+      btnImageStyle: document.getElementById('btnImageStyle'),
+      btnExportJson: document.getElementById('btnExportJson'),
+      btnImportJson: document.getElementById('btnImportJson'),
+      importFile: document.getElementById('importFile'),
+      showLabels: document.getElementById('showLabels'),
+      showLine: document.getElementById('showLine'),
+      showNumbers: document.getElementById('showNumbers'),
+      tripList: document.getElementById('tripList'),
+      statusText: document.getElementById('statusText')
+    };
+
+    function setStatus(msg, isError = false) {
+      els.statusText.textContent = msg || '';
+      els.statusText.style.color = isError ? '#b91c1c' : '#374151';
+    }
+
+    function escapeHtml(str = '') {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function syncTitlePreview() {
+      els.previewTitle.textContent = els.tripTitle.value.trim() || '나의 여행 경로';
+      els.previewSubtitle.textContent = els.tripSubtitle.value.trim() || '여행 경로를 출력 또는 PDF 저장으로 보관하세요.';
+    }
+
+    function getEventTypeLabel(type) {
+      const map = {
+        departure: '출발',
+        arrival: '도착',
+        stay: '머무름'
+      };
+      return map[type] || '일정';
+    }
+
+    function parseDayCountFromDate(dateText) {
+		const text = String(dateText || '').trim();
+		if (!text) return 1;
+
+		const normalized = text.replace(/\./g, '-').replace(/\s+/g, '');
+		const parts = normalized.split('~');
+
+		if (parts.length === 1) return 1;
+		if (parts.length !== 2) return 1;
+
+		const start = new Date(parts[0]);
+		const end = new Date(parts[1]);
+
+		if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return 1;
+
+		const diff = Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1;
+		return diff > 0 ? diff : 1;
+	}
+
+		function getDisplayDayCount(place) {
+		const value = Number(place.dayCount);
+		if (Number.isFinite(value) && value > 0) return value;
+		return parseDayCountFromDate(place.date);
+	}
+
+		function getStayCircleRadius(dayCount) {
+		const safeDays = Math.max(1, Number(dayCount) || 1);
+		return Math.min(20000 + ((safeDays - 1) * 20000), 120000);
+	}
+
+    function buildMarkerHTML(index, place) {
+		const bgColor = place.eventType === 'stay' ? '#2563eb' : place.eventType === 'departure' ? '#16a34a' : '#ff7a00';
+		const ringColor = place.eventType === 'stay' ? 'rgba(37,99,235,0.25)' : place.eventType === 'departure' ? 'rgba(22,163,74,0.25)' : 'rgba(255,122,0,0.25)';
+		const dayCount = getDisplayDayCount(place);
+		const size = place.eventType === 'stay' ? Math.min(16 + ((dayCount - 1) * 2), 28) : 16;
+		const borderSize = place.eventType === 'stay' ? 2 : 3;
+
+		return `<div class="place-dot" style="width:${size}px; height:${size}px; border:${borderSize}px solid rgba(255,255,255,0.95); background:${bgColor}; box-shadow: 0 0 0 4px ${ringColor};"></div>`;
+	}
+
+    function getPlaceLabel(place) {
+      return place.displayLabel || place.name || place.to || place.from || '';
+    }
+
+
+
+
+    function getOffsetPosition(place, index, sameCoordIndexMap) {
+		return [place.lat, place.lng];
+	}
+
+
+
+
+    function buildCurvePoints(start, end, bendDirection = 1, bendStrength = 0.06) {
+      const steps = 20;
+      const lat1 = start[0], lng1 = start[1];
+      const lat2 = end[0], lng2 = end[1];
+      const midLat = (lat1 + lat2) / 2;
+      const midLng = (lng1 + lng2) / 2;
+
+      const dx = lng2 - lng1;
+      const dy = lat2 - lat1;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+
+      const bendAmount = Math.min(Math.max(dist * bendStrength, 0.8), 3.5);
+      const offsetLng = (-dy / dist) * bendAmount * bendDirection;
+      const offsetLat = (dx / dist) * bendAmount * bendDirection;
+
+      const ctrlLat = midLat + offsetLat;
+      const ctrlLng = midLng + offsetLng;
+      const pts = [];
+
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const lat = (1 - t) * (1 - t) * lat1 + 2 * (1 - t) * t * ctrlLat + t * t * lat2;
+        const lng = (1 - t) * (1 - t) * lng1 + 2 * (1 - t) * t * ctrlLng + t * t * lng2;
+        pts.push([lat, lng]);
+      }
+      return pts;
+    }
+
+    function getPointOnLine(points, ratio = 0.5) {
+      if (!points || !points.length) return null;
+      if (points.length === 1) return points[0];
+
+      const clamped = Math.max(0, Math.min(1, ratio));
+      const scaled = clamped * (points.length - 1);
+      const index = Math.floor(scaled);
+      const nextIndex = Math.min(points.length - 1, index + 1);
+      const t = scaled - index;
+
+      const p1 = points[index];
+      const p2 = points[nextIndex];
+      const lat = p1[0] + (p2[0] - p1[0]) * t;
+      const lng = p1[1] + (p2[1] - p1[1]) * t;
+      return [lat, lng];
+    }
+
+    function getTransportIconPoint(linePoints) {
+      return getPointOnLine(linePoints, 0.5);
+    }
+
+    function getArrowAngle(from, to) {
+      const dx = to[1] - from[1];
+      const dy = to[0] - from[0];
+      return Math.atan2(dy, dx) * 180 / Math.PI;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+    function renderMap() {
+      const map = state.map;
+      if (!map) return;
+
+      state.markerLayer.clearLayers();
+      state.lineLayer.clearLayers();
+      state.labelLayer.clearLayers();
+
+      const segments = state.places;
+      const markerEvents = [];
+
+      if (segments.length) {
+        markerEvents.push({
+          name: segments[0].from,
+          displayLabel: segments[0].fromDisplayName || segments[0].from,
+          eventType: 'departure',
+          date: segments[0].date,
+          memo: '출발지',
+          lat: segments[0].fromLat,
+          lng: segments[0].fromLng
+        });
+      }
+
+      segments.forEach(seg => {
+		markerEvents.push({
+			name: seg.to,
+			displayLabel: seg.toDisplayName || seg.to,
+			eventType: seg.isStay ? 'stay' : 'arrival',
+			date: seg.date,
+			dayCount: seg.dayCount,
+			memo: seg.memo,
+			lat: seg.toLat,
+			lng: seg.toLng
+		});
+	  });
+
+      const sameCoordIndexMap = new Map();
+      const displayMarkers = markerEvents.map((place, index) => {
+        const pos = getOffsetPosition(place);
+        return { ...place, displayLat: pos[0], displayLng: pos[1] };
+      });
+
+      if (els.showLine.checked && segments.length) {
+        segments.forEach((seg, segIndex) => {
+          if (seg.isStay) return;
+
+          const start = [seg.fromLat, seg.fromLng];
+          const end = [seg.toLat, seg.toLng];
+
+          const reverseIndex = segments.findIndex((other, otherIndex) =>
+            otherIndex !== segIndex &&
+            !other.isStay &&
+            other.from === seg.to &&
+            other.to === seg.from
+          );
+
+          let linePoints;
+          const lineOptions = {
+            color: '#ef4444',
+            weight: 4,
+            opacity: 0.92,
+            lineJoin: 'round'
+          };
+
+          if (reverseIndex === -1) {
+            linePoints = [start, end];
+          } else {
+            const isFirstInPair = segIndex < reverseIndex;
+            linePoints = isFirstInPair ? [start, end] : buildCurvePoints(start, end, -1, 0.06);
+          }
+
+          L.polyline(linePoints, lineOptions).addTo(state.lineLayer);
+
+          
+		  
+		  
+		           if (els.showNumbers.checked) {
+            const midPoint = getPointOnLine(linePoints, 0.5);
+            if (midPoint) {
+              const segmentMarker = L.marker(midPoint, {
+                icon: L.divIcon({
+                  className: '',
+                  html: `<div class="segment-number-badge">${segIndex + 1}</div>`,
+                  iconSize: null,
+                  iconAnchor: [0, 14]
+                }),
+                interactive: true,
+                zIndexOffset: 1000
+              }).addTo(state.lineLayer);
+
+              segmentMarker.bindPopup(`
+                <div style="min-width:190px; line-height:1.6; font-size:13px;">
+                  <div style="font-weight:800; margin-bottom:4px;">
+                    ${segIndex + 1}. ${escapeHtml(seg.isStay ? `${seg.to} 머무름` : `${seg.from} → ${seg.to}`)}
+                  </div>
+                  <div>유형: ${seg.isStay ? '머무름' : '이동'}</div>
+                  <div>일수: ${seg.dayCount || 1}일</div>
+                  ${seg.date ? `<div>날짜: ${escapeHtml(seg.date)}</div>` : ''}
+                  ${seg.memo ? `<div>메모: ${escapeHtml(seg.memo)}</div>` : ''}
+                  <div style="color:#666; margin-top:4px;">
+                    출발 ${seg.fromLat.toFixed(4)}, ${seg.fromLng.toFixed(4)}<br>
+                    도착 ${seg.toLat.toFixed(4)}, ${seg.toLng.toFixed(4)}
+                  </div>
+                </div>
+              `);
+            }
+          }
+        });
+      }
+
+      displayMarkers.forEach((place, index) => {
+        const latlng = [place.displayLat, place.displayLng];
+
+        if (place.eventType === 'stay') {
+          L.circle(latlng, {
+            radius: getStayCircleRadius(getDisplayDayCount(place)),
+            color: '#2563eb',
+            weight: 2,
+            fillColor: '#60a5fa',
+            fillOpacity: 0.14
+          }).addTo(state.lineLayer);
+        }
+
+        const markerSize = place.eventType === 'stay'
+          ? Math.min(16 + ((getDisplayDayCount(place) - 1) * 2), 28)
+          : 16;
+
+        const marker = L.marker(latlng, {
+          icon: L.divIcon({
+            className: '',
+            html: buildMarkerHTML(index, place),
+            iconSize: [markerSize, markerSize],
+            iconAnchor: [markerSize / 2, markerSize / 2]
+          }),
+          zIndexOffset: place.eventType === 'stay' ? 1000 : 0
+        }).addTo(state.markerLayer);
+
+        if (place.eventType === 'stay') {
+          marker.bindPopup(`
+            <div style="min-width:190px; line-height:1.6; font-size:13px;">
+              <div style="font-weight:800; margin-bottom:4px;">${escapeHtml(getPlaceLabel(place))}</div>
+              <div>유형: 머무름</div>
+              <div>일수: ${getDisplayDayCount(place)}일</div>
+              ${place.date ? `<div>날짜: ${escapeHtml(place.date)}</div>` : ''}
+              ${place.memo ? `<div>메모: ${escapeHtml(place.memo)}</div>` : ''}
+              <div style="color:#666; margin-top:4px;">위도 ${place.lat.toFixed(4)} / 경도 ${place.lng.toFixed(4)}</div>
+            </div>
+          `);
+        }
+      }); 
+		  
+		  
+		  
+		  
+		  
+		  
+		  
+		  
+		  
+		  
+		  
+		  	  
+
+      if (els.showLabels.checked) {
+        const renderedLabelKeys = new Set();
+
+        displayMarkers.forEach((place) => {
+          const labelKey = `${getPlaceLabel(place)}__${place.lat.toFixed(4)}__${place.lng.toFixed(4)}`;
+          if (renderedLabelKeys.has(labelKey)) return;
+          renderedLabelKeys.add(labelKey);
+
+          const latlng = [place.displayLat, place.displayLng];
+          L.marker(latlng, {
+            icon: L.divIcon({
+              className: '',
+              html: `<div class="place-name-label">${escapeHtml(getPlaceLabel(place))}</div>`,
+              iconSize: null,
+              iconAnchor: [-10, 14]
+            }),
+            interactive: false
+          }).addTo(state.labelLayer);
+        });
+      }
+
+      renderTripList();
+      syncTitlePreview();
+    }
+
+    function renderTripList() {
+      if (!state.places.length) {
+        els.tripList.innerHTML = "<div class=\"helper\">아직 추가된 일정이 없습니다.</div>";
+        return;
+      }
+
+      els.tripList.innerHTML = state.places.map((place, index) => {
+        const title = place.isStay
+          ? `${index + 1}. ${escapeHtml(place.to)} 머무름`
+          : `${index + 1}. ${escapeHtml(place.from)} → ${escapeHtml(place.to)}`;
+
+        return `
+          <div class="trip-item">
+            <div class="trip-top">
+              <div>
+                <div class="trip-name">${title}</div>
+                <div class="trip-sub">
+                  ${place.isStay ? '유형: 머무름' : '유형: 이동'}
+				<br>일수: ${getDisplayDayCount(place)}일
+				${place.date ? `<br>날짜: ${escapeHtml(place.date)}` : ''}
+				${place.memo ? `<br>메모: ${escapeHtml(place.memo)}` : ''}
+                </div>
+              </div>
+            </div>
+            <div class="trip-actions">
+              <button class="ghost" onclick="movePlace(${index}, -1)">위로</button>
+              <button class="ghost" onclick="movePlace(${index}, 1)">아래로</button>
+              <button class="light" onclick="focusPlace(${index})">보기</button>
+              <button class="secondary" onclick="editPlace(${index})">수정</button>
+              <button class="primary" onclick="removePlace(${index})">삭제</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function geocodePlace(query) {
+      const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&accept-language=ko&q=${encodeURIComponent(query)}`;
+      const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+
+      if (!res.ok) {
+        throw new Error('위치 검색 요청에 실패했습니다.');
+      }
+
+      const data = await res.json();
+      if (!data || !data.length) {
+        throw new Error('해당 장소를 찾지 못했습니다. 영어 도시명으로 다시 시도해 주세요.');
+      }
+
+      const rawDisplayName = data[0].display_name || query;
+      const shortDisplayName = rawDisplayName.split(',')[0].trim() || query;
+
+      return {
+        lat: parseFloat(data[0].lat),
+        lng: parseFloat(data[0].lon),
+        displayName: shortDisplayName,
+        fullDisplayName: rawDisplayName
+      };
+    }
+
+    function autofillFromPrevious() {
+      if (!state.places.length) return;
+      const last = state.places[state.places.length - 1];
+      els.fromPlace.value = last.to || '';
+    }
+
+    async function addOrUpdatePlace() {
+      const fromName = els.fromPlace.value.trim();
+      const toName = els.toPlace.value.trim();
+      const date = els.placeDate.value.trim();
+      const memo = els.placeMemo.value.trim();
+      const manualDayCount = parseInt(els.dayCount.value, 10);
+
+      if (!fromName || !toName) {
+        setStatus('출발지와 도착지를 모두 입력해 주세요.', true);
+        return;
+      }
+
+      try {
+        setStatus(`'${fromName}'와 '${toName}' 위치를 찾는 중입니다...`);
+        els.btnAddPlace.disabled = true;
+
+        const fromGeo = await geocodePlace(fromName);
+        const toGeo = fromName === toName ? fromGeo : await geocodePlace(toName);
+
+        const item = {
+			from: fromName,
+			to: toName,
+			fromDisplayName: fromGeo.displayName || fromName,
+			toDisplayName: toGeo.displayName || toName,
+			date,
+			memo,
+			dayCount: Number.isFinite(manualDayCount) && manualDayCount > 0
+				? manualDayCount
+				: parseDayCountFromDate(date),
+			isStay: fromName === toName,
+			fromLat: fromGeo.lat,
+			fromLng: fromGeo.lng,
+			toLat: toGeo.lat,
+			toLng: toGeo.lng
+		};
+
+        if (state.editingIndex === null) {
+          state.places.push(item);
+          setStatus(item.isStay ? `'${toName}' 머무름 일정을 추가했습니다.` : `'${fromName} → ${toName}' 일정을 추가했습니다.`);
+        } else {
+          state.places[state.editingIndex] = item;
+          setStatus('일정을 수정했습니다.');
+          state.editingIndex = null;
+          els.btnAddPlace.textContent = '일정 추가';
+        }
+
+        els.toPlace.value = '';
+        els.placeDate.value = '';
+        els.placeMemo.value = '';
+        els.dayCount.value = '';
+        
+		
+		
+		renderMap();
+
+		state.map.setView([item.toLat, item.toLng], 7, {
+		animate: true,
+		duration: 1.2
+		});
+
+		autofillFromPrevious();
+        els.toPlace.focus();
+      } catch (err) {
+        console.error(err);
+        setStatus(err.message || '위치 검색 중 오류가 발생했습니다.', true);
+      } finally {
+        els.btnAddPlace.disabled = false;
+      }
+    }
+
+    function removePlace(index) {
+      if (!confirm('이 도시를 삭제할까요?')) return;
+      state.places.splice(index, 1);
+      if (state.editingIndex === index) {
+        state.editingIndex = null;
+        els.btnAddPlace.textContent = '일정 추가';
+      } else if (state.editingIndex !== null && state.editingIndex > index) {
+        state.editingIndex -= 1;
+      }
+      renderMap();
+      setStatus('도시를 삭제했습니다.');
+      if (state.places.length) {
+        fitRoute();
+      } else {
+        worldView();
+      }
+    }
+
+    function editPlace(index) {
+      const p = state.places[index];
+      state.editingIndex = index;
+      els.fromPlace.value = p.from || '';
+      els.toPlace.value = p.to || '';
+      els.placeDate.value = p.date || '';
+      els.placeMemo.value = p.memo || '';
+	  els.dayCount.value = getDisplayDayCount(p);
+      els.btnAddPlace.textContent = '수정 완료';
+      setStatus(`'${p.from} → ${p.to}' 일정을 수정 중입니다.`);
+      els.toPlace.focus();
+    }
+
+    function movePlace(index, direction) {
+      const newIndex = index + direction;
+      if (newIndex < 0 || newIndex >= state.places.length) return;
+      const temp = state.places[index];
+      state.places[index] = state.places[newIndex];
+      state.places[newIndex] = temp;
+      renderMap();
+      setStatus('경로 순서를 변경했습니다.');
+      fitRoute();
+    }
+
+    function focusPlace(index) {
+      const p = state.places[index];
+      if (!p || !state.map) return;
+      state.map.setView([p.toLat, p.toLng], 6, { animate: true });
+    }
+
+    function fitRoute() {
+      if (!state.map) return;
+      if (!state.places.length) {
+        worldView();
+        return;
+      }
+
+      const coords = [];
+      state.places.forEach(p => {
+        coords.push([p.fromLat, p.fromLng]);
+        coords.push([p.toLat, p.toLng]);
+      });
+      const bounds = L.latLngBounds(coords);
+      state.map.fitBounds(bounds, { padding: [60, 60] });
+    }
+
+    function worldView() {
+      if (!state.map) return;
+      state.map.setView([22, 20], 2, { animate: true });
+    }
+
+    function clearAllPlaces() {
+      if (!state.places.length) return;
+      if (!confirm('모든 도시를 삭제할까요?')) return;
+      state.places = [];
+      state.editingIndex = null;
+      els.btnAddPlace.textContent = '일정 추가';
+      renderMap();
+      setStatus('전체 경로를 삭제했습니다.');
+      worldView();
+    }
+
+    function exportJson() {
+      const payload = {
+        title: els.tripTitle.value,
+        subtitle: els.tripSubtitle.value,
+        places: state.places,
+        exportedAt: new Date().toISOString()
+      };
+
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'travel-route-world-map.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      setStatus('JSON 파일로 내보냈습니다.');
+    }
+
+    function importJsonFromFile(file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = JSON.parse(e.target.result);
+          state.places = Array.isArray(data.places) ? data.places : [];
+          els.tripTitle.value = data.title || '나의 여행 경로';
+          els.tripSubtitle.value = data.subtitle || '';
+          state.editingIndex = null;
+          els.btnAddPlace.textContent = '도시 추가';
+          renderMap();
+          setStatus('JSON 파일을 불러왔습니다.');
+          if (state.places.length) fitRoute(); else worldView();
+        } catch (err) {
+          console.error(err);
+          setStatus('JSON 파일 형식이 올바르지 않습니다.', true);
+        }
+      };
+      reader.readAsText(file, 'utf-8');
+    }
+
+    function loadSample() {
+      state.places = [
+        { from: 'Daegu', to: 'Istanbul', fromDisplayName: '대구', toDisplayName: '이스탄불', date: '2026-04-19', memo: '터키 도착', dayCount: 1, isStay: false, fromLat: 35.8714, fromLng: 128.6014, toLat: 41.0082, toLng: 28.9784 },
+        { from: 'Istanbul', to: 'Cappadocia', fromDisplayName: '이스탄불', toDisplayName: '카파도키아', date: '2026-04-19', memo: '카파도키아 이동', dayCount: 1, isStay: false, fromLat: 41.0082, fromLng: 28.9784, toLat: 38.6431, toLng: 34.8284 },
+        { from: 'Cappadocia', to: 'Cappadocia', fromDisplayName: '카파도키아', toDisplayName: '카파도키아', date: '2026-04-19~2026-04-22', memo: '투어 및 숙박', dayCount: 4, isStay: true, fromLat: 38.6431, fromLng: 34.8284, toLat: 38.6431, toLng: 34.8284 },
+        { from: 'Cappadocia', to: 'Istanbul', fromDisplayName: '카파도키아', toDisplayName: '이스탄불', date: '2026-04-22', memo: '이스탄불 복귀', dayCount: 1, isStay: false, fromLat: 38.6431, fromLng: 34.8284, toLat: 41.0082, toLng: 28.9784 }
+      ];
+      renderMap();
+      fitRoute();
+      autofillFromPrevious();
+      setStatus('샘플 일정을 불러왔습니다.');
+    }
+
+    function generateImageStylePlaceholder() {
+      if (!state.places.length) {
+        setStatus('먼저 도시를 1개 이상 추가해 주세요.', true);
+        return;
+      }
+
+      const routeSummary = state.places
+        .map((p, i) => `${i + 1}. ${p.isStay ? p.to : `${p.from} → ${p.to}`}`)
+        .join(' / ');
+
+      alert(
+        '이미지 스타일 생성 기능은 다음 단계에서 연결할 예정입니다.' +
+        '현재는 버튼 자리만 먼저 넣어둔 상태입니다.' +
+        '예상 동작:' +
+        '- 현재 입력한 경로 정보를 바탕으로' +
+        '- 더 깔끔한 디자인형 지도 이미지를 생성' +
+        '- PNG 또는 PDF 결과물로 저장' +
+        '현재 경로:' + routeSummary
+      );
+      setStatus('이미지 스타일 생성 버튼 자리를 추가해 두었습니다.');
+    }
+
+    function initMap() {
+      const map = L.map('map', {
+        zoomControl: true,
+        worldCopyJump: false,
+        minZoom: 2,
+        maxZoom: 18,
+        preferCanvas: true
+      }).setView([36.5667, 126.9783], 3.5);
+
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap &copy; CARTO'
+      }).addTo(map);
+
+      state.map = map;
+      state.markerLayer = L.layerGroup().addTo(map);
+      state.lineLayer = L.layerGroup().addTo(map);
+      state.labelLayer = L.layerGroup().addTo(map);
+
+      renderMap();
+    }
+
+    els.tripTitle.addEventListener('input', syncTitlePreview);
+    els.tripSubtitle.addEventListener('input', syncTitlePreview);
+    els.btnAddPlace.addEventListener('click', addOrUpdatePlace);
+    els.btnAddSample.addEventListener('click', loadSample);
+    els.btnClearAll.addEventListener('click', clearAllPlaces);
+    els.btnPrint.addEventListener('click', () => window.print());
+    els.btnImageStyle.addEventListener('click', generateImageStylePlaceholder);
+    els.btnFitRoute.addEventListener('click', fitRoute);
+    els.btnWorldView.addEventListener('click', worldView);
+    els.btnExportJson.addEventListener('click', exportJson);
+    els.btnImportJson.addEventListener('click', () => els.importFile.click());
+    els.importFile.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) importJsonFromFile(file);
+      e.target.value = '';
+    });
+    els.showLabels.addEventListener('change', renderMap);
+    els.showLine.addEventListener('change', renderMap);
+    els.placeDate.addEventListener('input', () => {
+		if (els.dayCount.value.trim()) return;
+		const parsed = parseDayCountFromDate(els.placeDate.value);
+		els.dayCount.placeholder = parsed ? `${parsed}일 자동 계산` : '자동 계산';
+	});
+
+    els.toPlace.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') addOrUpdatePlace();
+    });
+
+    window.movePlace = movePlace;
+    window.focusPlace = focusPlace;
+    window.editPlace = editPlace;
+    window.removePlace = removePlace;
+
+    syncTitlePreview();
+    initMap();
+    els.fromPlace.focus();
+  </script>
+</body>
+</html>
