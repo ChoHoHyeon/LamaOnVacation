@@ -564,7 +564,7 @@
   </div>
 
   <script src="https://unpkg.com/globe.gl"></script>
-
+  <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
   <script>
     (() => {
       'use strict';
@@ -1137,8 +1137,9 @@
     color,
     transparent: true,
     opacity: 0.98,
-    shininess: 85,
+    shininess: 110,
     specular: 0xffffff
+    emissive: 0x111111
   });
 
   const dome = new THREE.Mesh(geometry, material);
