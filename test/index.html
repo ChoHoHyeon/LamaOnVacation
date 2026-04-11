@@ -1097,34 +1097,71 @@
     .atmosphereAltitude(0.12)
     .atmosphereColor('#9ec5ff')
     .globeCurvatureResolution(6)
-    .pointAltitude(0.005)
-    .pointRadius(item => getVisitLevelRadius(item.visitCount || 1))
-    .pointResolution(14)
-    .pointsMerge(false)
-    .pointsTransitionDuration(0)
-    .labelSize(0.9)
-    .labelsTransitionDuration(0)
-    .ringMaxRadius(5)
-    .ringPropagationSpeed(3)
-    .ringRepeatPeriod(900)
-    .pointColor(item => getVisitLevelColor(item.visitCount || 1))
-    .pointLabel(item => {
-      const visitedDatesText = item.visitedDates && item.visitedDates.length
-        ? item.visitedDates.join(', ')
-        : '방문일 미입력';
 
-      return `
-        <div style="padding:6px 8px;">
-          <strong>${escapeHtml(item.city)}, ${escapeHtml(item.country)}</strong><br>
-          <span>총 ${item.visitCount}회 방문</span><br>
-          <span>최근 방문일: ${escapeHtml(item.latestVisitedAt || '미입력')}</span><br>
-          <span>전체 방문일: ${escapeHtml(visitedDatesText)}</span>
-        </div>
-      `;
-    })
-    .onPointClick(point => {
-      focusGroup(point.groupKey, true);
-    })
+
+
+
+
+    
+    .objectAltitude(0)
+.objectFacesSurface(true)
+.objectLabel(item => {
+  const visitedDatesText = item.visitedDates && item.visitedDates.length
+    ? item.visitedDates.join(', ')
+    : '방문일 미입력';
+
+  return `
+    <div style="padding:6px 8px;">
+      <strong>${escapeHtml(item.city)}, ${escapeHtml(item.country)}</strong><br>
+      <span>총 ${item.visitCount}회 방문</span><br>
+      <span>최근 방문일: ${escapeHtml(item.latestVisitedAt || '미입력')}</span><br>
+      <span>전체 방문일: ${escapeHtml(visitedDatesText)}</span>
+    </div>
+  `;
+})
+.objectThreeObject(item => {
+  const radius = getVisitLevelRadius(item.visitCount || 1) * 0.55;
+  const color = getVisitLevelColor(item.visitCount || 1);
+
+  const geometry = new THREE.SphereGeometry(
+    radius,
+    24,
+    16,
+    0,
+    Math.PI * 2,
+    0,
+    Math.PI / 2
+  );
+
+  const material = new THREE.MeshPhongMaterial({
+    color,
+    transparent: true,
+    opacity: 0.98,
+    shininess: 85,
+    specular: 0xffffff
+  });
+
+  const dome = new THREE.Mesh(geometry, material);
+
+  // 반구의 바닥면이 지표면에 닿도록 위치 보정
+  dome.position.y = 0;
+
+  // 방향이 눕거나 뒤집혀 보이면 아래 한 줄을 사용
+  dome.rotation.x = Math.PI / 2;
+
+  return dome;
+})
+.onObjectClick(obj => {
+  focusGroup(obj.groupKey, true);
+})
+.ringMaxRadius(5)
+.ringPropagationSpeed(3)
+.ringRepeatPeriod(900)
+
+
+
+
+    
     .showPointerCursor(obj => !!obj)
     .onGlobeReady(() => {
       state.globeReady = true;
@@ -1168,13 +1205,13 @@
       }
 
       function renderGlobeData() {
-        if (!state.globe) return;
+  if (!state.globe) return;
 
-        const grouped = groupVisibleTrips();
+  const grouped = groupVisibleTrips();
 
-        state.globe.pointsData(grouped);
-        state.globe.ringsData(state.currentRings);
-      }
+  state.globe.objectsData(grouped);
+  state.globe.ringsData(state.currentRings);
+}
 
       function getResponsiveLayoutValues() {
         const width = dom.globeArea.clientWidth;
