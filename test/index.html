@@ -309,7 +309,7 @@
       font-weight: 900;
       margin-right: 4px;
     }
-
+    
     .trip-sub {
       margin-top: 3px;
       font-size: 12px;
@@ -417,6 +417,17 @@
       font-size: 12px;
       color: var(--muted);
       line-height: 1.45;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
     }
 
     @media (max-width: 960px) {
@@ -552,7 +563,6 @@
     </main>
   </div>
 
-  <script src="https://unpkg.com/three@0.161.0/build/three.min.js"></script>
   <script src="https://unpkg.com/globe.gl"></script>
 
   <script>
@@ -684,6 +694,8 @@
         return dateString || '방문일 미입력';
       }
 
+
+
       function buildTripGroupKey(trip) {
         return [
           normalizeText(trip.city).toLowerCase(),
@@ -694,178 +706,19 @@
       }
 
       function getVisitLevelColor(count) {
-        if (count >= 4) return '#b91c1c';
-        if (count === 3) return '#ef4444';
-        if (count === 2) return '#f59e0b';
-        return '#facc15';
+        if (count >= 4) return '#b91c1c';   // 진한 빨강
+        if (count === 3) return '#ef4444';  // 빨강
+        if (count === 2) return '#f59e0b';  // 진한 노랑/주황
+        return '#facc15';                   // 노랑
       }
 
       function getVisitLevelRadius(count) {
         if (count >= 4) return 0.95;
-        if (count === 3) return 0.78;
-        if (count === 2) return 0.62;
-        return 0.48;
+        if (count === 3) return 0.75;
+        if (count === 2) return 0.58;
+        return 0.42;
       }
 
-      function getMarkerPalette(count) {
-        if (count >= 4) {
-          return {
-            top: '#fecaca',
-            mid: '#ef4444',
-            bottom: '#991b1b'
-          };
-        }
-        if (count === 3) {
-          return {
-            top: '#fed7aa',
-            mid: '#f97316',
-            bottom: '#c2410c'
-          };
-        }
-        if (count === 2) {
-          return {
-            top: '#fde68a',
-            mid: '#f59e0b',
-            bottom: '#b45309'
-          };
-        }
-        return {
-          top: '#fef08a',
-          mid: '#facc15',
-          bottom: '#ca8a04'
-        };
-      }
-
-      function getMarkerPixelSize(count) {
-        if (count >= 4) return 2.2;
-        if (count === 3) return 1.95;
-        if (count === 2) return 1.7;
-        return 1.45;
-      }
-
-
-
-
-
-
-
-
-
-
-      
-      function createHemisphereObject(item) {
-  const radius = getMarkerPixelSize(item.visitCount || 1);
-  const palette = getMarkerPalette(item.visitCount || 1);
-
-  const group = new THREE.Group();
-
-  // 🔴 반구 (윗부분)
-  const domeGeometry = new THREE.SphereGeometry(
-    radius,
-    36,
-    24,
-    0,
-    Math.PI * 2,
-    0,
-    Math.PI / 2   // 반구
-  );
-
-  const domeMaterial = new THREE.MeshStandardMaterial({
-    color: new THREE.Color(palette.mid),
-    roughness: 0.34,
-    metalness: 0.08
-  });
-
-  const dome = new THREE.Mesh(domeGeometry, domeMaterial);
-
-  // ⭐ 핵심: y → z 방향으로 눕힘
-  dome.rotation.x = Math.PI / 2;
-
-  group.add(dome);
-
-  // 🔴 바닥 (잘린 면)
-  const baseGeometry = new THREE.CircleGeometry(radius, 36);
-  const baseMaterial = new THREE.MeshStandardMaterial({
-    color: new THREE.Color(palette.bottom),
-    roughness: 0.62,
-    metalness: 0.04,
-    side: THREE.DoubleSide
-  });
-
-  const base = new THREE.Mesh(baseGeometry, baseMaterial);
-
-  // ⭐ 평면은 그대로 두고 살짝 띄움 (z축)
-  base.position.z = 0.01;
-
-  group.add(base);
-
-  // 🔴 테두리 링 (입체 강조)
-  const rimGeometry = new THREE.RingGeometry(radius * 0.8, radius * 0.98, 40);
-  const rimMaterial = new THREE.MeshBasicMaterial({
-    color: new THREE.Color('#fff7d6'),
-    transparent: true,
-    opacity: 0.55,
-    side: THREE.DoubleSide
-  });
-
-  const rim = new THREE.Mesh(rimGeometry, rimMaterial);
-  rim.position.z = 0.02;
-
-  group.add(rim);
-
-  // 🔴 하이라이트 (광택)
-  const highlightGeometry = new THREE.SphereGeometry(
-    radius * 0.32,
-    20,
-    14,
-    0,
-    Math.PI * 2,
-    0,
-    Math.PI / 2
-  );
-
-  const highlightMaterial = new THREE.MeshBasicMaterial({
-    color: 0xffffff,
-    transparent: true,
-    opacity: 0.42
-  });
-
-  const highlight = new THREE.Mesh(highlightGeometry, highlightMaterial);
-
-  // ⭐ 이것도 같은 기준 (z축 기준)
-  highlight.rotation.x = Math.PI / 2;
-
-  highlight.position.set(
-    -radius * 0.28,
-    radius * 0.16,
-    radius * 0.62
-  );
-
-  group.add(highlight);
-
-  // 클릭용 데이터
-  group.userData.groupKey = item.groupKey;
-  group.userData.latestTripId = item.latestTripId;
-
-  if (item.latestTripId === state.activeId) {
-    group.scale.setScalar(1.12);
-  }
-
-  return group;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-      
       function sortVisitedDates(dates) {
         return [...dates].sort((a, b) => {
           if (!a && !b) return 0;
@@ -877,7 +730,7 @@
 
       function groupVisibleTrips() {
         const groups = new Map();
-
+  
         state.trips
           .filter(item => item.visible)
           .forEach(trip => {
@@ -943,7 +796,6 @@
         state.activeId = group.latestTripId;
         setFocusInfoFromGroup(group);
         scheduleListRender();
-        scheduleGlobeRender();
 
         if (state.globe) {
           const viewLat = Math.max(-85, Math.min(85, group.lat + 6));
@@ -971,7 +823,7 @@
           });
         }
       }
-
+      
       function updateQueryPreview() {
         dom.queryPreview.value = buildQuery(dom.cityInput.value, dom.countryInput.value);
       }
@@ -1004,7 +856,6 @@
         `;
 
         scheduleListRender();
-        scheduleGlobeRender();
       }
 
       function normalizeLatLng(lat, lng) {
@@ -1164,145 +1015,143 @@
       }
 
       function renderTripList() {
-        const list = dom.tripList;
+  const list = dom.tripList;
 
-        if (state.trips.length === 0) {
-          list.innerHTML = `
-            <div class="empty">
-              아직 기록된 여행지가 없어요.<br>
-              왼쪽 입력창에서 첫 여행지를 추가해보세요.
+  if (state.trips.length === 0) {
+    list.innerHTML = `
+      <div class="empty">
+        아직 기록된 여행지가 없어요.<br>
+        왼쪽 입력창에서 첫 여행지를 추가해보세요.
+      </div>
+    `;
+    return;
+  }
+
+  // 최신 입력이 위로 오도록 렌더링용 배열만 역순 복사
+  const renderTrips = [...state.trips].reverse();
+
+  list.innerHTML = renderTrips.map((trip, index) => {
+    const activeClass = trip.id === state.activeId ? ' active' : '';
+    const noteHtml = trip.memo
+      ? `<div class="trip-note">${escapeHtml(trip.memo)}</div>`
+      : '';
+
+    // 화면상 번호: 최신이 1번
+    const displayNumber = state.trips.length - index;
+
+    return `
+      <article class="trip-card${activeClass}" draggable="true" data-id="${escapeHtml(trip.id)}">
+        <div class="trip-head">
+          <div>
+            <div class="trip-title">
+              <span class="trip-number">${displayNumber}.</span>
+              ${escapeHtml(trip.city)}, ${escapeHtml(trip.country)}
             </div>
-          `;
-          return;
-        }
+            <div class="trip-sub">${escapeHtml(formatDate(trip.visitedAt))}</div>
+          </div>
+          <div class="chip">${trip.visible ? '표시 중' : '숨김'}</div>
+        </div>
 
-        const renderTrips = [...state.trips].reverse();
+        <div class="trip-meta">
+          <span class="chip">위도 ${trip.lat.toFixed(3)}</span>
+          <span class="chip">경도 ${trip.lng.toFixed(3)}</span>
+        </div>
 
-        list.innerHTML = renderTrips.map((trip, index) => {
-          const activeClass = trip.id === state.activeId ? ' active' : '';
-          const noteHtml = trip.memo
-            ? `<div class="trip-note">${escapeHtml(trip.memo)}</div>`
-            : '';
+        ${noteHtml}
 
-          const displayNumber = state.trips.length - index;
+        <div class="trip-actions">
+          <label class="toggle">
+            <input type="checkbox" data-action="toggle" data-id="${escapeHtml(trip.id)}" ${trip.visible ? 'checked' : ''} />
+            지도 표시
+          </label>
 
-          return `
-            <article class="trip-card${activeClass}" draggable="true" data-id="${escapeHtml(trip.id)}">
-              <div class="trip-head">
-                <div>
-                  <div class="trip-title">
-                    <span class="trip-number">${displayNumber}.</span>
-                    ${escapeHtml(trip.city)}, ${escapeHtml(trip.country)}
-                  </div>
-                  <div class="trip-sub">${escapeHtml(formatDate(trip.visitedAt))}</div>
-                </div>
-                <div class="chip">${trip.visible ? '표시 중' : '숨김'}</div>
-              </div>
+          <div class="actions">
+            <button class="btn small" type="button" data-action="focus" data-id="${escapeHtml(trip.id)}">이동</button>
+            <button class="btn small danger" type="button" data-action="delete" data-id="${escapeHtml(trip.id)}">삭제</button>
+          </div>
+        </div>
+      </article>
+    `;
+  }).join('');
+}
 
-              <div class="trip-meta">
-                <span class="chip">위도 ${trip.lat.toFixed(3)}</span>
-                <span class="chip">경도 ${trip.lng.toFixed(3)}</span>
-              </div>
 
-              ${noteHtml}
 
-              <div class="trip-actions">
-                <label class="toggle">
-                  <input type="checkbox" data-action="toggle" data-id="${escapeHtml(trip.id)}" ${trip.visible ? 'checked' : ''} />
-                  지도 표시
-                </label>
 
-                <div class="actions">
-                  <button class="btn small" type="button" data-action="focus" data-id="${escapeHtml(trip.id)}">이동</button>
-                  <button class="btn small danger" type="button" data-action="delete" data-id="${escapeHtml(trip.id)}">삭제</button>
-                </div>
-              </div>
-            </article>
-          `;
-        }).join('');
-      }
+
+
+
+
+
+
+
+
+
 
       
-
       function initGlobe() {
-        const globe = Globe()(dom.globeViz)
-          .globeImageUrl(EARTH_TEXTURE)
-          .backgroundColor('rgba(0,0,0,0)')
-          .showAtmosphere(true)
-          .atmosphereAltitude(0.12)
-          .atmosphereColor('#9ec5ff')
-          .globeCurvatureResolution(6)
-          .pointAltitude(0.0001)
-          .pointRadius(0.0001)
-          .pointResolution(2)
-          .pointsMerge(false)
-          .pointsTransitionDuration(0)
-          .labelSize(0.9)
-          .labelsTransitionDuration(0)
-          .ringMaxRadius(5)
-          .ringPropagationSpeed(3)
-          .ringRepeatPeriod(900)
-          .pointColor(() => 'rgba(0,0,0,0)')
-          .pointLabel(item => {
-            const visitedDatesText = item.visitedDates && item.visitedDates.length
-              ? item.visitedDates.join(', ')
-              : '방문일 미입력';
+  const globe = Globe()(dom.globeViz)
+    .globeImageUrl(EARTH_TEXTURE)
+    .backgroundColor('rgba(0,0,0,0)')
+    .showAtmosphere(true)
+    .atmosphereAltitude(0.12)
+    .atmosphereColor('#9ec5ff')
+    .globeCurvatureResolution(6)
+    .pointAltitude(0.005)
+    .pointRadius(item => getVisitLevelRadius(item.visitCount || 1))
+    .pointResolution(14)
+    .pointsMerge(false)
+    .pointsTransitionDuration(0)
+    .labelSize(0.9)
+    .labelsTransitionDuration(0)
+    .ringMaxRadius(5)
+    .ringPropagationSpeed(3)
+    .ringRepeatPeriod(900)
+    .pointColor(item => getVisitLevelColor(item.visitCount || 1))
+    .pointLabel(item => {
+      const visitedDatesText = item.visitedDates && item.visitedDates.length
+        ? item.visitedDates.join(', ')
+        : '방문일 미입력';
 
-            return `
-              <div style="padding:6px 8px;">
-                <strong>${escapeHtml(item.city)}, ${escapeHtml(item.country)}</strong><br>
-                <span>총 ${item.visitCount}회 방문</span><br>
-                <span>최근 방문일: ${escapeHtml(item.latestVisitedAt || '미입력')}</span><br>
-                <span>전체 방문일: ${escapeHtml(visitedDatesText)}</span>
-              </div>
-            `;
-          })
-          .objectsData([])
-          .objectLat(item => item.lat)
-          .objectLng(item => item.lng)
-          .objectAltitude(() => 0.0015)
-          .objectFacesSurface(true)
-          .objectThreeObject(item => createHemisphereObject(item))
-          .onObjectClick(obj => {
-            if (obj?.userData?.groupKey) {
-              focusGroup(obj.userData.groupKey, true);
-            }
-          })
-          .showPointerCursor(obj => !!obj)
-          .onGlobeReady(() => {
-            state.globeReady = true;
-            scheduleGlobeRender();
-          });
+      return `
+        <div style="padding:6px 8px;">
+          <strong>${escapeHtml(item.city)}, ${escapeHtml(item.country)}</strong><br>
+          <span>총 ${item.visitCount}회 방문</span><br>
+          <span>최근 방문일: ${escapeHtml(item.latestVisitedAt || '미입력')}</span><br>
+          <span>전체 방문일: ${escapeHtml(visitedDatesText)}</span>
+        </div>
+      `;
+    })
+    .onPointClick(point => {
+      focusGroup(point.groupKey, true);
+    })
+    .showPointerCursor(obj => !!obj)
+    .onGlobeReady(() => {
+      state.globeReady = true;
+      scheduleGlobeRender();
+    });
 
-        const renderer = globe.renderer();
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+  const renderer = globe.renderer();
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 1.35);
-        directionalLight.position.set(-120, 160, 140);
-        const directionalLight2 = new THREE.DirectionalLight(0xfff1cf, 0.45);
-        directionalLight2.position.set(90, 40, -80);
-        globe.scene().add(ambientLight);
-        globe.scene().add(directionalLight);
-        globe.scene().add(directionalLight2);
+  const controls = globe.controls();
+  controls.enablePan = false;
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.minDistance = 140;
+  controls.maxDistance = 360;
+  controls.rotateSpeed = 0.75;
+  controls.zoomSpeed = 0.8;
 
-        const controls = globe.controls();
-        controls.enablePan = false;
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.08;
-        controls.minDistance = 140;
-        controls.maxDistance = 360;
-        controls.rotateSpeed = 0.75;
-        controls.zoomSpeed = 0.8;
+  globe.pointOfView({ lat: 20, lng: 20, altitude: 2.2 }, 0);
 
-        globe.pointOfView({ lat: 20, lng: 20, altitude: 2.2 }, 0);
+  state.globe = globe;
+  resizeGlobe();
+  updateResponsiveGlobeLayout();
+  scheduleGlobeRender();
+}
 
-        state.globe = globe;
-        resizeGlobe();
-        updateResponsiveGlobeLayout();
-        scheduleGlobeRender();
-      }
-
+      
       function visibleTrips() {
         return state.trips.filter(item => item.visible);
       }
@@ -1324,8 +1173,40 @@
         const grouped = groupVisibleTrips();
 
         state.globe.pointsData(grouped);
-        state.globe.objectsData(grouped);
         state.globe.ringsData(state.currentRings);
+      }
+
+      function getResponsiveLayoutValues() {
+        const width = dom.globeArea.clientWidth;
+        let shiftX = 0;
+        let altitude = 2.2;
+
+        if (width < 1400) {
+          shiftX = -30;
+          altitude = 2.28;
+        }
+        if (width < 1200) {
+          shiftX = -60;
+          altitude = 2.36;
+        }
+        if (width < 1050) {
+          shiftX = -95;
+          altitude = 2.48;
+        }
+        if (width < 900) {
+          shiftX = -130;
+          altitude = 2.62;
+        }
+        if (width < 760) {
+          shiftX = -165;
+          altitude = 2.78;
+        }
+        if (window.innerWidth <= 960) {
+          shiftX = 0;
+          altitude = 2.15;
+        }
+
+        return { shiftX, altitude };
       }
 
       function resizeGlobe() {
@@ -1364,8 +1245,10 @@
           altitude = 1.8;
         }
 
+        // 위치 이동
         globeEl.style.transform = `translateX(${shiftX}px)`;
 
+        // 카메라 재조정
         if (recenterActive && state.activeId) {
           const trip = state.trips.find(t => t.id === state.activeId);
           if (trip) {
@@ -1393,7 +1276,7 @@
         });
       }
 
-      function focusTrip(id, showRing = true) {
+     function focusTrip(id, showRing = true) {
         const trip = state.trips.find(item => item.id === id);
         if (!trip) return;
 
@@ -1490,7 +1373,7 @@
 
             addTrip(trip);
             scheduleGlobeRender();
-            setTimeout(() => focusTrip(trip.id, true), 100);
+            setTimeout(() => focusTrip(trip.id, true, 1000), 100);
 
             dom.tripForm.reset();
             updateQueryPreview();
@@ -1602,7 +1485,7 @@
             setStatus('파일을 불러왔습니다.', 'ok');
 
             if (state.trips.length > 0) {
-              setTimeout(() => focusTrip(state.trips[state.trips.length - 1].id, false), 80);
+              setTimeout(() => focusTrip(state.trips[state.trips.length - 1].id, false, 0), 80);
             }
           } catch (error) {
             console.error(error);
@@ -1632,17 +1515,17 @@
           }, 40);
         }, 60);
 
-        window.addEventListener('resize', () => {
-          onResize();
+        window.addEventListener('resize', debounce(() => {
+        resizeGlobe();
 
-          if (state.activeId) {
-            const activeTrip = state.trips.find(item => item.id === state.activeId);
-            if (activeTrip) {
-              const groupKey = buildTripGroupKey(activeTrip);
-              focusGroup(groupKey, false);
-            }
+        if (state.activeId) {
+          const activeTrip = state.trips.find(item => item.id === state.activeId);
+          if (activeTrip) {
+            const groupKey = buildTripGroupKey(activeTrip);
+            focusGroup(groupKey, false);
           }
-        }, { passive: true });
+        }
+      }, 100), { passive: true });
       }
 
       function init() {
@@ -1657,7 +1540,7 @@
 
         if (state.trips.length > 0) {
           const lastTrip = state.trips[state.trips.length - 1];
-          setTimeout(() => focusTrip(lastTrip.id, false), 120);
+          setTimeout(() => focusTrip(lastTrip.id, false, 0), 120);
           setStatus('이전 기록을 자동으로 불러왔습니다.', 'ok');
         } else {
           setStatus('새 여행 기록을 추가해보세요.');
@@ -1669,4 +1552,3 @@
   </script>
 </body>
 </html>
- 
