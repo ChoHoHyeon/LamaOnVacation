@@ -419,96 +419,6 @@
       line-height: 1.45;
     }
 
-    .globe-marker-wrap {
-      pointer-events: auto;
-      cursor: pointer;
-      transform: translate(-50%, -74%);
-      user-select: none;
-    }
-
-    .globe-marker-dome {
-      position: relative;
-      width: var(--marker-size, 24px);
-      height: calc(var(--marker-size, 24px) * 0.72);
-      border-radius: 999px 999px 12px 12px / 999px 999px 10px 10px;
-      border-bottom-left-radius: 4px;
-      border-bottom-right-radius: 4px;
-      border: 1px solid rgba(255, 255, 255, 0.82);
-      border-bottom-color: rgba(120, 78, 18, 0.65);
-      background:
-        radial-gradient(circle at 34% 24%, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.72) 13%, rgba(255,255,255,0.28) 24%, rgba(255,255,255,0) 34%),
-        radial-gradient(circle at 50% 58%, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.02) 34%, rgba(0,0,0,0.18) 100%),
-        linear-gradient(180deg, var(--marker-top, #fde68a) 0%, var(--marker-mid, #f59e0b) 58%, var(--marker-bottom, #b45309) 100%);
-      box-shadow:
-        inset 0 8px 10px rgba(255,255,255,0.28),
-        inset 0 -8px 12px rgba(0,0,0,0.20),
-        0 6px 14px rgba(15, 23, 42, 0.28);
-      overflow: hidden;
-      transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
-    }
-
-    .globe-marker-dome::before {
-      content: '';
-      position: absolute;
-      left: 18%;
-      top: 12%;
-      width: 30%;
-      height: 24%;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.55) 45%, rgba(255,255,255,0) 80%);
-      opacity: 0.95;
-      filter: blur(0.3px);
-    }
-
-    .globe-marker-dome::after {
-      content: '';
-      position: absolute;
-      left: 10%;
-      right: 10%;
-      bottom: 0;
-      height: 3px;
-      border-radius: 999px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.25), rgba(110,72,16,0.55));
-      opacity: 0.9;
-    }
-
-    .globe-marker-shadow {
-      width: calc(var(--marker-size, 24px) * 0.82);
-      height: calc(var(--marker-size, 24px) * 0.16);
-      margin: 1px auto 0;
-      border-radius: 999px;
-      background: radial-gradient(ellipse at center, rgba(15,23,42,0.32) 0%, rgba(15,23,42,0.16) 50%, rgba(15,23,42,0) 80%);
-      filter: blur(0.7px);
-      opacity: 0.72;
-    }
-
-    .globe-marker-wrap:hover .globe-marker-dome,
-    .globe-marker-wrap.active .globe-marker-dome {
-      transform: translateY(-1px) scale(1.07);
-      filter: saturate(1.08) brightness(1.04);
-      box-shadow:
-        inset 0 9px 12px rgba(255,255,255,0.30),
-        inset 0 -10px 14px rgba(0,0,0,0.22),
-        0 8px 18px rgba(15, 23, 42, 0.34),
-        0 0 0 2px rgba(255,255,255,0.18);
-    }
-
-    .globe-marker-wrap.active .globe-marker-shadow {
-      opacity: 0.92;
-      transform: scale(1.08);
-    }
-
-    .sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      border: 0;
-    }
-
     @media (max-width: 960px) {
       body { overflow: auto; }
 
@@ -642,6 +552,7 @@
     </main>
   </div>
 
+  <script src="https://unpkg.com/three@0.161.0/build/three.min.js"></script>
   <script src="https://unpkg.com/globe.gl"></script>
 
   <script>
@@ -826,10 +737,92 @@
       }
 
       function getMarkerPixelSize(count) {
-        if (count >= 4) return 34;
-        if (count === 3) return 30;
-        if (count === 2) return 26;
-        return 22;
+        if (count >= 4) return 2.2;
+        if (count === 3) return 1.95;
+        if (count === 2) return 1.7;
+        return 1.45;
+      }
+
+      function createHemisphereObject(item) {
+        const radius = getMarkerPixelSize(item.visitCount || 1);
+        const palette = getMarkerPalette(item.visitCount || 1);
+
+        const group = new THREE.Group();
+
+        const domeGeometry = new THREE.SphereGeometry(
+          radius,
+          36,
+          24,
+          0,
+          Math.PI * 2,
+          0,
+          Math.PI / 2
+        );
+
+        const domeMaterial = new THREE.MeshStandardMaterial({
+          color: new THREE.Color(palette.mid),
+          roughness: 0.34,
+          metalness: 0.08
+        });
+
+        const dome = new THREE.Mesh(domeGeometry, domeMaterial);
+        dome.castShadow = false;
+        dome.receiveShadow = false;
+        dome.rotation.x = Math.PI;
+        dome.position.y = radius;
+        group.add(dome);
+
+        const baseGeometry = new THREE.CircleGeometry(radius, 36);
+        const baseMaterial = new THREE.MeshStandardMaterial({
+          color: new THREE.Color(palette.bottom),
+          roughness: 0.62,
+          metalness: 0.04,
+          side: THREE.DoubleSide
+        });
+        const base = new THREE.Mesh(baseGeometry, baseMaterial);
+        base.rotation.x = -Math.PI / 2;
+        base.position.y = 0.02;
+        group.add(base);
+
+        const rimGeometry = new THREE.RingGeometry(radius * 0.8, radius * 0.98, 40);
+        const rimMaterial = new THREE.MeshBasicMaterial({
+          color: new THREE.Color('#fff7d6'),
+          transparent: true,
+          opacity: 0.55,
+          side: THREE.DoubleSide
+        });
+        const rim = new THREE.Mesh(rimGeometry, rimMaterial);
+        rim.rotation.x = -Math.PI / 2;
+        rim.position.y = 0.05;
+        group.add(rim);
+
+        const highlightGeometry = new THREE.SphereGeometry(
+          radius * 0.32,
+          20,
+          14,
+          0,
+          Math.PI * 2,
+          0,
+          Math.PI / 2
+        );
+        const highlightMaterial = new THREE.MeshBasicMaterial({
+          color: 0xffffff,
+          transparent: true,
+          opacity: 0.42
+        });
+        const highlight = new THREE.Mesh(highlightGeometry, highlightMaterial);
+        highlight.rotation.x = Math.PI;
+        highlight.position.set(-radius * 0.28, radius * 1.62, radius * 0.16);
+        group.add(highlight);
+
+        group.userData.groupKey = item.groupKey;
+        group.userData.latestTripId = item.latestTripId;
+
+        if (item.latestTripId === state.activeId) {
+          group.scale.setScalar(1.12);
+        }
+
+        return group;
       }
 
       function sortVisitedDates(dates) {
@@ -1188,49 +1181,7 @@
         }).join('');
       }
 
-      function createMarkerElement(item) {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'globe-marker-wrap';
-        wrapper.setAttribute('role', 'button');
-        wrapper.setAttribute('tabindex', '0');
-        wrapper.setAttribute('aria-label', `${item.city}, ${item.country} ${item.visitCount}회 방문`);
-
-        const dome = document.createElement('div');
-        dome.className = 'globe-marker-dome';
-
-        const shadow = document.createElement('div');
-        shadow.className = 'globe-marker-shadow';
-
-        const size = getMarkerPixelSize(item.visitCount || 1);
-        const palette = getMarkerPalette(item.visitCount || 1);
-
-        wrapper.style.setProperty('--marker-size', `${size}px`);
-        wrapper.style.setProperty('--marker-top', palette.top);
-        wrapper.style.setProperty('--marker-mid', palette.mid);
-        wrapper.style.setProperty('--marker-bottom', palette.bottom);
-
-        if (item.latestTripId === state.activeId) {
-          wrapper.classList.add('active');
-        }
-
-        wrapper.appendChild(dome);
-        wrapper.appendChild(shadow);
-
-        const activate = event => {
-          event.stopPropagation();
-          focusGroup(item.groupKey, true);
-        };
-
-        wrapper.addEventListener('click', activate);
-        wrapper.addEventListener('keydown', event => {
-          if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            activate(event);
-          }
-        });
-
-        return wrapper;
-      }
+      
 
       function initGlobe() {
         const globe = Globe()(dom.globeViz)
@@ -1265,21 +1216,34 @@
               </div>
             `;
           })
+          .objectsData([])
+          .objectLat(item => item.lat)
+          .objectLng(item => item.lng)
+          .objectAltitude(() => 0)
+          .objectFacesSurface(true)
+          .objectThreeObject(item => createHemisphereObject(item))
+          .onObjectClick(obj => {
+            if (obj?.userData?.groupKey) {
+              focusGroup(obj.userData.groupKey, true);
+            }
+          })
           .showPointerCursor(obj => !!obj)
           .onGlobeReady(() => {
             state.globeReady = true;
             scheduleGlobeRender();
           });
 
-        globe
-          .htmlElementsData([])
-          .htmlLat(item => item.lat)
-          .htmlLng(item => item.lng)
-          .htmlAltitude(0.018)
-          .htmlElement(item => createMarkerElement(item));
-
         const renderer = globe.renderer();
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1.35);
+        directionalLight.position.set(-120, 160, 140);
+        const directionalLight2 = new THREE.DirectionalLight(0xfff1cf, 0.45);
+        directionalLight2.position.set(90, 40, -80);
+        globe.scene().add(ambientLight);
+        globe.scene().add(directionalLight);
+        globe.scene().add(directionalLight2);
 
         const controls = globe.controls();
         controls.enablePan = false;
@@ -1319,7 +1283,7 @@
         const grouped = groupVisibleTrips();
 
         state.globe.pointsData(grouped);
-        state.globe.htmlElementsData(grouped);
+        state.globe.objectsData(grouped);
         state.globe.ringsData(state.currentRings);
       }
 
