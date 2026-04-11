@@ -713,10 +713,10 @@
       }
 
       function getVisitLevelRadius(count) {
-        if (count >= 4) return 2.0;
-        if (count === 3) return 1.6;
-        if (count === 2) return 1.4;
-        return 1.2;
+        if (count >= 4) return 2.6;
+        if (count === 3) return 2.2;
+        if (count === 2) return 1.8;
+        return 1.4;
       }
 
       function sortVisitedDates(dates) {
@@ -1120,7 +1120,7 @@
   `;
 })
 .objectThreeObject(item => {
-  const radius = getVisitLevelRadius(item.visitCount || 1) * 1.2;
+  const radius = getVisitLevelRadius(item.visitCount || 1) * 1.4;
   const color = getVisitLevelColor(item.visitCount || 1);
 
   const geometry = new THREE.SphereGeometry(
