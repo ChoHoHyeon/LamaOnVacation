@@ -743,88 +743,129 @@
         return 1.45;
       }
 
+
+
+
+
+
+
+
+
+
+      
       function createHemisphereObject(item) {
-        const radius = getMarkerPixelSize(item.visitCount || 1);
-        const palette = getMarkerPalette(item.visitCount || 1);
+  const radius = getMarkerPixelSize(item.visitCount || 1);
+  const palette = getMarkerPalette(item.visitCount || 1);
 
-        const group = new THREE.Group();
+  const group = new THREE.Group();
 
-        const domeGeometry = new THREE.SphereGeometry(
-          radius,
-          36,
-          24,
-          0,
-          Math.PI * 2,
-          0,
-          Math.PI / 2
-        );
+  // 🔴 반구 (윗부분)
+  const domeGeometry = new THREE.SphereGeometry(
+    radius,
+    36,
+    24,
+    0,
+    Math.PI * 2,
+    0,
+    Math.PI / 2   // 반구
+  );
 
-        const domeMaterial = new THREE.MeshStandardMaterial({
-          color: new THREE.Color(palette.mid),
-          roughness: 0.34,
-          metalness: 0.08
-        });
+  const domeMaterial = new THREE.MeshStandardMaterial({
+    color: new THREE.Color(palette.mid),
+    roughness: 0.34,
+    metalness: 0.08
+  });
 
-        const dome = new THREE.Mesh(domeGeometry, domeMaterial);
-        dome.castShadow = false;
-        dome.receiveShadow = false;
-        dome.rotation.x = Math.PI;
-        dome.position.y = radius;
-        group.add(dome);
+  const dome = new THREE.Mesh(domeGeometry, domeMaterial);
 
-        const baseGeometry = new THREE.CircleGeometry(radius, 36);
-        const baseMaterial = new THREE.MeshStandardMaterial({
-          color: new THREE.Color(palette.bottom),
-          roughness: 0.62,
-          metalness: 0.04,
-          side: THREE.DoubleSide
-        });
-        const base = new THREE.Mesh(baseGeometry, baseMaterial);
-        base.rotation.x = -Math.PI / 2;
-        base.position.y = 0.02;
-        group.add(base);
+  // ⭐ 핵심: y → z 방향으로 눕힘
+  dome.rotation.x = Math.PI / 2;
 
-        const rimGeometry = new THREE.RingGeometry(radius * 0.8, radius * 0.98, 40);
-        const rimMaterial = new THREE.MeshBasicMaterial({
-          color: new THREE.Color('#fff7d6'),
-          transparent: true,
-          opacity: 0.55,
-          side: THREE.DoubleSide
-        });
-        const rim = new THREE.Mesh(rimGeometry, rimMaterial);
-        rim.rotation.x = -Math.PI / 2;
-        rim.position.y = 0.05;
-        group.add(rim);
+  group.add(dome);
 
-        const highlightGeometry = new THREE.SphereGeometry(
-          radius * 0.32,
-          20,
-          14,
-          0,
-          Math.PI * 2,
-          0,
-          Math.PI / 2
-        );
-        const highlightMaterial = new THREE.MeshBasicMaterial({
-          color: 0xffffff,
-          transparent: true,
-          opacity: 0.42
-        });
-        const highlight = new THREE.Mesh(highlightGeometry, highlightMaterial);
-        highlight.rotation.x = Math.PI;
-        highlight.position.set(-radius * 0.28, radius * 1.62, radius * 0.16);
-        group.add(highlight);
+  // 🔴 바닥 (잘린 면)
+  const baseGeometry = new THREE.CircleGeometry(radius, 36);
+  const baseMaterial = new THREE.MeshStandardMaterial({
+    color: new THREE.Color(palette.bottom),
+    roughness: 0.62,
+    metalness: 0.04,
+    side: THREE.DoubleSide
+  });
 
-        group.userData.groupKey = item.groupKey;
-        group.userData.latestTripId = item.latestTripId;
+  const base = new THREE.Mesh(baseGeometry, baseMaterial);
 
-        if (item.latestTripId === state.activeId) {
-          group.scale.setScalar(1.12);
-        }
+  // ⭐ 평면은 그대로 두고 살짝 띄움 (z축)
+  base.position.z = 0.01;
 
-        return group;
-      }
+  group.add(base);
 
+  // 🔴 테두리 링 (입체 강조)
+  const rimGeometry = new THREE.RingGeometry(radius * 0.8, radius * 0.98, 40);
+  const rimMaterial = new THREE.MeshBasicMaterial({
+    color: new THREE.Color('#fff7d6'),
+    transparent: true,
+    opacity: 0.55,
+    side: THREE.DoubleSide
+  });
+
+  const rim = new THREE.Mesh(rimGeometry, rimMaterial);
+  rim.position.z = 0.02;
+
+  group.add(rim);
+
+  // 🔴 하이라이트 (광택)
+  const highlightGeometry = new THREE.SphereGeometry(
+    radius * 0.32,
+    20,
+    14,
+    0,
+    Math.PI * 2,
+    0,
+    Math.PI / 2
+  );
+
+  const highlightMaterial = new THREE.MeshBasicMaterial({
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0.42
+  });
+
+  const highlight = new THREE.Mesh(highlightGeometry, highlightMaterial);
+
+  // ⭐ 이것도 같은 기준 (z축 기준)
+  highlight.rotation.x = Math.PI / 2;
+
+  highlight.position.set(
+    -radius * 0.28,
+    radius * 0.16,
+    radius * 0.62
+  );
+
+  group.add(highlight);
+
+  // 클릭용 데이터
+  group.userData.groupKey = item.groupKey;
+  group.userData.latestTripId = item.latestTripId;
+
+  if (item.latestTripId === state.activeId) {
+    group.scale.setScalar(1.12);
+  }
+
+  return group;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+      
       function sortVisitedDates(dates) {
         return [...dates].sort((a, b) => {
           if (!a && !b) return 0;
@@ -1219,7 +1260,7 @@
           .objectsData([])
           .objectLat(item => item.lat)
           .objectLng(item => item.lng)
-          .objectAltitude(() => 0)
+          .objectAltitude(() => 0.0015)
           .objectFacesSurface(true)
           .objectThreeObject(item => createHemisphereObject(item))
           .onObjectClick(obj => {
