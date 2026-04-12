@@ -1266,21 +1266,28 @@
         let shiftX = 0;
         let altitude = 2.2;
 
-        if (globeWidth < 1200) {
-          shiftX = -20;
-          altitude = 2.0;
-        }
-        if (globeWidth < 1000) {
-          shiftX = -50;
-          altitude = 1.9;
-        }
-        if (globeWidth < 850) {
-          shiftX = -90;
-          altitude = 1.85;
-        }
-        if (globeWidth < 700) {
-          shiftX = -130;
-          altitude = 1.8;
+        // 모바일만 별도 처리
+        if (window.innerWidth <= 960) {
+          shiftX = 0;
+          altitude = 2.15;
+        } else {
+          // 기존 PC 버전 규칙 그대로 유지
+          if (globeWidth < 1200) {
+            shiftX = -20;
+            altitude = 2.0;
+          }
+          if (globeWidth < 1000) {
+            shiftX = -50;
+            altitude = 1.9;
+          }
+          if (globeWidth < 850) {
+            shiftX = -90;
+            altitude = 1.85;
+          }
+          if (globeWidth < 700) {
+            shiftX = -130;
+            altitude = 1.8;
+          }
         }
 
         // 위치 이동
