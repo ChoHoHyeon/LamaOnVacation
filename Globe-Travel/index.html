@@ -1258,57 +1258,53 @@
       }
 
       function updateResponsiveGlobeLayout(recenterActive = true) {
-        if (!state.globe) return;
+  if (!state.globe) return;
 
-        const globeEl = dom.globeViz;
-        const globeWidth = globeEl.clientWidth;
+  const globeEl = dom.globeViz;
+  const globeWidth = globeEl.clientWidth;
 
-        let shiftX = 0;
-        let altitude = 2.2;
+  let shiftX = 0;
+  let altitude = 2.2;
 
-        // 모바일만 별도 처리
-        if (window.innerWidth <= 960) {
-          shiftX = 0;
-          altitude = 2.15;
-        } else {
-          // 기존 PC 버전 규칙 그대로 유지
-          if (globeWidth < 1200) {
-            shiftX = -20;
-            altitude = 2.0;
-          }
-          if (globeWidth < 1000) {
-            shiftX = -50;
-            altitude = 1.9;
-          }
-          if (globeWidth < 850) {
-            shiftX = -90;
-            altitude = 1.85;
-          }
-          if (globeWidth < 700) {
-            shiftX = -130;
-            altitude = 1.8;
-          }
-        }
+  if (window.innerWidth <= 960) {
+    shiftX = 0;
+    altitude = 2.15;
+  } else {
+    if (globeWidth < 1200) {
+      shiftX = -20;
+      altitude = 2.0;
+    }
+    if (globeWidth < 1000) {
+      shiftX = -50;
+      altitude = 1.9;
+    }
+    if (globeWidth < 850) {
+      shiftX = -90;
+      altitude = 1.85;
+    }
+    if (globeWidth < 700) {
+      shiftX = -130;
+      altitude = 1.8;
+    }
+  }
 
-        // 위치 이동
-        globeEl.style.transform = `translateX(${shiftX}px)`;
+  globeEl.style.transform = `translateX(${shiftX}px)`;
 
-        // 카메라 재조정
-        if (recenterActive && state.activeId) {
-          const trip = state.trips.find(t => t.id === state.activeId);
-          if (trip) {
-            state.globe.pointOfView(
-              { lat: trip.lat + 6, lng: trip.lng, altitude },
-              800
-            );
-          }
-        } else if (!state.activeId) {
-          state.globe.pointOfView(
-            { lat: 20, lng: 20, altitude },
-            0
-          );
-        }
-      }
+  if (recenterActive && state.activeId) {
+    const trip = state.trips.find(t => t.id === state.activeId);
+    if (trip) {
+      state.globe.pointOfView(
+        { lat: trip.lat + 6, lng: trip.lng, altitude },
+        800
+      );
+    }
+  } else if (!state.activeId) {
+    state.globe.pointOfView(
+      { lat: 20, lng: 20, altitude },
+      0
+    );
+  }
+}
 
       function scheduleResponsiveLayout() {
         if (resizeScheduled) return;
