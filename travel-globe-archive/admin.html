@@ -1,0 +1,3188 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>여행 지구본 기록 웹앱</title>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --panel: #ffffff;
+      --line: #e7eaf1;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --primary: #2563eb;
+      --primary-soft: #eff6ff;
+      --danger: #ef4444;
+      --success: #16a34a;
+      --shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+      --shadow-soft: 0 14px 32px rgba(37, 99, 235, 0.08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    body { overflow: hidden; }
+
+    .app {
+      display: grid;
+      grid-template-columns: clamp(320px, 34vw, 420px) minmax(0, 1fr);
+      width: 100%;
+      height: 100vh;
+    }
+
+    .sidebar {
+      background: var(--panel);
+      border-right: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      min-width: 340px;
+      height: 100vh;
+      overflow: hidden;
+      z-index: 2;
+    }
+
+    .sidebar-inner {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 16px;
+      min-height: 0;
+      height: 100%;
+    }
+
+    .title-box {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .title-box h1 {
+      font-size: 22px;
+      margin: 0;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .title-box p {
+      margin: 0;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .stat {
+      background: #fbfcff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .stat-value {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .panel {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      gap: 12px;
+    }
+
+    .section-title h2 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .section-title span {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 12px;
+      align-items: start;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      min-width: 0;
+    }
+
+    .field.full { grid-column: 1 / -1; }
+
+    label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    input, textarea, button { font: inherit; }
+
+    input, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 11px 12px;
+      outline: none;
+      background: #fff;
+      color: var(--text);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+
+    input:focus, textarea:focus {
+      border-color: #93c5fd;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 78px;
+      line-height: 1.45;
+    }
+
+    .actions, .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .btn {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: transform 0.05s ease, background 0.15s ease, border-color 0.15s ease;
+      user-select: none;
+    }
+
+    .btn:hover { background: #f8fafc; }
+    .btn:active { transform: translateY(1px); }
+    .btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .btn.primary:hover { background: #1d4ed8; }
+    .btn.danger { color: var(--danger); }
+    .btn.small { padding: 8px 10px; font-size: 12px; border-radius: 10px; }
+    .btn.tiny { padding: 6px 8px; font-size: 11px; border-radius: 9px; }
+
+    .status {
+      min-height: 20px;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    .status.ok { color: var(--success); }
+    .status.error { color: var(--danger); }
+
+    .photo-panel {
+      margin-top: 12px;
+      border: 1px solid #e8edf7;
+      border-radius: 16px;
+      background: linear-gradient(180deg, #fbfdff 0%, #f8fbff 100%);
+      padding: 12px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .photo-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .photo-title {
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .photo-help {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .upload-card {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1.5px dashed #bfd4ff;
+      background: var(--primary-soft);
+      color: #1d4ed8;
+      border-radius: 16px;
+      padding: 16px;
+      min-height: 96px;
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.12s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+
+    .upload-card:hover {
+      transform: translateY(-1px);
+      border-color: #8fb6ff;
+      box-shadow: 0 12px 26px rgba(37, 99, 235, 0.12);
+    }
+
+    .upload-card strong { display: block; font-size: 14px; margin-bottom: 4px; }
+    .upload-card span { font-size: 12px; color: #4b5563; line-height: 1.4; }
+
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .photo-item {
+      position: relative;
+      overflow: hidden;
+      border-radius: 16px;
+      border: 1px solid #e5eaf4;
+      background: #fff;
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .photo-thumb {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      display: block;
+      background: #f3f4f6;
+    }
+
+    .photo-overlay {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      padding: 8px;
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.72) 0%, rgba(15, 23, 42, 0.08) 100%);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 6px;
+      pointer-events: none;
+    }
+
+    .photo-badge {
+      font-size: 11px;
+      font-weight: 700;
+      color: #fff;
+      background: rgba(37, 99, 235, 0.88);
+      border-radius: 999px;
+      padding: 4px 8px;
+      backdrop-filter: blur(6px);
+    }
+
+    .photo-badge.comment { background: rgba(22, 163, 74, 0.9); }
+
+    .photo-actions {
+      display: flex;
+      gap: 6px;
+      pointer-events: auto;
+    }
+
+    .icon-btn {
+      border: none;
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.92);
+      color: #111827;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 800;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .icon-btn:hover { background: #fff; }
+
+    .photo-empty {
+      margin-top: 12px;
+      border: 1px dashed #d9e2f0;
+      border-radius: 14px;
+      padding: 16px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      background: #fcfdff;
+    }
+
+    .list-panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      flex: 1;
+    }
+
+    .list-wrap {
+      min-height: 0;
+      overflow: auto;
+      padding-right: 2px;
+    }
+
+    .list-wrap::-webkit-scrollbar { width: 10px; }
+    .list-wrap::-webkit-scrollbar-thumb {
+      background: #d8deea;
+      border-radius: 999px;
+      border: 2px solid transparent;
+      background-clip: padding-box;
+    }
+
+    .trip-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 100%;
+    }
+
+    .empty {
+      display: grid;
+      place-items: center;
+      min-height: 180px;
+      border: 1px dashed #d9e2f0;
+      border-radius: 14px;
+      color: var(--muted);
+      font-size: 14px;
+      background: #fcfdff;
+      text-align: center;
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    .trip-card {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      cursor: grab;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+
+    .trip-card:hover {
+      border-color: #cdd8eb;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+    }
+
+    .trip-card.dragging { opacity: 0.45; }
+    .trip-card.active { border-color: #93c5fd; background: #f8fbff; }
+
+    .trip-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .trip-title { font-size: 15px; font-weight: 800; line-height: 1.3; }
+    .trip-number { display: inline-block; min-width: 22px; color: #2563eb; font-weight: 900; margin-right: 4px; }
+    .trip-sub { margin-top: 3px; font-size: 12px; color: var(--muted); }
+
+    .trip-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .chip {
+      background: #f3f6fb;
+      border: 1px solid #e7edf7;
+      border-radius: 999px;
+      padding: 4px 8px;
+      white-space: nowrap;
+    }
+
+    .trip-note {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #374151;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .trip-preview {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .trip-preview-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .trip-preview-thumb {
+      width: 56px;
+      height: 56px;
+      object-fit: cover;
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+      background: #f3f4f6;
+      flex-shrink: 0;
+    }
+
+    .trip-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      user-select: none;
+      cursor: pointer;
+    }
+
+    .toggle input {
+      width: auto;
+      margin: 0;
+      accent-color: var(--primary);
+    }
+
+    .globe-area {
+      position: relative;
+      min-width: 0;
+      min-height: 0;
+      background: linear-gradient(180deg, #f8fbff 0%, #eef3fb 100%);
+      overflow: hidden;
+    }
+
+    .globe-stage {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    #globeViz {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      will-change: transform;
+    }
+
+    .globe-overlay {
+      position: absolute;
+      right: 18px;
+      top: 18px;
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .globe-badge {
+      pointer-events: auto;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(226, 232, 240, 0.95);
+      border-radius: 14px;
+      padding: 10px 12px;
+      box-shadow: var(--shadow);
+      min-width: 210px;
+    }
+
+    .globe-badge strong { display: block; font-size: 13px; margin-bottom: 4px; }
+    .globe-badge div { font-size: 12px; color: var(--muted); line-height: 1.45; }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+    }
+
+    .floating-card {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 280px;
+      background: rgba(255,255,255,0.96);
+      border: 1px solid rgba(226, 232, 240, 0.95);
+      border-radius: 18px;
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.22), 0 6px 18px rgba(15, 23, 42, 0.12);
+      overflow: visible;
+      z-index: 30;
+      opacity: 0;
+      transform: translate3d(0, 0, 0) scale(0.96);
+      transform-origin: left center;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.22s ease;
+      backdrop-filter: blur(10px);
+    }
+
+    .floating-card.show {
+      opacity: 1;
+      transform: translate3d(0, 0, 0) scale(1);
+      pointer-events: auto;
+    }
+
+    .floating-card::before,
+    .floating-card::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      pointer-events: none;
+    }
+
+    .floating-card::before {
+      left: -13px;
+      border-top: 12px solid transparent;
+      border-bottom: 12px solid transparent;
+      border-right: 13px solid rgba(226, 232, 240, 0.95);
+    }
+
+    .floating-card::after {
+      left: -11px;
+      border-top: 11px solid transparent;
+      border-bottom: 11px solid transparent;
+      border-right: 12px solid rgba(255,255,255,0.96);
+    }
+
+    .floating-card.tail-right::before {
+      left: auto;
+      right: -13px;
+      border-right: 0;
+      border-left: 13px solid rgba(226, 232, 240, 0.95);
+      border-top: 12px solid transparent;
+      border-bottom: 12px solid transparent;
+    }
+
+    .floating-card.tail-right::after {
+      left: auto;
+      right: -11px;
+      border-right: 0;
+      border-left: 12px solid rgba(255,255,255,0.96);
+      border-top: 11px solid transparent;
+      border-bottom: 11px solid transparent;
+    }
+
+    .floating-card-media-wrap {
+      position: relative;
+      width: 100%;
+      height: 160px;
+      background: #eef2f7;
+      cursor: default;
+      overflow: hidden;
+    }
+
+    .floating-card-media-wrap.is-clickable { cursor: pointer; }
+    .floating-card-media-wrap.is-clickable::after {
+      content: "클릭해서 보기";
+      position: absolute;
+      right: 10px;
+      bottom: 10px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #fff;
+      background: rgba(15, 23, 42, 0.5);
+      padding: 5px 9px;
+      border-radius: 999px;
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity 0.18s ease, transform 0.18s ease;
+      backdrop-filter: blur(6px);
+    }
+
+    .floating-card-media-wrap.is-clickable:hover::after { opacity: 1; transform: translateY(0); }
+    .floating-card-media-wrap.is-clickable:hover .floating-card-media { transform: scale(1.02); }
+
+    .floating-card-media {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+      border-bottom: 1px solid #e5e7eb;
+      transition: transform 0.22s ease;
+    }
+
+    .floating-card-media.show { display: block; }
+
+    .floating-card-media-empty {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: #6b7280;
+      font-size: 13px;
+      background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+    }
+
+    .floating-card-body { padding: 14px; }
+    .floating-card-title { font-size: 16px; font-weight: 800; line-height: 1.35; margin-bottom: 6px; color: #111827; }
+    .floating-card-date { font-size: 12px; color: #6b7280; margin-bottom: 8px; }
+    .floating-card-memo { font-size: 13px; line-height: 1.5; color: #374151; min-height: 38px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .floating-card-bottom { margin-top: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .floating-card-count { font-size: 12px; color: #6b7280; font-weight: 700; }
+
+    .photo-side-panel {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      pointer-events: none;
+    }
+
+    .photo-side-panel.show { pointer-events: auto; }
+
+    .photo-side-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0);
+      backdrop-filter: blur(0px);
+      transition: background 0.34s ease, backdrop-filter 0.34s ease;
+    }
+
+    .photo-side-panel.show .photo-side-backdrop {
+      background: rgba(15, 23, 42, 0.52);
+      backdrop-filter: blur(10px);
+    }
+
+    .photo-side-sheet {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: min(860px, 96vw);
+      height: 100%;
+      background: linear-gradient(180deg, rgba(255,255,255,0.985) 0%, rgba(250,252,255,0.985) 100%);
+      border-left: 1px solid rgba(226, 232, 240, 0.92);
+      box-shadow: -30px 0 80px rgba(15, 23, 42, 0.22), -10px 0 28px rgba(15, 23, 42, 0.08);
+      transform: translateX(100%);
+      opacity: 0.98;
+      transition: transform 0.34s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.28s ease;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .photo-side-panel.show .photo-side-sheet { transform: translateX(0); opacity: 1; }
+
+    .photo-side-close {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      z-index: 3;
+      width: 38px;
+      height: 38px;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.84);
+      color: #475569;
+      font-size: 20px;
+      line-height: 1;
+      cursor: pointer;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+    }
+
+    .photo-side-header {
+      padding: 22px 24px 14px;
+      border-bottom: 1px solid rgba(229, 231, 235, 0.72);
+      background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.95) 100%);
+    }
+
+    .photo-side-title {
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1.2;
+      letter-spacing: -0.04em;
+      padding-right: 52px;
+      margin-bottom: 8px;
+      color: #111827;
+    }
+
+    .photo-side-meta {
+      font-size: 14px;
+      color: #6b7280;
+      letter-spacing: 0.01em;
+      line-height: 1.6;
+    }
+
+    .photo-side-stage {
+      position: relative;
+      background: radial-gradient(circle at top, rgba(30,41,59,0.98) 0%, rgba(15,23,42,1) 72%);
+      min-height: 420px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .photo-side-image-wrap {
+      position: relative;
+      width: 100%;
+      height: min(56vh, 760px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 34px 34px 28px;
+      overflow: hidden;
+    }
+
+    .photo-side-image {
+      position: absolute;
+      inset: 34px 34px 28px 34px;
+      width: calc(100% - 68px);
+      height: calc(100% - 62px);
+      object-fit: contain;
+      display: block;
+      border-radius: 22px;
+      box-shadow: 0 22px 40px rgba(0,0,0,0.32), 0 6px 14px rgba(255,255,255,0.06);
+      opacity: 0;
+      transform: translateX(28px);
+      transition: opacity 0.32s ease, transform 0.32s ease;
+      pointer-events: none;
+    }
+
+    .photo-side-image.is-active {
+      opacity: 1;
+      transform: translateX(0);
+      z-index: 2;
+    }
+
+    .photo-side-image.is-exit-left {
+      opacity: 0;
+      transform: translateX(-28px);
+      z-index: 1;
+    }
+
+    .photo-side-image.is-exit-right {
+      opacity: 0;
+      transform: translateX(28px);
+      z-index: 1;
+    }
+
+    .photo-side-image.is-enter-left {
+      opacity: 0;
+      transform: translateX(-28px);
+      z-index: 2;
+    }
+
+    .photo-side-image.is-enter-right {
+      opacity: 0;
+      transform: translateX(28px);
+      z-index: 2;
+    }
+
+    .photo-side-nav {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 56px;
+      height: 56px;
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.9);
+      color: #111827;
+      font-size: 30px;
+      font-weight: 700;
+      cursor: pointer;
+      z-index: 3;
+      box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+      transform: translate(-50%, -50%);
+    }
+
+    .photo-side-thumbs {
+      display: flex;
+      gap: 12px;
+      padding: 16px 20px;
+      overflow-x: auto;
+      border-bottom: 1px solid rgba(229, 231, 235, 0.9);
+      background: linear-gradient(180deg, #f8fafc 0%, #f4f7fb 100%);
+    }
+
+    .photo-side-thumb {
+      position: relative;
+      width: 86px;
+      height: 86px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      background: #fff;
+      flex: 0 0 auto;
+      cursor: pointer;
+      box-shadow: 0 8px 16px rgba(15, 23, 42, 0.08);
+      transition: transform 0.18s ease, border-color 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+      opacity: 0.52;
+    }
+
+    .photo-side-thumb.active {
+      transform: translateY(-4px) scale(1.06);
+      border-color: #2563eb;
+      box-shadow: 0 14px 28px rgba(37, 99, 235, 0.18), 0 0 0 4px rgba(37, 99, 235, 0.14);
+      opacity: 1;
+    }
+
+    .photo-side-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    .photo-side-info {
+      padding: 22px 24px 28px;
+      overflow: auto;
+      background: #fff;
+    }
+
+    .photo-side-date {
+      display: inline-block;
+      font-size: 13px;
+      color: #475569;
+      margin-bottom: 12px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: #f3f6fb;
+      border: 1px solid #e6edf7;
+      font-weight: 700;
+    }
+
+    .photo-side-caption-box {
+      margin-top: 10px;
+      padding: 18px;
+      border-radius: 18px;
+      border: 1px solid #dbe7fb;
+      background: linear-gradient(180deg, #fbfdff 0%, #f4f8ff 100%);
+      box-shadow: 0 10px 22px rgba(37, 99, 235, 0.05);
+    }
+
+    .photo-side-caption-label {
+      font-size: 13px;
+      font-weight: 800;
+      color: #2563eb;
+      margin-bottom: 10px;
+      letter-spacing: -0.01em;
+    }
+
+    .photo-side-caption {
+      font-size: 17px;
+      color: #1f2937;
+      line-height: 1.85;
+      white-space: pre-wrap;
+      word-break: break-word;
+      letter-spacing: -0.01em;
+    }
+
+    .photo-side-caption.empty { color: #6b7280; }
+
+    .photo-side-caption.warning {
+      color: #b45309;
+      font-weight: 700;
+    }
+
+    .photo-side-tripmemo {
+      margin-top: 16px;
+      font-size: 14px;
+      color: #4b5563;
+      line-height: 1.8;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .photo-side-editor {
+      margin-top: 18px;
+      padding: 18px;
+      border: 1px solid #dbe7fb;
+      border-radius: 18px;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+      box-shadow: 0 10px 22px rgba(37, 99, 235, 0.05);
+    }
+
+    .photo-side-editor-label {
+      font-size: 13px;
+      font-weight: 800;
+      color: #2563eb;
+      margin-bottom: 10px;
+    }
+
+    .photo-side-editor-input {
+      width: 100%;
+      min-height: 140px;
+      resize: vertical;
+      border: 1px solid #dbe3f1;
+      border-radius: 14px;
+      padding: 14px;
+      font-size: 14px;
+      line-height: 1.8;
+      background: #fff;
+      color: #1f2937;
+      outline: none;
+    }
+
+    .photo-side-editor-input:focus {
+      border-color: #93c5fd;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+    }
+
+    .photo-side-editor-actions {
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .photo-side-editor-hint {
+      font-size: 12px;
+      color: #6b7280;
+      line-height: 1.6;
+    }
+
+    .image-zoom-panel {
+      position: fixed;
+      inset: 0;
+      z-index: 90;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.24s ease;
+    }
+
+    .image-zoom-panel.show {
+      pointer-events: auto;
+      opacity: 1;
+    }
+
+    .image-zoom-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.82);
+      backdrop-filter: blur(8px);
+    }
+
+    .image-zoom-sheet {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 28px;
+    }
+
+    .image-zoom-image {
+      max-width: min(96vw, 1500px);
+      max-height: 92vh;
+      object-fit: contain;
+      border-radius: 22px;
+      box-shadow: 0 28px 60px rgba(0,0,0,0.42), 0 10px 24px rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.04);
+    }
+
+    .image-zoom-close {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      width: 44px;
+      height: 44px;
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+      font-size: 22px;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 22px rgba(0,0,0,0.2);
+    }
+
+    .image-zoom-caption {
+      position: absolute;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      max-width: min(88vw, 980px);
+      padding: 10px 14px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+      font-size: 13px;
+      line-height: 1.6;
+      text-align: center;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 22px rgba(0,0,0,0.18);
+    }
+
+
+
+.date-icon-btn:hover {
+  background: #f8fafc;
+  color: #2563eb;
+}
+
+.date-range-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+
+.date-inline-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 4px 6px;
+}
+
+.date-inline-group:focus-within {
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+}
+
+.date-inline-group input {
+  width: 44px;
+  min-width: 0;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 6px 2px !important;
+  height: 32px !important;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 8px !important;
+}
+
+.date-inline-group input:first-of-type {
+  width: 58px;
+}
+
+.date-dot {
+  color: #9aa4b2;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  flex: 0 0 auto;
+}
+
+.date-icon-btn {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  color: #64748b;
+  padding: 0;
+}
+
+.date-icon-btn:hover {
+  background: #f8fafc;
+  color: #2563eb;
+}
+
+
+#clearPhotosBtn {
+  min-width: 80px;
+  white-space: nowrap;
+}
+
+
+    .date-range-tilde {
+      flex: 0 0 auto;
+      color: #9aa4b2;
+      font-weight: 700;
+    }
+
+    #queryPreview {
+      width: 100%;
+      min-width: 0;
+      height: 42px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      background: linear-gradient(180deg, #fbfcff 0%, #f7f9fd 100%);
+      color: #4b5563;
+    }
+
+    @media (max-width: 960px) {
+      body { overflow: auto; }
+      .app {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 55vh;
+        height: auto;
+        min-height: 100vh;
+      }
+      .sidebar {
+        height: auto;
+        min-width: 0;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .globe-area { min-height: 55vh; }
+      .photo-grid { grid-template-columns: repeat(2, 1fr); }
+      .floating-card { width: 240px; }
+      .floating-card-media-wrap { height: 130px; }
+      .photo-side-sheet { width: 100vw; }
+      .photo-side-image-wrap { height: min(46vh, 500px); padding: 18px 14px 16px; }
+      .photo-side-image {
+        inset: 18px 14px 16px 14px;
+        width: calc(100% - 28px);
+        height: calc(100% - 34px);
+      }
+      .photo-side-thumb { width: 70px; height: 70px; }
+      .photo-side-title { font-size: 24px; }
+      .photo-side-caption { font-size: 15px; }
+    }
+
+
+@media (max-width: 620px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+  .date-range-row { gap: 6px; }
+
+
+
+  .date-dot { font-size: 12px; }
+
+  .date-icon-btn {
+    width: 26px;
+    height: 26px;
+    flex-basis: 26px;
+    font-size: 13px;
+  }
+
+  .photo-side-title { font-size: 22px; }
+  .photo-side-caption { font-size: 14px; }
+
+  .image-zoom-sheet { padding: 14px; }
+
+  .image-zoom-image {
+    max-width: 96vw;
+    max-height: 84vh;
+    border-radius: 16px;
+  }
+
+  .image-zoom-caption {
+    bottom: 14px;
+    font-size: 12px;
+  }
+}
+
+
+
+
+
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar-inner">
+        <div class="title-box">
+          <h1>Lama’s Travel Globe</h1>
+          <p>다녀온 도시를 기록하고, 지구본 위에서 다시 꺼내보는 가벼운 여행 아카이브입니다. 자동 저장은 IndexedDB로 처리되고, JSON 파일로 저장/불러오기도 가능합니다.</p>
+        </div>
+
+        <section class="stats" aria-label="통계">
+          <div class="stat"><div class="stat-label">방문 국가 수</div><div class="stat-value" id="statCountries">0</div></div>
+          <div class="stat"><div class="stat-label">방문 도시 수</div><div class="stat-value" id="statCities">0</div></div>
+          <div class="stat"><div class="stat-label">총 여행 수</div><div class="stat-value" id="statTrips">0</div></div>
+        </section>
+
+        <section class="panel" aria-labelledby="addTitle">
+          <div class="section-title">
+            <h2 id="addTitle">여행지 추가</h2>
+            <span>위도/경도 자동 조회</span>
+          </div>
+
+          <form id="tripForm" autocomplete="off">
+            <div class="form-grid">
+              <div class="field">
+                <label for="cityInput">도시명</label>
+                <input id="cityInput" name="city" type="text" placeholder="예: 파리" required />
+              </div>
+
+              <div class="field">
+                <label for="countryInput">국가명</label>
+                <input id="countryInput" name="country" type="text" placeholder="예: 프랑스" required />
+              </div>
+
+
+
+
+
+
+
+              <div class="field full">
+  <label>여행기간</label>
+
+  <div class="date-range-row">
+    <div class="date-inline-group">
+      <input id="startYearInput" type="text" inputmode="numeric" maxlength="4" placeholder="YYYY" />
+      <span class="date-dot">.</span>
+      <input id="startMonthInput" type="text" inputmode="numeric" maxlength="2" placeholder="MM" />
+      <span class="date-dot">.</span>
+      <input id="startDayInput" type="text" inputmode="numeric" maxlength="2" placeholder="DD" />
+      <button type="button" class="date-icon-btn" id="startDateBtn" aria-label="시작일 달력 열기">📅</button>
+      <input id="startDateInput" type="date" class="sr-only" />
+    </div>
+
+    <span class="date-range-tilde">~</span>
+
+    <div class="date-inline-group">
+      <input id="endYearInput" type="text" inputmode="numeric" maxlength="4" placeholder="YYYY" />
+      <span class="date-dot">.</span>
+      <input id="endMonthInput" type="text" inputmode="numeric" maxlength="2" placeholder="MM" />
+      <span class="date-dot">.</span>
+      <input id="endDayInput" type="text" inputmode="numeric" maxlength="2" placeholder="DD" />
+      <button type="button" class="date-icon-btn" id="endDateBtn" aria-label="종료일 달력 열기">📅</button>
+      <input id="endDateInput" type="date" class="sr-only" />
+    </div>
+  </div>
+</div>
+
+          
+
+
+
+
+
+
+
+
+
+              
+              <div class="sr-only" aria-hidden="true">
+                <label for="queryPreview">검색 대상</label>
+                <input id="queryPreview" type="text" tabindex="-1" />
+              </div>
+
+              <div class="field full">
+                <label for="memoInput">메모</label>
+                <textarea id="memoInput" name="memo" placeholder="예: 야경이 정말 좋았고, 다음엔 3박 이상 머물고 싶음"></textarea>
+              </div>
+            </div>
+
+            <div class="photo-panel">
+              <div class="photo-top">
+                <div>
+                  <div class="photo-title">여행 사진</div>
+                  <div class="photo-help">최대 10장까지 추가 가능. 등록 화면에서는 사진만 올리고, 사진별 코멘트는 우측 패널에서 작성·수정합니다.</div>
+                </div>
+                <button class="btn small" type="button" id="clearPhotosBtn">사진 비우기</button>
+              </div>
+
+              <label class="upload-card" for="photoInput">
+                <div>
+                  <strong>사진 업로드</strong>
+                  <span>클릭해서 여러 장 선택<br>사진은 한 번에 올리고, 코멘트는 나중에 우측 패널에서 정리합니다.</span>
+                </div>
+              </label>
+              <input id="photoInput" class="sr-only" type="file" accept="image/*" multiple />
+
+              <div id="photoGrid" class="photo-grid"></div>
+              <div id="photoEmpty" class="photo-empty">아직 추가된 사진이 없습니다.</div>
+            </div>
+
+            <div class="actions" style="margin-top: 12px;">
+              <button class="btn primary" type="submit" id="addBtn">추가하기</button>
+              <button class="btn ghost" type="button" id="resetBtn">입력 초기화</button>
+            </div>
+
+            <div id="statusText" class="status" aria-live="polite"></div>
+          </form>
+        </section>
+
+        <section class="panel">
+          <div class="section-title">
+            <h2>저장 / 불러오기</h2>
+            <span>JSON 파일</span>
+          </div>
+
+          <div class="toolbar">
+            <button class="btn" type="button" id="downloadBtn">저장하기</button>
+            <button class="btn" type="button" id="uploadBtn">불러오기</button>
+            <button class="btn danger" type="button" id="clearBtn">전체 삭제</button>
+          </div>
+
+          <input id="fileInput" class="sr-only" type="file" accept="application/json" />
+        </section>
+
+        <section class="panel list-panel">
+          <div class="section-title">
+            <h2>여행 리스트</h2>
+            <span>드래그해서 순서 변경</span>
+          </div>
+          <div class="list-wrap">
+            <div id="tripList" class="trip-list"></div>
+          </div>
+        </section>
+      </div>
+    </aside>
+
+    <main class="globe-area">
+      <div class="globe-stage">
+        <div id="globeViz" aria-label="지구본"></div>
+      </div>
+
+      <div class="globe-overlay">
+        <div class="globe-badge" id="focusInfo">
+          <strong>선택된 여행지</strong>
+          <div>좌측 리스트 또는 지구본의 점을 클릭해보세요.</div>
+        </div>
+      </div>
+
+      <div id="floatingCard" class="floating-card" aria-hidden="true">
+        <div class="floating-card-media-wrap">
+          <img id="floatingCardImage" class="floating-card-media" alt="여행 대표사진" />
+          <div id="floatingCardImageEmpty" class="floating-card-media-empty">사진 없음</div>
+        </div>
+        <div class="floating-card-body">
+          <div class="floating-card-title" id="floatingCardTitle">도시명</div>
+          <div class="floating-card-date" id="floatingCardDate">방문일</div>
+          <div class="floating-card-memo" id="floatingCardMemo">메모</div>
+          <div class="floating-card-bottom">
+            <span id="floatingCardCount" class="floating-card-count">사진 0장</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="photoSidePanel" class="photo-side-panel" aria-hidden="true">
+        <div class="photo-side-backdrop" data-photo-close="true"></div>
+        <aside class="photo-side-sheet">
+          <button id="photoSideCloseBtn" class="photo-side-close" type="button" aria-label="닫기">×</button>
+
+          <div class="photo-side-header">
+            <div id="photoSideTitle" class="photo-side-title">도시명</div>
+            <div id="photoSideMeta" class="photo-side-meta">사진 1 / 1 · 방문일 미입력</div>
+          </div>
+
+          <div class="photo-side-stage">
+            <button id="photoPrevBtn" class="photo-side-nav prev" type="button" aria-label="이전 사진">‹</button>
+            <div class="photo-side-image-wrap">
+              <img id="photoSideImageA" class="photo-side-image is-active" alt="여행 사진 크게 보기" />
+              <img id="photoSideImageB" class="photo-side-image" alt="여행 사진 크게 보기" />
+            </div>
+            <button id="photoNextBtn" class="photo-side-nav next" type="button" aria-label="다음 사진">›</button>
+          </div>
+
+          <div class="photo-side-thumbs" id="photoSideThumbs"></div>
+
+          <div class="photo-side-info">
+            <div id="photoSideDate" class="photo-side-date">방문일</div>
+
+            <div class="photo-side-caption-box">
+              <div class="photo-side-caption-label">현재 사진 코멘트</div>
+              <div id="photoSideCaption" class="photo-side-caption empty">이 사진에 등록된 코멘트가 없습니다.</div>
+            </div>
+
+            <div id="photoSideMemo" class="photo-side-tripmemo">메모가 없습니다.</div>
+
+            <div class="photo-side-editor">
+              <div class="photo-side-editor-label">이 사진 코멘트 작성 / 수정</div>
+              <textarea id="photoSideCommentInput" class="photo-side-editor-input" placeholder="이 사진에 대한 생각이나 메모를 작성하세요."></textarea>
+              <div class="photo-side-editor-actions">
+                <div id="photoSideEditorHint" class="photo-side-editor-hint">사진을 바꾸면 해당 사진의 코멘트가 자동으로 불러와집니다.</div>
+                <button id="photoSaveCommentBtn" class="btn small primary" type="button">이 사진 코멘트 저장</button>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <div id="imageZoomPanel" class="image-zoom-panel" aria-hidden="true">
+        <div class="image-zoom-backdrop" data-zoom-close="true"></div>
+        <div class="image-zoom-sheet">
+          <button id="imageZoomCloseBtn" class="image-zoom-close" type="button" aria-label="확대 이미지 닫기">×</button>
+          <img id="imageZoomImage" class="image-zoom-image" alt="확대 이미지" />
+          <div id="imageZoomCaption" class="image-zoom-caption"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/globe.gl"></script>
+  <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+  <script>
+    (() => {
+      'use strict';
+
+      const DB_NAME = 'travel_globe_db';
+      const DB_VERSION = 1;
+      const STORE_NAME = 'app_state';
+      const STATE_KEY = 'travel_globe_records';
+      const STORAGE_KEY_LEGACY_V4 = 'travel_globe_records_v4';
+      const STORAGE_KEY_LEGACY_V3 = 'travel_globe_records_v3';
+      const FILE_SCHEMA_VERSION = 4;
+      const EARTH_TEXTURE = 'https://unpkg.com/three-globe/example/img/earth-day.jpg';
+      const MAX_PHOTOS = 10;
+      const MAX_PHOTO_SIDE = 1280;
+      const PHOTO_QUALITY = 0.82;
+
+      let listRenderScheduled = false;
+      let globeRenderScheduled = false;
+      let resizeScheduled = false;
+      let persistTimer = null;
+
+      const ringTimers = new Map();
+
+      const state = {
+        trips: [],
+        activeId: null,
+        draggingId: null,
+        globe: null,
+        globeReady: false,
+        draftPhotos: [],
+        floatingTripId: null,
+        photoModalIndex: 0,
+        floatingFollowRaf: null,
+        db: null,
+        persistenceReady: false,
+        persistenceError: false,
+        isBooting: true,
+        photoImageLayerIndex: 0,
+        photoImageTransitionTimer: null,
+        touchStartX: 0,
+        touchStartY: 0,
+        touchDeltaX: 0,
+        touchDeltaY: 0,
+        isSwipingPhoto: false
+      };
+
+      const dom = {
+        tripForm: document.getElementById('tripForm'),
+        cityInput: document.getElementById('cityInput'),
+        countryInput: document.getElementById('countryInput'),
+        startYearInput: document.getElementById('startYearInput'),
+        startMonthInput: document.getElementById('startMonthInput'),
+        startDayInput: document.getElementById('startDayInput'),
+        endYearInput: document.getElementById('endYearInput'),
+        endMonthInput: document.getElementById('endMonthInput'),
+        endDayInput: document.getElementById('endDayInput'),
+        
+        startDateBtn: document.getElementById('startDateBtn'),
+        endDateBtn: document.getElementById('endDateBtn'),
+        startDateInput: document.getElementById('startDateInput'),
+        endDateInput: document.getElementById('endDateInput'),
+
+        
+        memoInput: document.getElementById('memoInput'),
+        queryPreview: document.getElementById('queryPreview'),
+        addBtn: document.getElementById('addBtn'),
+        resetBtn: document.getElementById('resetBtn'),
+        statusText: document.getElementById('statusText'),
+        tripList: document.getElementById('tripList'),
+        globeViz: document.getElementById('globeViz'),
+        globeArea: document.querySelector('.globe-area'),
+        downloadBtn: document.getElementById('downloadBtn'),
+        uploadBtn: document.getElementById('uploadBtn'),
+        fileInput: document.getElementById('fileInput'),
+        clearBtn: document.getElementById('clearBtn'),
+        statCountries: document.getElementById('statCountries'),
+        statCities: document.getElementById('statCities'),
+        statTrips: document.getElementById('statTrips'),
+        focusInfo: document.getElementById('focusInfo'),
+        photoInput: document.getElementById('photoInput'),
+        photoGrid: document.getElementById('photoGrid'),
+        photoEmpty: document.getElementById('photoEmpty'),
+        clearPhotosBtn: document.getElementById('clearPhotosBtn'),
+        floatingCard: document.getElementById('floatingCard'),
+        floatingCardImage: document.getElementById('floatingCardImage'),
+        floatingCardImageEmpty: document.getElementById('floatingCardImageEmpty'),
+        floatingCardTitle: document.getElementById('floatingCardTitle'),
+        floatingCardDate: document.getElementById('floatingCardDate'),
+        floatingCardMemo: document.getElementById('floatingCardMemo'),
+        floatingCardCount: document.getElementById('floatingCardCount'),
+        floatingCardMediaWrap: document.querySelector('.floating-card-media-wrap'),
+        photoSidePanel: document.getElementById('photoSidePanel'),
+        photoSideImageA: document.getElementById('photoSideImageA'),
+        photoSideImageB: document.getElementById('photoSideImageB'),
+        photoSideTitle: document.getElementById('photoSideTitle'),
+        photoSideMeta: document.getElementById('photoSideMeta'),
+        photoSideCloseBtn: document.getElementById('photoSideCloseBtn'),
+        photoSideThumbs: document.getElementById('photoSideThumbs'),
+        photoSideDate: document.getElementById('photoSideDate'),
+        photoSideCaption: document.getElementById('photoSideCaption'),
+        photoSideMemo: document.getElementById('photoSideMemo'),
+        photoPrevBtn: document.getElementById('photoPrevBtn'),
+        photoNextBtn: document.getElementById('photoNextBtn'),
+        photoSideCommentInput: document.getElementById('photoSideCommentInput'),
+        photoSaveCommentBtn: document.getElementById('photoSaveCommentBtn'),
+        photoSideEditorHint: document.getElementById('photoSideEditorHint'),
+        imageZoomPanel: document.getElementById('imageZoomPanel'),
+        imageZoomImage: document.getElementById('imageZoomImage'),
+        imageZoomCaption: document.getElementById('imageZoomCaption'),
+        imageZoomCloseBtn: document.getElementById('imageZoomCloseBtn')
+      };
+
+
+      function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value));
+      }
+
+      function updatePhotoNavPositions() {
+        const activeImage =
+          dom.photoSideImageA.classList.contains('is-active')
+            ? dom.photoSideImageA
+            : dom.photoSideImageB;
+
+        if (!activeImage || !activeImage.src) return;
+
+        const stage = activeImage.closest('.photo-side-stage');
+        if (!stage) return;
+
+        const stageRect = stage.getBoundingClientRect();
+        const imageRect = activeImage.getBoundingClientRect();
+
+        const gap = 28;
+        const buttonHalf = 28;
+        const minX = buttonHalf + 10;
+        const maxX = stageRect.width - buttonHalf - 10;
+        const centerY = imageRect.top - stageRect.top + (imageRect.height / 2);
+
+        const prevXRaw = imageRect.left - stageRect.left - gap;
+        const nextXRaw = imageRect.right - stageRect.left + gap;
+
+        const prevX = clamp(prevXRaw, minX, maxX);
+        const nextX = clamp(nextXRaw, minX, maxX);
+
+        dom.photoPrevBtn.style.left = `${prevX}px`;
+        dom.photoPrevBtn.style.top = `${centerY}px`;
+
+        dom.photoNextBtn.style.left = `${nextX}px`;
+        dom.photoNextBtn.style.top = `${centerY}px`;
+      }
+
+
+
+
+
+
+      function uid() {
+        return 'trip_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+      }
+
+      function photoId() {
+        return 'photo_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7);
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+
+      function normalizeText(value) {
+        return String(value ?? '').trim();
+      }
+
+      function onlyDigits(value) {
+        return String(value || '').replace(/\D/g, '');
+      }
+
+      function setStatus(message, type = '') {
+        dom.statusText.textContent = message || '';
+        dom.statusText.className = 'status' + (type ? ' ' + type : '');
+      }
+
+      function buildQuery(city, country) {
+        return [normalizeText(city), normalizeText(country)].filter(Boolean).join(', ');
+      }
+
+      function formatDate(dateString) {
+        return dateString || '방문일 미입력';
+      }
+
+      function sanitizePhotos(list) {
+        if (!Array.isArray(list)) return [];
+        return list
+          .map(item => ({
+            id: normalizeText(item.id) || photoId(),
+            name: normalizeText(item.name) || 'photo',
+            dataUrl: normalizeText(item.dataUrl || item.url),
+            comment: normalizeText(item.comment || item.caption || '')
+          }))
+          .filter(item => item.dataUrl.startsWith('data:image/'))
+          .slice(0, MAX_PHOTOS);
+      }
+
+      function sanitizeTrips(list) {
+        return (Array.isArray(list) ? list : [])
+          .map(item => {
+            const photos = sanitizePhotos(item.photos);
+            return {
+              id: normalizeText(item.id) || uid(),
+              city: normalizeText(item.city),
+              country: normalizeText(item.country),
+              visitedAt: normalizeText(item.visitedAt),
+              memo: normalizeText(item.memo),
+              lat: Number(item.lat),
+              lng: Number(item.lng),
+              visible: item.visible !== false,
+              createdAt: normalizeText(item.createdAt) || new Date().toISOString(),
+              photos,
+              thumbnail: photos[0]?.dataUrl || ''
+            };
+          })
+          .filter(item => item.city && item.country && Number.isFinite(item.lat) && Number.isFinite(item.lng));
+      }
+
+      function getDb() {
+        return new Promise((resolve, reject) => {
+          if (!('indexedDB' in window)) {
+            reject(new Error('이 브라우저는 IndexedDB를 지원하지 않습니다.'));
+            return;
+          }
+
+          const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+          request.onupgradeneeded = event => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+              db.createObjectStore(STORE_NAME, { keyPath: 'key' });
+            }
+          };
+
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error || new Error('IndexedDB를 열지 못했습니다.'));
+        });
+      }
+
+      function idbGet(db, key) {
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE_NAME, 'readonly');
+          const store = tx.objectStore(STORE_NAME);
+          const request = store.get(key);
+          request.onsuccess = () => resolve(request.result || null);
+          request.onerror = () => reject(request.error || new Error('IndexedDB 조회 실패'));
+        });
+      }
+
+      function idbPut(db, record) {
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE_NAME, 'readwrite');
+          const store = tx.objectStore(STORE_NAME);
+          store.put(record);
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => reject(tx.error || new Error('IndexedDB 저장 실패'));
+          tx.onabort = () => reject(tx.error || new Error('IndexedDB 저장이 중단되었습니다.'));
+        });
+      }
+
+      function idbDelete(db, key) {
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE_NAME, 'readwrite');
+          const store = tx.objectStore(STORE_NAME);
+          store.delete(key);
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => reject(tx.error || new Error('IndexedDB 삭제 실패'));
+          tx.onabort = () => reject(tx.error || new Error('IndexedDB 삭제가 중단되었습니다.'));
+        });
+      }
+
+      async function loadLegacyLocalStorage() {
+        const keys = [STORAGE_KEY_LEGACY_V4, STORAGE_KEY_LEGACY_V3];
+        for (const key of keys) {
+          try {
+            const raw = localStorage.getItem(key);
+            if (!raw) continue;
+            const parsed = JSON.parse(raw);
+            if (parsed && Array.isArray(parsed.trips)) {
+              return sanitizeTrips(parsed.trips);
+            }
+          } catch (error) {
+            console.error('기존 localStorage 읽기 실패:', error);
+          }
+        }
+        return [];
+      }
+
+      async function removeLegacyLocalStorage() {
+        try {
+          localStorage.removeItem(STORAGE_KEY_LEGACY_V4);
+          localStorage.removeItem(STORAGE_KEY_LEGACY_V3);
+        } catch (error) {
+          console.error('기존 localStorage 정리 실패:', error);
+        }
+      }
+
+      async function hydrateStateFromStorage() {
+        try {
+          state.db = await getDb();
+          state.persistenceReady = true;
+
+          const saved = await idbGet(state.db, STATE_KEY);
+          if (saved && Array.isArray(saved.trips)) {
+            state.trips = sanitizeTrips(saved.trips);
+            return;
+          }
+
+          const legacyTrips = await loadLegacyLocalStorage();
+          if (legacyTrips.length) {
+            state.trips = legacyTrips;
+            await persistStateNow(false);
+            await removeLegacyLocalStorage();
+          }
+        } catch (error) {
+          console.error(error);
+          state.persistenceError = true;
+          setStatus('IndexedDB 초기화에 실패했습니다. 브라우저 저장이 제한될 수 있습니다.', 'error');
+          state.trips = [];
+        }
+      }
+
+      async function persistStateNow(showError = true) {
+        if (!state.db || !state.persistenceReady) return;
+        const payload = {
+          key: STATE_KEY,
+          version: FILE_SCHEMA_VERSION,
+          savedAt: new Date().toISOString(),
+          trips: state.trips
+        };
+
+        try {
+          await idbPut(state.db, payload);
+        } catch (error) {
+          console.error(error);
+          if (showError) {
+            setStatus('자동 저장 중 오류가 발생했습니다. 브라우저 저장 용량이나 권한을 확인해주세요.', 'error');
+          }
+        }
+      }
+
+      function schedulePersist() {
+        if (!state.persistenceReady || state.isBooting) return;
+        clearTimeout(persistTimer);
+        persistTimer = setTimeout(() => {
+          persistStateNow(true);
+        }, 180);
+      }
+
+      async function clearPersistedState() {
+        if (!state.db || !state.persistenceReady) return;
+        try {
+          await idbDelete(state.db, STATE_KEY);
+        } catch (error) {
+          console.error(error);
+          setStatus('저장된 데이터 삭제 중 오류가 발생했습니다.', 'error');
+        }
+      }
+
+      function downloadJson(filename, data) {
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      
+
+ 
+    function syncDatePartsFromPicker(type) {
+  const input = type === 'start' ? dom.startDateInput : dom.endDateInput;
+  const year = type === 'start' ? dom.startYearInput : dom.endYearInput;
+  const month = type === 'start' ? dom.startMonthInput : dom.endMonthInput;
+  const day = type === 'start' ? dom.startDayInput : dom.endDayInput;
+
+  if (!input.value) {
+    year.value = '';
+    month.value = '';
+    day.value = '';
+    return;
+  }
+
+  const [y, m, d] = input.value.split('-');
+  year.value = y || '';
+  month.value = m || '';
+  day.value = d || '';
+}
+
+function syncPickerFromDateParts(type) {
+  const year = type === 'start' ? dom.startYearInput : dom.endYearInput;
+  const month = type === 'start' ? dom.startMonthInput : dom.endMonthInput;
+  const day = type === 'start' ? dom.startDayInput : dom.endDayInput;
+  const input = type === 'start' ? dom.startDateInput : dom.endDateInput;
+
+  const y = onlyDigits(year.value);
+  const m = onlyDigits(month.value);
+  const d = onlyDigits(day.value);
+
+  if (y.length === 4 && m.length >= 1 && d.length >= 1) {
+    const mm = m.padStart(2, '0');
+    const dd = d.padStart(2, '0');
+    input.value = `${y}-${mm}-${dd}`;
+  } else {
+    input.value = '';
+  }
+}
+
+function getDateRange() {
+  const sY = onlyDigits(dom.startYearInput.value);
+  const sM = onlyDigits(dom.startMonthInput.value);
+  const sD = onlyDigits(dom.startDayInput.value);
+  const eY = onlyDigits(dom.endYearInput.value);
+  const eM = onlyDigits(dom.endMonthInput.value);
+  const eD = onlyDigits(dom.endDayInput.value);
+
+  if (!sY && !sM && !sD && !eY && !eM && !eD) return '';
+
+  if (sY.length !== 4 || eY.length !== 4 || !sM || !sD || !eM || !eD) {
+    throw new Error('여행기간은 시작일과 종료일을 모두 입력해주세요.');
+  }
+
+  const start = `${sY}-${sM.padStart(2, '0')}-${sD.padStart(2, '0')}`;
+  const end = `${eY}-${eM.padStart(2, '0')}-${eD.padStart(2, '0')}`;
+
+  if (new Date(start) > new Date(end)) {
+    throw new Error('종료일은 시작일보다 이후여야 합니다.');
+  }
+
+  return `${start} ~ ${end}`;
+}
+
+function clearVisitedAtInputs() {
+  dom.startYearInput.value = '';
+  dom.startMonthInput.value = '';
+  dom.startDayInput.value = '';
+  dom.endYearInput.value = '';
+  dom.endMonthInput.value = '';
+  dom.endDayInput.value = '';
+
+  dom.startDateInput.value = '';
+  dom.endDateInput.value = '';
+}
+
+
+
+
+
+
+
+
+
+
+
+
+      function bindDateAutoMove(input, maxLength, nextInput = null, prevInput = null) {
+        input.addEventListener('input', () => {
+          input.value = onlyDigits(input.value).slice(0, maxLength);
+          if (nextInput && input.value.length >= maxLength) {
+            nextInput.focus();
+            nextInput.select();
+          }
+        });
+
+        input.addEventListener('keydown', event => {
+          if (event.key === 'Backspace' && !input.value && prevInput) {
+            prevInput.focus();
+            prevInput.selectionStart = prevInput.value.length;
+            prevInput.selectionEnd = prevInput.value.length;
+          }
+        });
+      }
+
+      function readFileAsDataURL(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = () => reject(new Error('파일을 읽지 못했습니다.'));
+          reader.readAsDataURL(file);
+        });
+      }
+
+      function loadImage(src) {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = () => reject(new Error('이미지를 불러오지 못했습니다.'));
+          img.src = src;
+        });
+      }
+
+      async function compressImageFile(file) {
+        const rawDataUrl = await readFileAsDataURL(file);
+        const img = await loadImage(rawDataUrl);
+
+        let { width, height } = img;
+        const maxSide = Math.max(width, height);
+        if (maxSide > MAX_PHOTO_SIDE) {
+          const ratio = MAX_PHOTO_SIDE / maxSide;
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        return canvas.toDataURL('image/jpeg', PHOTO_QUALITY);
+      }
+
+      function hasPhotoComment(comment) {
+        return !!normalizeText(comment);
+      }
+
+      async function buildPhotoObjects(files) {
+        const results = [];
+        for (let i = 0; i < files.length; i += 1) {
+          const file = files[i];
+          const dataUrl = await compressImageFile(file);
+          results.push({
+            id: photoId(),
+            name: file.name || 'photo',
+            dataUrl,
+            comment: ''
+          });
+        }
+        return results;
+      }
+
+      function renderDraftPhotos() {
+        const photos = state.draftPhotos;
+        dom.photoEmpty.style.display = photos.length ? 'none' : 'block';
+        dom.photoGrid.innerHTML = photos.map((photo, index) => `
+          <div class="photo-item">
+            <img class="photo-thumb" src="${photo.dataUrl}" alt="업로드 사진 ${index + 1}">
+            <div class="photo-overlay">
+              <div style="display:flex; flex-direction:column; gap:4px;">
+                <span class="photo-badge">${index === 0 ? '대표사진' : `${index + 1}번`}</span>
+                ${hasPhotoComment(photo.comment) ? '<span class="photo-badge comment">코멘트 있음</span>' : '<span class="photo-badge" style="background:rgba(180,83,9,.9)">코멘트 미입력</span>'}
+              </div>
+              <div class="photo-actions">
+                ${index > 0 ? `<button class="icon-btn" type="button" data-photo-action="cover" data-id="${photo.id}" title="대표사진으로">★</button>` : ''}
+                <button class="icon-btn" type="button" data-photo-action="remove" data-id="${photo.id}" title="삭제">×</button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      function clearDraftPhotos() {
+        state.draftPhotos = [];
+        renderDraftPhotos();
+      }
+
+      function getActiveTrip() {
+        return state.trips.find(item => item.id === state.activeId) || null;
+      }
+
+      function updateStats() {
+        const countries = new Set();
+        const cities = new Set();
+        state.trips.forEach(item => {
+          countries.add(item.country.toLowerCase());
+          cities.add((item.city + '|' + item.country).toLowerCase());
+        });
+        dom.statCountries.textContent = String(countries.size);
+        dom.statCities.textContent = String(cities.size);
+        dom.statTrips.textContent = String(state.trips.length);
+      }
+
+      function hideFloatingCard() {
+        state.floatingTripId = null;
+        dom.floatingCard.classList.remove('show');
+        dom.floatingCard.setAttribute('aria-hidden', 'true');
+      }
+
+      function renderFloatingCard(trip) {
+        if (!trip) {
+          hideFloatingCard();
+          return;
+        }
+
+        state.floatingTripId = trip.id;
+        dom.floatingCardTitle.textContent = `${trip.city}, ${trip.country}`;
+        dom.floatingCardDate.textContent = formatDate(trip.visitedAt);
+        dom.floatingCardMemo.textContent = trip.memo || '메모가 없습니다.';
+        dom.floatingCardCount.textContent = `사진 ${trip.photos?.length || 0}장`;
+
+        const hasThumb = !!trip.thumbnail;
+        const hasPhotos = !!(trip.photos && trip.photos.length > 0);
+        if (hasThumb) {
+          dom.floatingCardImage.src = trip.thumbnail;
+          dom.floatingCardImage.classList.add('show');
+          dom.floatingCardImageEmpty.style.display = 'none';
+        } else {
+          dom.floatingCardImage.removeAttribute('src');
+          dom.floatingCardImage.classList.remove('show');
+          dom.floatingCardImageEmpty.style.display = 'grid';
+        }
+
+        dom.floatingCardMediaWrap.classList.toggle('is-clickable', hasPhotos);
+        dom.floatingCard.classList.add('show');
+        dom.floatingCard.setAttribute('aria-hidden', 'false');
+        updateFloatingCardPosition();
+      }
+
+      function updateFloatingCardPosition() {
+        if (!state.globe || !state.floatingTripId) return;
+        const trip = state.trips.find(item => item.id === state.floatingTripId);
+        if (!trip) return;
+
+        const coords = state.globe.getScreenCoords(trip.lat, trip.lng, 0);
+        if (!coords) return;
+
+        const globeRect = dom.globeViz.getBoundingClientRect();
+        const card = dom.floatingCard;
+        const cardWidth = card.offsetWidth || 280;
+        const cardHeight = card.offsetHeight || 260;
+        const gap = 18;
+
+        let left = coords.x + gap;
+        let top = coords.y - Math.round(cardHeight * 0.5);
+        const minLeft = 12;
+        const maxLeft = globeRect.width - cardWidth - 12;
+        const minTop = 12;
+        const maxTop = globeRect.height - cardHeight - 12;
+        let isLeftSide = false;
+
+        if (left > maxLeft) {
+          left = coords.x - cardWidth - gap;
+          isLeftSide = true;
+        }
+
+        left = Math.max(minLeft, Math.min(left, maxLeft));
+        top = Math.max(minTop, Math.min(top, maxTop));
+        card.classList.toggle('tail-right', isLeftSide);
+        card.style.left = `${left}px`;
+        card.style.top = `${top}px`;
+      }
+
+      function stopFloatingCardFollow() {
+        if (state.floatingFollowRaf) {
+          cancelAnimationFrame(state.floatingFollowRaf);
+          state.floatingFollowRaf = null;
+        }
+      }
+
+      function followFloatingCardDuringCameraMove(duration = 1400) {
+        stopFloatingCardFollow();
+        const start = performance.now();
+        function tick(now) {
+          updateFloatingCardPosition();
+          if (now - start < duration) {
+            state.floatingFollowRaf = requestAnimationFrame(tick);
+          } else {
+            updateFloatingCardPosition();
+            state.floatingFollowRaf = null;
+          }
+        }
+        state.floatingFollowRaf = requestAnimationFrame(tick);
+      }
+
+      function openPhotoModal(startIndex = 0) {
+        const trip = getActiveTrip();
+        if (!trip || !trip.photos || trip.photos.length === 0) return;
+        state.photoModalIndex = Math.max(0, Math.min(startIndex, trip.photos.length - 1));
+        renderPhotoModal('next', true);
+        dom.photoSidePanel.classList.add('show');
+        dom.photoSidePanel.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closePhotoModal() {
+        dom.photoSidePanel.classList.remove('show');
+        dom.photoSidePanel.setAttribute('aria-hidden', 'true');
+        closeZoomImage();
+        document.body.style.overflow = '';
+      }
+
+      function openZoomImage() {
+        const trip = getActiveTrip();
+        if (!trip || !trip.photos || !trip.photos.length) return;
+        const current = trip.photos[state.photoModalIndex];
+        if (!current) return;
+        dom.imageZoomImage.src = current.dataUrl;
+        dom.imageZoomCaption.textContent = current.comment || `${trip.city}, ${trip.country} · ${formatDate(trip.visitedAt)}`;
+        dom.imageZoomPanel.classList.add('show');
+        dom.imageZoomPanel.setAttribute('aria-hidden', 'false');
+      }
+
+      function closeZoomImage() {
+        dom.imageZoomPanel.classList.remove('show');
+        dom.imageZoomPanel.setAttribute('aria-hidden', 'true');
+      }
+
+      function swapPhotoStageImage(src, direction = 'next', immediate = false) {
+        const images = [dom.photoSideImageA, dom.photoSideImageB];
+        const active = images[state.photoImageLayerIndex];
+        const inactive = images[1 - state.photoImageLayerIndex];
+
+        if (state.photoImageTransitionTimer) {
+          clearTimeout(state.photoImageTransitionTimer);
+          state.photoImageTransitionTimer = null;
+        }
+
+        if (immediate || !active.getAttribute('src')) {
+          inactive.className = 'photo-side-image';
+          active.className = 'photo-side-image is-active';
+          active.src = src;
+          state.photoImageLayerIndex = images.indexOf(active);
+          return;
+        }
+
+        inactive.src = src;
+        inactive.className = `photo-side-image ${direction === 'prev' ? 'is-enter-left' : 'is-enter-right'}`;
+        active.className = `photo-side-image is-active ${direction === 'prev' ? 'is-exit-right' : 'is-exit-left'}`;
+
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            inactive.className = 'photo-side-image is-active';
+
+            updatePhotoNavPositions();
+          });
+        });
+
+        state.photoImageLayerIndex = 1 - state.photoImageLayerIndex;
+        state.photoImageTransitionTimer = setTimeout(() => {
+          active.className = 'photo-side-image';
+          state.photoImageTransitionTimer = null;
+        }, 340);
+      }
+
+      function renderPhotoModal(direction = 'next', immediate = false) {
+        const trip = getActiveTrip();
+        if (!trip || !trip.photos || trip.photos.length === 0) return;
+        const total = trip.photos.length;
+        const current = trip.photos[state.photoModalIndex];
+        if (!current) return;
+
+        swapPhotoStageImage(current.dataUrl, direction, immediate);
+        if (dom.imageZoomPanel.classList.contains('show')) {
+          dom.imageZoomImage.src = current.dataUrl;
+          dom.imageZoomCaption.textContent = current.comment || `${trip.city}, ${trip.country} · ${formatDate(trip.visitedAt)}`;
+        }
+        dom.photoSideTitle.textContent = `${trip.city}, ${trip.country}`;
+        dom.photoSideMeta.textContent = `사진 ${state.photoModalIndex + 1} / ${total} · 방문일 ${formatDate(trip.visitedAt)}`;
+        dom.photoSideDate.textContent = formatDate(trip.visitedAt);
+        dom.photoSideMemo.textContent = trip.memo || '메모가 없습니다.';
+
+        const comment = normalizeText(current.comment);
+        const hasComment = hasPhotoComment(comment);
+        dom.photoSideCaption.textContent = hasComment ? comment : '이 사진 코멘트가 아직 비어 있습니다. 아래 입력창에서 작성한 뒤 저장해보세요.';
+        dom.photoSideCaption.classList.toggle('empty', !hasComment);
+        dom.photoSideCaption.classList.toggle('warning', !hasComment);
+        dom.photoSideCommentInput.value = current.comment || '';
+        dom.photoSideEditorHint.textContent = hasComment
+          ? '현재 사진에 저장된 코멘트를 수정할 수 있습니다.'
+          : '아직 저장된 코멘트가 없습니다. 아래에 입력 후 저장하세요.';
+
+        dom.photoSideThumbs.innerHTML = trip.photos.map((photo, index) => `
+          <button class="photo-side-thumb${index === state.photoModalIndex ? ' active' : ''}" type="button" data-photo-thumb-index="${index}" aria-label="사진 ${index + 1}">
+            <img src="${photo.dataUrl}" alt="썸네일 ${index + 1}">
+          </button>
+        `).join('');
+      }
+
+      function movePhotoModal(step) {
+        const trip = getActiveTrip();
+        if (!trip || !trip.photos || trip.photos.length === 0) return;
+        const total = trip.photos.length;
+        state.photoModalIndex = (state.photoModalIndex + step + total) % total;
+        renderPhotoModal(step < 0 ? 'prev' : 'next', false);
+      }
+
+      function buildTripGroupKey(trip) {
+        return [
+          normalizeText(trip.city).toLowerCase(),
+          normalizeText(trip.country).toLowerCase(),
+          Number(trip.lat).toFixed(4),
+          Number(trip.lng).toFixed(4)
+        ].join('|');
+      }
+
+      function getVisitLevelColor(count) {
+        if (count >= 4) return '#b91c1c';
+        if (count === 3) return '#ef4444';
+        if (count === 2) return '#f59e0b';
+        return '#facc15';
+      }
+
+      function getVisitLevelRadius(count) {
+        if (count >= 4) return 2.0;
+        if (count === 3) return 1.6;
+        if (count === 2) return 1.2;
+        return 1.0;
+      }
+
+      function sortVisitedDates(dates) {
+        return [...dates].sort((a, b) => {
+          if (!a && !b) return 0;
+          if (!a) return 1;
+          if (!b) return -1;
+          return a.localeCompare(b);
+        });
+      }
+
+      function groupVisibleTrips() {
+        const groups = new Map();
+        state.trips.filter(item => item.visible).forEach(trip => {
+          const groupKey = buildTripGroupKey(trip);
+          if (!groups.has(groupKey)) {
+            groups.set(groupKey, {
+              groupKey,
+              city: trip.city,
+              country: trip.country,
+              lat: trip.lat,
+              lng: trip.lng,
+              visitCount: 0,
+              visitedDates: [],
+              latestVisitedAt: '',
+              latestTripId: trip.id
+            });
+          }
+          const group = groups.get(groupKey);
+          group.visitCount += 1;
+          if (trip.visitedAt) group.visitedDates.push(trip.visitedAt);
+          if (!group.latestVisitedAt || (trip.visitedAt && trip.visitedAt > group.latestVisitedAt)) {
+            group.latestVisitedAt = trip.visitedAt;
+            group.latestTripId = trip.id;
+          }
+        });
+        return Array.from(groups.values()).map(group => {
+          group.visitedDates = sortVisitedDates(group.visitedDates);
+          return group;
+        });
+      }
+
+      function setFocusInfoFromGroup(group) {
+        const visitedDatesText = group.visitedDates.length ? group.visitedDates.join(', ') : '방문일 미입력';
+        dom.focusInfo.innerHTML = `
+          <strong>${escapeHtml(group.city)}, ${escapeHtml(group.country)}</strong>
+          <div>
+            총 ${group.visitCount}회 방문<br>
+            최근 방문일: ${escapeHtml(group.latestVisitedAt || '미입력')}<br>
+            전체 방문일: ${escapeHtml(visitedDatesText)}<br>
+            좌표: ${group.lat.toFixed(4)}, ${group.lng.toFixed(4)}
+          </div>
+        `;
+      }
+
+      function setActiveTrip(id) {
+        state.activeId = id;
+        const trip = state.trips.find(item => item.id === id);
+        if (!trip) {
+          hideFloatingCard();
+          return;
+        }
+
+        dom.focusInfo.innerHTML = `
+          <strong>${escapeHtml(trip.city)}, ${escapeHtml(trip.country)}</strong>
+          <div>
+            방문일: ${escapeHtml(formatDate(trip.visitedAt))}<br>
+            사진 수: ${trip.photos?.length || 0}장<br>
+            좌표: ${trip.lat.toFixed(4)}, ${trip.lng.toFixed(4)}
+          </div>
+        `;
+
+        renderFloatingCard(trip);
+        scheduleListRender();
+      }
+
+      function playRing(point) {
+        if (!state.globe) return;
+        const ring = { lat: point.lat, lng: point.lng, maxR: 5, propagationSpeed: 3, repeatPeriod: 900 };
+        state.globe.ringsData([ring]);
+        clearTimeout(ringTimers.get(point.id));
+        const timer = setTimeout(() => {
+          if (state.globe) state.globe.ringsData([]);
+          ringTimers.delete(point.id);
+        }, 1800);
+        ringTimers.set(point.id, timer);
+      }
+
+      function clearRingTimer(id) {
+        if (ringTimers.has(id)) {
+          clearTimeout(ringTimers.get(id));
+          ringTimers.delete(id);
+        }
+      }
+
+      function focusTrip(id, showRing = true) {
+        const trip = state.trips.find(item => item.id === id);
+        if (!trip) return;
+        setActiveTrip(id);
+        if (state.globe) {
+          let altitude = 1.7;
+          const globeWidth = dom.globeViz.clientWidth;
+          if (globeWidth < 1000) altitude = 1.9;
+          if (globeWidth < 700) altitude = 2.1;
+          state.globe.pointOfView({ lat: Math.max(-85, Math.min(85, trip.lat + 6)), lng: trip.lng, altitude }, 1600);
+          followFloatingCardDuringCameraMove(1700);
+        }
+        if (showRing) playRing({ id: trip.id, lat: trip.lat, lng: trip.lng });
+      }
+
+      function focusGroup(groupKey, showRing = true) {
+        const groups = groupVisibleTrips();
+        const group = groups.find(item => item.groupKey === groupKey);
+        if (!group) return;
+        state.activeId = group.latestTripId;
+        setFocusInfoFromGroup(group);
+        scheduleListRender();
+        const trip = state.trips.find(item => item.id === group.latestTripId) || null;
+        renderFloatingCard(trip);
+        if (state.globe) {
+          let altitude = 1.6;
+            const globeWidth = dom.globeViz.clientWidth;
+            if (globeWidth < 1200) altitude = 1.75;
+            if (globeWidth < 1000) altitude = 1.95;
+            if (globeWidth < 850) altitude = 2.15;
+            if (globeWidth < 700) altitude = 2.3;
+          state.globe.pointOfView({ lat: Math.max(-85, Math.min(85, group.lat + 6)), lng: group.lng, altitude }, 1600);
+          followFloatingCardDuringCameraMove(1700);
+        }
+        if (showRing) playRing({ id: group.groupKey, lat: group.lat, lng: group.lng });
+      }
+
+      function updateQueryPreview() {
+        dom.queryPreview.value = buildQuery(dom.cityInput.value, dom.countryInput.value);
+      }
+
+      function scheduleListRender() {
+        if (listRenderScheduled) return;
+        listRenderScheduled = true;
+        queueMicrotask(() => {
+          listRenderScheduled = false;
+          renderTripList();
+        });
+      }
+
+      function renderTripList() {
+        const list = dom.tripList;
+        if (state.trips.length === 0) {
+          list.innerHTML = `
+            <div class="empty">
+              아직 기록된 여행지가 없어요.<br>
+              왼쪽 입력창에서 첫 여행지를 추가해보세요.
+            </div>
+          `;
+          return;
+        }
+
+        const renderTrips = [...state.trips].reverse();
+        list.innerHTML = renderTrips.map((trip, index) => {
+          const activeClass = trip.id === state.activeId ? ' active' : '';
+          const noteHtml = trip.memo ? `<div class="trip-note">${escapeHtml(trip.memo)}</div>` : '';
+          const displayNumber = state.trips.length - index;
+          const thumbHtml = trip.thumbnail
+            ? `
+              <div class="trip-preview">
+                <div class="trip-preview-left">
+                  <img class="trip-preview-thumb" src="${trip.thumbnail}" alt="${escapeHtml(trip.city)} 대표사진">
+                  <div class="trip-meta">
+                    <span class="chip">사진 ${(trip.photos || []).length}장</span>
+                    <span class="chip">코멘트 ${(trip.photos || []).filter(photo => normalizeText(photo.comment)).length}개</span>
+                  </div>
+                </div>
+                <button class="btn tiny" type="button" data-action="add-photo" data-id="${escapeHtml(trip.id)}">사진추가</button>
+              </div>
+            `
+            : `
+              <div class="trip-preview">
+                <div class="trip-meta"><span class="chip">사진 없음</span></div>
+                <button class="btn tiny" type="button" data-action="add-photo" data-id="${escapeHtml(trip.id)}">사진추가</button>
+              </div>
+            `;
+
+          return `
+            <article class="trip-card${activeClass}" draggable="true" data-id="${escapeHtml(trip.id)}">
+              <input class="sr-only trip-photo-input" type="file" accept="image/*" multiple data-trip-photo-input="${escapeHtml(trip.id)}" />
+
+              <div class="trip-head">
+                <div>
+                  <div class="trip-title">
+                    <span class="trip-number">${displayNumber}.</span>
+                    ${escapeHtml(trip.city)}, ${escapeHtml(trip.country)}
+                  </div>
+                  <div class="trip-sub">${escapeHtml(formatDate(trip.visitedAt))}</div>
+                </div>
+                <div class="chip">${trip.visible ? '표시 중' : '숨김'}</div>
+              </div>
+
+              <div class="trip-meta">
+                <span class="chip">위도 ${trip.lat.toFixed(3)}</span>
+                <span class="chip">경도 ${trip.lng.toFixed(3)}</span>
+              </div>
+
+              ${thumbHtml}
+              ${noteHtml}
+
+              <div class="trip-actions">
+                <label class="toggle">
+                  <input type="checkbox" data-action="toggle" data-id="${escapeHtml(trip.id)}" ${trip.visible ? 'checked' : ''} />
+                  지도 표시
+                </label>
+
+                <div class="actions">
+                  <button class="btn small" type="button" data-action="focus" data-id="${escapeHtml(trip.id)}">이동</button>
+                  <button class="btn small danger" type="button" data-action="delete" data-id="${escapeHtml(trip.id)}">삭제</button>
+                </div>
+              </div>
+            </article>
+          `;
+        }).join('');
+      }
+
+      function scheduleGlobeRender() {
+        if (globeRenderScheduled) return;
+        globeRenderScheduled = true;
+        requestAnimationFrame(() => {
+          globeRenderScheduled = false;
+          renderGlobePoints();
+        });
+      }
+
+      function renderGlobePoints() {
+        if (!state.globe || !state.globeReady) return;
+        const groups = groupVisibleTrips();
+        state.globe.objectsData(groups);
+        state.globe.ringsData([]);
+      }
+
+      function normalizeLatLng(lat, lng) {
+        let nLat = Number(lat);
+        let nLng = Number(lng);
+        if (!Number.isFinite(nLat) || !Number.isFinite(nLng)) throw new Error('좌표값이 올바르지 않습니다.');
+        nLat = Math.max(-90, Math.min(90, nLat));
+        while (nLng > 180) nLng -= 360;
+        while (nLng < -180) nLng += 360;
+        return { lat: nLat, lng: nLng };
+      }
+
+      function scoreGeocodeResult(item, city, country) {
+        const display = String(item.display_name || '').toLowerCase();
+        const name = String(item.name || '').toLowerCase();
+        const type = String(item.type || '').toLowerCase();
+        const cls = String(item.class || '').toLowerCase();
+        const cityLc = city.toLowerCase();
+        const countryLc = country.toLowerCase();
+        let score = 0;
+        if (display.includes(cityLc)) score += 50;
+        if (display.includes(countryLc)) score += 30;
+        if (name === cityLc) score += 35;
+        if (['city', 'town', 'village', 'municipality', 'administrative'].includes(type)) score += 20;
+        if (cls === 'place' || cls === 'boundary') score += 10;
+        if (Number.isFinite(Number(item.importance))) score += Number(item.importance) * 20;
+        return score;
+      }
+
+      async function geocodePlace(city, country) {
+        const cleanCity = city.trim();
+        const cleanCountry = country.trim();
+        const query = buildQuery(cleanCity, cleanCountry);
+        const url = new URL('https://nominatim.openstreetmap.org/search');
+        url.searchParams.set('format', 'jsonv2');
+        url.searchParams.set('limit', '5');
+        url.searchParams.set('addressdetails', '1');
+        url.searchParams.set('accept-language', 'ko,en');
+        url.searchParams.set('q', query);
+
+        const response = await fetch(url.toString(), {
+          headers: { 'Accept': 'application/json', 'Accept-Language': 'ko,en;q=0.8' }
+        });
+
+        if (!response.ok) throw new Error('좌표 조회 요청 실패');
+        const data = await response.json();
+        if (!Array.isArray(data) || data.length === 0) {
+          throw new Error('해당 위치를 찾지 못했습니다. 도시명/국가명을 다시 확인해주세요.');
+        }
+
+        const best = [...data].sort((a, b) => scoreGeocodeResult(b, cleanCity, cleanCountry) - scoreGeocodeResult(a, cleanCity, cleanCountry))[0];
+        const normalized = normalizeLatLng(best.lat, best.lon);
+        return { lat: normalized.lat, lng: normalized.lng, displayName: best.display_name || query };
+      }
+
+      function addTrip(trip) {
+        state.trips.push(trip);
+        schedulePersist();
+        updateStats();
+        scheduleListRender();
+        scheduleGlobeRender();
+      }
+
+      function removeTrip(id) {
+        const idx = state.trips.findIndex(item => item.id === id);
+        if (idx < 0) return;
+        clearRingTimer(id);
+        state.trips.splice(idx, 1);
+        if (state.activeId === id) {
+          state.activeId = null;
+          hideFloatingCard();
+        }
+        schedulePersist();
+        updateStats();
+        scheduleListRender();
+        scheduleGlobeRender();
+        if (!state.trips.length) {
+          dom.focusInfo.innerHTML = '<strong>선택된 여행지</strong><div>좌측 리스트 또는 지구본의 점을 클릭해보세요.</div>';
+        }
+      }
+
+      function toggleTripVisibility(id, visible) {
+        const trip = state.trips.find(item => item.id === id);
+        if (!trip) return;
+        trip.visible = visible;
+        schedulePersist();
+        scheduleListRender();
+        scheduleGlobeRender();
+      }
+
+      function reorderTrips(dragId, dropId) {
+        if (!dragId || !dropId || dragId === dropId) return;
+        const fromIndex = state.trips.findIndex(item => item.id === dragId);
+        const toIndex = state.trips.findIndex(item => item.id === dropId);
+        if (fromIndex < 0 || toIndex < 0) return;
+        const [moved] = state.trips.splice(fromIndex, 1);
+        state.trips.splice(toIndex, 0, moved);
+        schedulePersist();
+        scheduleListRender();
+        scheduleGlobeRender();
+      }
+
+      function replaceTrips(nextTrips) {
+        for (const id of ringTimers.keys()) clearRingTimer(id);
+        state.trips = sanitizeTrips(nextTrips);
+        state.activeId = null;
+        hideFloatingCard();
+        schedulePersist();
+        updateStats();
+        scheduleListRender();
+        scheduleGlobeRender();
+        dom.focusInfo.innerHTML = '<strong>선택된 여행지</strong><div>좌측 리스트 또는 지구본의 점을 클릭해보세요.</div>';
+      }
+
+      async function addPhotosToTrip(tripId, files) {
+        const trip = state.trips.find(item => item.id === tripId);
+        if (!trip) return;
+        const fileList = (Array.isArray(files) ? files : Array.from(files || []))
+			.filter(file => file && file.type && file.type.startsWith('image/'));
+        if (!fileList.length) {
+          setStatus('이미지 파일만 추가할 수 있습니다.', 'error');
+          return;
+        }
+
+        const remaining = MAX_PHOTOS - (trip.photos?.length || 0);
+        if (remaining <= 0) {
+          setStatus(`이 여행지는 사진을 최대 ${MAX_PHOTOS}장까지 저장할 수 있습니다.`, 'error');
+          return;
+        }
+
+        const targetFiles = fileList.slice(0, remaining);
+        const skippedCount = fileList.length - targetFiles.length;
+        setStatus('선택한 여행지에 사진을 추가하는 중입니다...');
+
+        try {
+          const newPhotos = await buildPhotoObjects(targetFiles);
+          trip.photos = [...trip.photos, ...newPhotos].slice(0, MAX_PHOTOS);
+          trip.thumbnail = trip.photos[0]?.dataUrl || '';
+          schedulePersist();
+          updateStats();
+          scheduleListRender();
+          scheduleGlobeRender();
+          if (state.activeId === trip.id) {
+            renderFloatingCard(trip);
+            if (dom.photoSidePanel.classList.contains('show')) renderPhotoModal('next', true);
+          }
+          setStatus(skippedCount > 0 ? `사진 ${newPhotos.length}장 추가 완료. 최대 ${MAX_PHOTOS}장까지만 저장됩니다.` : `사진 ${newPhotos.length}장을 추가했습니다.`, 'ok');
+        } catch (error) {
+          console.error(error);
+          setStatus(error.message || '사진 추가 중 오류가 발생했습니다.', 'error');
+        }
+      }
+
+      function initGlobe() {
+        const globe = Globe()(dom.globeViz)
+          .globeImageUrl(EARTH_TEXTURE)
+          .backgroundColor('rgba(0,0,0,0)')
+          .showAtmosphere(true)
+          .atmosphereAltitude(0.12)
+          .atmosphereColor('#9ec5ff')
+          .globeCurvatureResolution(6)
+          .objectAltitude(0)
+          .objectFacesSurface(true)
+          .objectLabel(item => {
+            const visitedDatesText = item.visitedDates && item.visitedDates.length ? item.visitedDates.join(', ') : '방문일 미입력';
+            return `
+              <div style="padding:6px 8px;">
+                <strong>${escapeHtml(item.city)}, ${escapeHtml(item.country)}</strong><br>
+                <span>총 ${item.visitCount}회 방문</span><br>
+                <span>최근 방문일: ${escapeHtml(item.latestVisitedAt || '미입력')}</span><br>
+                <span>전체 방문일: ${escapeHtml(visitedDatesText)}</span>
+              </div>
+            `;
+          })
+          .objectThreeObject(item => {
+            const radius = getVisitLevelRadius(item.visitCount || 1);
+            const color = getVisitLevelColor(item.visitCount || 1);
+            const geometry = new THREE.SphereGeometry(radius, 24, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+            const material = new THREE.MeshPhongMaterial({
+              color,
+              transparent: true,
+              opacity: 0.98,
+              shininess: 110,
+              specular: 0xffffff,
+              emissive: 0x111111
+            });
+            const dome = new THREE.Mesh(geometry, material);
+            dome.position.y = 0;
+            dome.rotation.x = Math.PI / 2;
+            return dome;
+          })
+          .onObjectClick(obj => focusGroup(obj.groupKey, true))
+          .ringMaxRadius(5)
+          .ringPropagationSpeed(3)
+          .ringRepeatPeriod(900)
+          .showPointerCursor(obj => !!obj)
+          .onGlobeReady(() => {
+            state.globeReady = true;
+            scheduleGlobeRender();
+            setTimeout(updateFloatingCardPosition, 150);
+          });
+
+        const renderer = globe.renderer();
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+
+        const controls = globe.controls();
+        controls.enablePan = false;
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.1;
+        controls.minDistance = 140;
+        controls.maxDistance = 360;
+        controls.rotateSpeed = 0.75;
+        controls.zoomSpeed = 0.9;
+        state.globe = globe;
+        updateResponsiveGlobeLayout(true);
+
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            scheduleResize();
+          });
+        });
+
+      }
+
+      function updateResponsiveGlobeLayout(immediate = false) {
+        if (!state.globe || !dom.globeViz) return;
+
+        const globeWidth = dom.globeViz.clientWidth;
+
+        let altitude = 2.1;
+        let shiftX = 0;
+
+        if (globeWidth < 1400) {
+          altitude = 2.15;
+          shiftX = -20;
+        }
+        if (globeWidth < 1200) {
+          altitude = 2.22;
+          shiftX = -40;
+        }
+        if (globeWidth < 1000) {
+          altitude = 2.32;
+          shiftX = -70;
+        }
+        if (globeWidth < 850) {
+          altitude = 2.45;
+          shiftX = -95;
+        }
+        if (globeWidth < 700) {
+          altitude = 2.58;
+          shiftX = -120;
+        }
+
+        state.globe.pointOfView(
+          { lat: 20, lng: 120, altitude },
+          immediate ? 0 : 250
+        );
+
+        dom.globeViz.style.transform = `translateX(${shiftX}px)`;
+
+        updateFloatingCardPosition();
+      }
+
+
+
+      function scheduleResize() {
+        if (resizeScheduled) return;
+        resizeScheduled = true;
+
+        requestAnimationFrame(() => {
+          resizeScheduled = false;
+
+          if (state.globe && dom.globeViz) {
+            state.globe
+              .width(dom.globeViz.clientWidth)
+              .height(dom.globeViz.clientHeight);
+          }
+
+          updateFloatingCardPosition();
+          if (dom.photoSidePanel.classList.contains('show')) {
+            updatePhotoNavPositions();
+          }
+        });
+      }
+
+      async function boot() {
+        state.isBooting = true;
+        updateQueryPreview();
+        renderDraftPhotos();
+        initGlobe();
+
+        bindDateAutoMove(dom.startYearInput, 4, dom.startMonthInput, null);
+        bindDateAutoMove(dom.startMonthInput, 2, dom.startDayInput, dom.startYearInput);
+        bindDateAutoMove(dom.startDayInput, 2, dom.endYearInput, dom.startMonthInput);
+
+        bindDateAutoMove(dom.endYearInput, 4, dom.endMonthInput, dom.startDayInput);
+        bindDateAutoMove(dom.endMonthInput, 2, dom.endDayInput, dom.endYearInput);
+        bindDateAutoMove(dom.endDayInput, 2, null, dom.endMonthInput);
+
+        [dom.cityInput, dom.countryInput].forEach(input => input.addEventListener('input', updateQueryPreview));
+
+        dom.photoInput.addEventListener('change', async event => {
+          const files = Array.from(event.target.files || []).filter(file => file.type.startsWith('image/'));
+          if (!files.length) return;
+
+          const remaining = MAX_PHOTOS - state.draftPhotos.length;
+          if (remaining <= 0) {
+            setStatus(`사진은 최대 ${MAX_PHOTOS}장까지 추가할 수 있습니다.`, 'error');
+            dom.photoInput.value = '';
+            return;
+          }
+
+          const targetFiles = files.slice(0, remaining);
+          const skippedCount = files.length - targetFiles.length;
+          setStatus('사진을 준비하는 중입니다...');
+
+          try {
+            const newPhotos = await buildPhotoObjects(targetFiles);
+            state.draftPhotos.push(...newPhotos);
+            renderDraftPhotos();
+            setStatus(skippedCount > 0 ? `사진 ${newPhotos.length}장 추가 완료. 최대 ${MAX_PHOTOS}장까지만 저장됩니다.` : `사진 ${newPhotos.length}장을 추가했습니다.`, 'ok');
+          } catch (error) {
+            console.error(error);
+            setStatus(error.message || '사진 추가 중 오류가 발생했습니다.', 'error');
+          } finally {
+            dom.photoInput.value = '';
+          }
+        });
+
+        dom.clearPhotosBtn.addEventListener('click', () => {
+          clearDraftPhotos();
+          setStatus('추가 예정 사진을 비웠습니다.');
+        });
+
+        dom.photoGrid.addEventListener('click', event => {
+          const button = event.target.closest('[data-photo-action]');
+          if (!button) return;
+          const action = button.dataset.photoAction;
+          const id = button.dataset.id;
+          const index = state.draftPhotos.findIndex(photo => photo.id === id);
+          if (index < 0) return;
+
+          if (action === 'remove') {
+            state.draftPhotos.splice(index, 1);
+            renderDraftPhotos();
+            return;
+          }
+
+          if (action === 'cover') {
+            const [picked] = state.draftPhotos.splice(index, 1);
+            state.draftPhotos.unshift(picked);
+            renderDraftPhotos();
+          }
+        });
+
+        dom.tripForm.addEventListener('submit', async event => {
+          event.preventDefault();
+          const city = normalizeText(dom.cityInput.value);
+          const country = normalizeText(dom.countryInput.value);
+          const memo = normalizeText(dom.memoInput.value);
+
+          let visitedAt = '';
+          try {
+            visitedAt = getDateRange();
+          } catch (dateError) {
+            setStatus(dateError.message, 'error');
+            return;
+          }
+
+          if (!city || !country) {
+            setStatus('도시명과 국가명을 입력해주세요.', 'error');
+            return;
+          }
+
+          dom.addBtn.disabled = true;
+          setStatus('좌표를 조회하는 중입니다...');
+
+          try {
+            const geo = await geocodePlace(city, country);
+            const photos = state.draftPhotos.map(photo => ({ ...photo }));
+            const trip = {
+              id: uid(),
+              city,
+              country,
+              visitedAt,
+              memo,
+              lat: geo.lat,
+              lng: geo.lng,
+              visible: true,
+              createdAt: new Date().toISOString(),
+              photos,
+              thumbnail: photos[0]?.dataUrl || ''
+            };
+            addTrip(trip);
+            setTimeout(() => focusTrip(trip.id, true), 100);
+            dom.tripForm.reset();
+            clearVisitedAtInputs();
+            clearDraftPhotos();
+            updateQueryPreview();
+            setStatus(`추가 완료: ${geo.displayName}`, 'ok');
+          } catch (error) {
+            console.error(error);
+            setStatus(error.message || '추가 중 오류가 발생했습니다.', 'error');
+          } finally {
+            dom.addBtn.disabled = false;
+          }
+        });
+
+        dom.resetBtn.addEventListener('click', () => {
+          dom.tripForm.reset();
+          clearVisitedAtInputs();
+          clearDraftPhotos();
+          updateQueryPreview();
+          setStatus('입력값을 초기화했습니다.');
+        });
+
+        dom.downloadBtn.addEventListener('click', () => {
+          downloadJson(`travel-globe-${new Date().toISOString().slice(0, 10)}.json`, {
+            version: FILE_SCHEMA_VERSION,
+            savedAt: new Date().toISOString(),
+            trips: state.trips
+          });
+          setStatus('JSON 파일로 저장했습니다.', 'ok');
+        });
+
+dom.startDateBtn.addEventListener('click', () => {
+  if (dom.startDateInput.showPicker) {
+    dom.startDateInput.showPicker();
+  } else {
+    dom.startDateInput.click();
+  }
+});
+
+dom.endDateBtn.addEventListener('click', () => {
+  if (dom.endDateInput.showPicker) {
+    dom.endDateInput.showPicker();
+  } else {
+    dom.endDateInput.click();
+  }
+});
+
+dom.startDateInput.addEventListener('change', () => syncDatePartsFromPicker('start'));
+dom.endDateInput.addEventListener('change', () => syncDatePartsFromPicker('end'));
+
+[dom.startYearInput, dom.startMonthInput, dom.startDayInput].forEach(input => {
+  input.addEventListener('input', () => syncPickerFromDateParts('start'));
+});
+
+[dom.endYearInput, dom.endMonthInput, dom.endDayInput].forEach(input => {
+  input.addEventListener('input', () => syncPickerFromDateParts('end'));
+});
+
+        dom.uploadBtn.addEventListener('click', () => dom.fileInput.click());
+        dom.fileInput.addEventListener('change', async event => {
+          const file = event.target.files?.[0];
+          if (!file) return;
+          try {
+            const text = await file.text();
+            const parsed = JSON.parse(text);
+            if (!parsed || !Array.isArray(parsed.trips)) throw new Error('올바른 JSON 형식이 아닙니다.');
+            replaceTrips(parsed.trips);
+            setStatus('불러오기 완료', 'ok');
+          } catch (error) {
+            console.error(error);
+            setStatus(error.message || '불러오기 중 오류가 발생했습니다.', 'error');
+          } finally {
+            dom.fileInput.value = '';
+          }
+        });
+
+        dom.clearBtn.addEventListener('click', async () => {
+          if (!window.confirm('저장된 모든 여행지를 삭제할까요?')) return;
+          replaceTrips([]);
+          await clearPersistedState();
+          await removeLegacyLocalStorage();
+          setStatus('전체 데이터를 삭제했습니다.', 'ok');
+        });
+
+        dom.tripList.addEventListener('click', event => {
+          const actionTarget = event.target.closest('[data-action]');
+          const card = event.target.closest('.trip-card');
+
+          if (!actionTarget && card) {
+            const id = card.dataset.id;
+            if (id) focusTrip(id, true);
+            return;
+          }
+
+          if (!actionTarget) return;
+          const action = actionTarget.dataset.action;
+          const id = actionTarget.dataset.id;
+          if (!id) return;
+
+          if (action === 'focus') {
+            focusTrip(id, true);
+            return;
+          }
+
+          if (action === 'delete') {
+            if (window.confirm('이 여행 기록을 삭제할까요?')) removeTrip(id);
+            return;
+          }
+
+          if (action === 'toggle') {
+            toggleTripVisibility(id, actionTarget.checked);
+            return;
+          }
+
+          if (action === 'add-photo') {
+            const input = dom.tripList.querySelector(`[data-trip-photo-input="${CSS.escape(id)}"]`);
+            if (input) input.click();
+          }
+        });
+
+        dom.tripList.addEventListener('change', async event => {
+		  const input = event.target.closest('[data-trip-photo-input]');
+		  if (!input) return;
+
+		  const tripId = input.dataset.tripPhotoInput;
+		  const files = Array.from(input.files || []); // 먼저 복사
+
+		  input.value = ''; // 그 다음 초기화
+
+		  if (!files.length) return;
+
+		  await addPhotosToTrip(tripId, files);
+		});
+
+        dom.tripList.addEventListener('dragstart', event => {
+          const card = event.target.closest('.trip-card');
+          if (!card) return;
+          state.draggingId = card.dataset.id;
+          card.classList.add('dragging');
+          event.dataTransfer.effectAllowed = 'move';
+          event.dataTransfer.setData('text/plain', state.draggingId || '');
+        });
+
+        dom.tripList.addEventListener('dragend', event => {
+          const card = event.target.closest('.trip-card');
+          if (card) card.classList.remove('dragging');
+          state.draggingId = null;
+        });
+
+        dom.tripList.addEventListener('dragover', event => {
+          if (!state.draggingId) return;
+          event.preventDefault();
+          event.dataTransfer.dropEffect = 'move';
+        });
+
+        dom.tripList.addEventListener('drop', event => {
+          const card = event.target.closest('.trip-card');
+          if (!card || !state.draggingId) return;
+          event.preventDefault();
+          reorderTrips(state.draggingId, card.dataset.id);
+        });
+
+        dom.floatingCardMediaWrap.addEventListener('click', () => {
+          const trip = getActiveTrip();
+          if (!trip || !trip.photos || !trip.photos.length) return;
+          openPhotoModal(0);
+        });
+
+        document.querySelector('.photo-side-image-wrap').addEventListener('click', () => {
+          if (!dom.photoSidePanel.classList.contains('show')) return;
+          openZoomImage();
+        });
+
+        dom.imageZoomCloseBtn.addEventListener('click', closeZoomImage);
+        dom.imageZoomPanel.addEventListener('click', event => {
+          if (event.target.closest('[data-zoom-close="true"]')) {
+            closeZoomImage();
+          }
+        });
+
+        dom.photoSideCloseBtn.addEventListener('click', closePhotoModal);
+        dom.photoPrevBtn.addEventListener('click', () => movePhotoModal(-1));
+        dom.photoNextBtn.addEventListener('click', () => movePhotoModal(1));
+        dom.photoSideImageA.addEventListener('load', updatePhotoNavPositions);
+        dom.photoSideImageB.addEventListener('load', updatePhotoNavPositions);
+
+        dom.photoSidePanel.addEventListener('click', event => {
+          if (event.target.closest('[data-photo-close="true"]')) {
+            closePhotoModal();
+            return;
+          }
+          const thumb = event.target.closest('[data-photo-thumb-index]');
+          if (thumb) {
+            const nextIndex = Number(thumb.dataset.photoThumbIndex);
+            const direction = nextIndex < state.photoModalIndex ? 'prev' : 'next';
+            state.photoModalIndex = nextIndex;
+            renderPhotoModal(direction, false);
+          }
+        });
+
+        const photoSwipeTarget = document.querySelector('.photo-side-image-wrap');
+
+        photoSwipeTarget.addEventListener('touchstart', event => {
+          if (!dom.photoSidePanel.classList.contains('show')) return;
+          if (!event.touches || event.touches.length !== 1) return;
+          state.touchStartX = event.touches[0].clientX;
+          state.touchStartY = event.touches[0].clientY;
+          state.touchDeltaX = 0;
+          state.touchDeltaY = 0;
+          state.isSwipingPhoto = true;
+        }, { passive: true });
+
+        photoSwipeTarget.addEventListener('touchmove', event => {
+          if (!state.isSwipingPhoto || !event.touches || event.touches.length !== 1) return;
+          state.touchDeltaX = event.touches[0].clientX - state.touchStartX;
+          state.touchDeltaY = event.touches[0].clientY - state.touchStartY;
+        }, { passive: true });
+
+        photoSwipeTarget.addEventListener('touchend', () => {
+          if (!state.isSwipingPhoto) return;
+
+          const absX = Math.abs(state.touchDeltaX);
+          const absY = Math.abs(state.touchDeltaY);
+          const threshold = 50;
+
+          if (absX > threshold && absX > absY) {
+            if (state.touchDeltaX < 0) {
+              movePhotoModal(1);
+            } else {
+              movePhotoModal(-1);
+            }
+          }
+
+          state.isSwipingPhoto = false;
+          state.touchDeltaX = 0;
+          state.touchDeltaY = 0;
+        }, { passive: true });
+
+        photoSwipeTarget.addEventListener('touchcancel', () => {
+          state.isSwipingPhoto = false;
+          state.touchDeltaX = 0;
+          state.touchDeltaY = 0;
+        }, { passive: true });
+
+        dom.photoSaveCommentBtn.addEventListener('click', () => {
+          const trip = getActiveTrip();
+          if (!trip || !trip.photos || !trip.photos.length) return;
+          const current = trip.photos[state.photoModalIndex];
+          current.comment = dom.photoSideCommentInput.value;
+          schedulePersist();
+          scheduleListRender();
+          renderPhotoModal('next', true);
+          renderFloatingCard(trip);
+          setStatus('이 사진 코멘트를 저장했습니다.', 'ok');
+        });
+
+        window.addEventListener('keydown', event => {
+          const isOpen = dom.photoSidePanel.classList.contains('show');
+          if (!isOpen) return;
+          if (event.key === 'Escape') {
+            if (dom.imageZoomPanel.classList.contains('show')) {
+              closeZoomImage();
+            } else {
+              closePhotoModal();
+            }
+          }
+          if (event.key === 'ArrowLeft') movePhotoModal(-1);
+          if (event.key === 'ArrowRight') movePhotoModal(1);
+        });
+
+        window.addEventListener('resize', scheduleResize);
+
+        await hydrateStateFromStorage();
+        updateStats();
+        scheduleListRender();
+        scheduleGlobeRender();
+        state.isBooting = false;
+
+        if (!state.persistenceError) {
+          setStatus('IndexedDB 자동 저장 준비 완료', 'ok');
+        }
+      }
+
+      boot();
+    })();
+  </script>
+</body>
+</html>

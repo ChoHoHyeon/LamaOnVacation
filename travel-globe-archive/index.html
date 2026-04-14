@@ -1,0 +1,1939 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lama’s Travel Globe</title>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --panel: #ffffff;
+      --line: #e7eaf1;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --primary: #2563eb;
+      --primary-soft: #eff6ff;
+      --shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+      --shadow-soft: 0 14px 32px rgba(37, 99, 235, 0.08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    body { overflow: hidden; }
+
+    .app {
+      display: grid;
+      grid-template-columns: clamp(320px, 34vw, 420px) minmax(0, 1fr);
+      width: 100%;
+      height: 100vh;
+    }
+
+    .sidebar {
+      background: var(--panel);
+      border-right: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      min-width: 320px;
+      height: 100vh;
+      overflow: hidden;
+      z-index: 2;
+    }
+
+    .sidebar-inner {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 16px;
+      min-height: 0;
+      height: 100%;
+    }
+
+    .title-box {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .title-box h1 {
+      font-size: 22px;
+      margin: 0;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .title-box p {
+      margin: 0;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .stat {
+      background: #fbfcff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .stat-value {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .panel {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      gap: 12px;
+    }
+
+    .section-title h2 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .section-title span {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .status-panel {
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--muted);
+      background: linear-gradient(180deg, #fbfdff 0%, #f6f9ff 100%);
+    }
+
+    .status-error {
+      color: #dc2626;
+      font-weight: 700;
+    }
+
+    .list-panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      flex: 1;
+    }
+
+    .list-wrap {
+      min-height: 0;
+      overflow: auto;
+      padding-right: 2px;
+    }
+
+    .list-wrap::-webkit-scrollbar { width: 10px; }
+    .list-wrap::-webkit-scrollbar-thumb {
+      background: #d8deea;
+      border-radius: 999px;
+      border: 2px solid transparent;
+      background-clip: padding-box;
+    }
+
+    .trip-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 100%;
+    }
+
+    .empty {
+      display: grid;
+      place-items: center;
+      min-height: 180px;
+      border: 1px dashed #d9e2f0;
+      border-radius: 14px;
+      color: var(--muted);
+      font-size: 14px;
+      background: #fcfdff;
+      text-align: center;
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    .trip-card {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      cursor: pointer;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, transform 0.12s ease;
+    }
+
+    .trip-card:hover {
+      border-color: #cdd8eb;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+      transform: translateY(-1px);
+    }
+
+    .trip-card.active {
+      border-color: #93c5fd;
+      background: #f8fbff;
+      box-shadow: 0 10px 24px rgba(37, 99, 235, 0.10);
+    }
+
+    .trip-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .trip-title {
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.3;
+    }
+
+    .trip-number {
+      display: inline-block;
+      min-width: 22px;
+      color: #2563eb;
+      font-weight: 900;
+      margin-right: 4px;
+    }
+
+    .trip-sub {
+      margin-top: 3px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .trip-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .chip {
+      background: #f3f6fb;
+      border: 1px solid #e7edf7;
+      border-radius: 999px;
+      padding: 4px 8px;
+      white-space: nowrap;
+    }
+
+    .trip-note {
+      font-size: 13px;
+      line-height: 1.55;
+      color: #374151;
+      white-space: pre-wrap;
+      word-break: break-word;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .trip-preview {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .trip-preview-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .trip-preview-thumb {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+      background: #f3f4f6;
+      flex-shrink: 0;
+    }
+
+    .trip-preview-empty {
+      width: 60px;
+      height: 60px;
+      border-radius: 12px;
+      border: 1px dashed #d9e2f0;
+      background: #fcfdff;
+      color: #94a3b8;
+      font-size: 11px;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+
+    .trip-preview-text {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .trip-preview-label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .trip-preview-value {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .trip-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: transform 0.05s ease, background 0.15s ease, border-color 0.15s ease;
+      user-select: none;
+    }
+
+    .btn:hover { background: #f8fafc; }
+    .btn:active { transform: translateY(1px); }
+    .btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .btn.primary:hover { background: #1d4ed8; }
+    .btn.small { padding: 8px 10px; font-size: 12px; border-radius: 10px; }
+    .btn:disabled {
+      cursor: default;
+      opacity: 0.65;
+      background: #f8fafc;
+      color: #94a3b8;
+    }
+
+    .globe-area {
+      position: relative;
+      min-width: 0;
+      min-height: 0;
+      background: linear-gradient(180deg, #f8fbff 0%, #eef3fb 100%);
+      overflow: hidden;
+    }
+
+    .globe-stage {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    #globeViz {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      will-change: transform;
+    }
+
+    .globe-overlay {
+      position: absolute;
+      right: 18px;
+      top: 18px;
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .globe-badge {
+      pointer-events: auto;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(226, 232, 240, 0.95);
+      border-radius: 14px;
+      padding: 10px 12px;
+      box-shadow: var(--shadow);
+      min-width: 210px;
+    }
+
+    .globe-badge strong { display: block; font-size: 13px; margin-bottom: 4px; }
+    .globe-badge div { font-size: 12px; color: var(--muted); line-height: 1.45; }
+
+    .floating-card {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 280px;
+      background: rgba(255,255,255,0.96);
+      border: 1px solid rgba(226, 232, 240, 0.95);
+      border-radius: 18px;
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.22), 0 6px 18px rgba(15, 23, 42, 0.12);
+      overflow: visible;
+      z-index: 30;
+      opacity: 0;
+      transform: translate3d(0, 0, 0) scale(0.96);
+      transform-origin: left center;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.22s ease;
+      backdrop-filter: blur(10px);
+    }
+
+    .floating-card.show {
+      opacity: 1;
+      transform: translate3d(0, 0, 0) scale(1);
+      pointer-events: auto;
+    }
+
+    .floating-card::before,
+    .floating-card::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      pointer-events: none;
+    }
+
+    .floating-card::before {
+      left: -13px;
+      border-top: 12px solid transparent;
+      border-bottom: 12px solid transparent;
+      border-right: 13px solid rgba(226, 232, 240, 0.95);
+    }
+
+    .floating-card::after {
+      left: -11px;
+      border-top: 11px solid transparent;
+      border-bottom: 11px solid transparent;
+      border-right: 12px solid rgba(255,255,255,0.96);
+    }
+
+    .floating-card.tail-right::before {
+      left: auto;
+      right: -13px;
+      border-right: 0;
+      border-left: 13px solid rgba(226, 232, 240, 0.95);
+      border-top: 12px solid transparent;
+      border-bottom: 12px solid transparent;
+    }
+
+    .floating-card.tail-right::after {
+      left: auto;
+      right: -11px;
+      border-right: 0;
+      border-left: 12px solid rgba(255,255,255,0.96);
+      border-top: 11px solid transparent;
+      border-bottom: 11px solid transparent;
+    }
+
+    .floating-card-media-wrap {
+      position: relative;
+      width: 100%;
+      height: 160px;
+      background: #eef2f7;
+      cursor: default;
+      overflow: hidden;
+    }
+
+    .floating-card-media-wrap.is-clickable { cursor: pointer; }
+    .floating-card-media-wrap.is-clickable::after {
+      content: "클릭해서 보기";
+      position: absolute;
+      right: 10px;
+      bottom: 10px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #fff;
+      background: rgba(15, 23, 42, 0.5);
+      padding: 5px 9px;
+      border-radius: 999px;
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity 0.18s ease, transform 0.18s ease;
+      backdrop-filter: blur(6px);
+    }
+
+    .floating-card-media-wrap.is-clickable:hover::after { opacity: 1; transform: translateY(0); }
+    .floating-card-media-wrap.is-clickable:hover .floating-card-media { transform: scale(1.02); }
+
+    .floating-card-media {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+      border-bottom: 1px solid #e5e7eb;
+      transition: transform 0.22s ease;
+    }
+
+    .floating-card-media.show { display: block; }
+
+    .floating-card-media-empty {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: #6b7280;
+      font-size: 13px;
+      background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+    }
+
+    .floating-card-body { padding: 14px; }
+    .floating-card-title { font-size: 16px; font-weight: 800; line-height: 1.35; margin-bottom: 6px; color: #111827; }
+    .floating-card-date { font-size: 12px; color: #6b7280; margin-bottom: 8px; }
+    .floating-card-memo {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #374151;
+      min-height: 38px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .floating-card-bottom {
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .floating-card-count { font-size: 12px; color: #6b7280; font-weight: 700; }
+
+    .photo-side-panel {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      pointer-events: none;
+    }
+
+    .photo-side-panel.show { pointer-events: auto; }
+
+    .photo-side-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0);
+      backdrop-filter: blur(0px);
+      transition: background 0.34s ease, backdrop-filter 0.34s ease;
+    }
+
+    .photo-side-panel.show .photo-side-backdrop {
+      background: rgba(15, 23, 42, 0.52);
+      backdrop-filter: blur(10px);
+    }
+
+    .photo-side-sheet {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: min(860px, 96vw);
+      height: 100%;
+      background: linear-gradient(180deg, rgba(255,255,255,0.985) 0%, rgba(250,252,255,0.985) 100%);
+      border-left: 1px solid rgba(226, 232, 240, 0.92);
+      box-shadow: -30px 0 80px rgba(15, 23, 42, 0.22), -10px 0 28px rgba(15, 23, 42, 0.08);
+      transform: translateX(100%);
+      opacity: 0.98;
+      transition: transform 0.34s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.28s ease;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .photo-side-panel.show .photo-side-sheet { transform: translateX(0); opacity: 1; }
+
+    .photo-side-close {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      z-index: 3;
+      width: 38px;
+      height: 38px;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.84);
+      color: #475569;
+      font-size: 20px;
+      line-height: 1;
+      cursor: pointer;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+    }
+
+    .photo-side-header {
+      padding: 22px 24px 14px;
+      border-bottom: 1px solid rgba(229, 231, 235, 0.72);
+      background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.95) 100%);
+    }
+
+    .photo-side-title {
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1.2;
+      letter-spacing: -0.04em;
+      padding-right: 52px;
+      margin-bottom: 8px;
+      color: #111827;
+    }
+
+    .photo-side-meta {
+      font-size: 14px;
+      color: #6b7280;
+      letter-spacing: 0.01em;
+      line-height: 1.6;
+    }
+
+    .photo-side-stage {
+      position: relative;
+      background: radial-gradient(circle at top, rgba(30,41,59,0.98) 0%, rgba(15,23,42,1) 72%);
+      min-height: 420px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .photo-side-image-wrap {
+      position: relative;
+      width: 100%;
+      height: min(56vh, 760px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 34px 34px 28px;
+      overflow: hidden;
+    }
+
+    .photo-side-image {
+      position: absolute;
+      inset: 34px 34px 28px 34px;
+      width: calc(100% - 68px);
+      height: calc(100% - 62px);
+      object-fit: contain;
+      display: block;
+      border-radius: 22px;
+      box-shadow: 0 22px 40px rgba(0,0,0,0.32), 0 6px 14px rgba(255,255,255,0.06);
+      opacity: 0;
+      transform: translateX(28px);
+      transition: opacity 0.32s ease, transform 0.32s ease;
+      pointer-events: none;
+    }
+
+    .photo-side-image.is-active {
+      opacity: 1;
+      transform: translateX(0);
+      z-index: 2;
+      pointer-events: auto;
+      cursor: zoom-in;
+    }
+
+    .photo-side-image.is-exit-left {
+      opacity: 0;
+      transform: translateX(-28px);
+      z-index: 1;
+    }
+
+    .photo-side-image.is-exit-right {
+      opacity: 0;
+      transform: translateX(28px);
+      z-index: 1;
+    }
+
+    .photo-side-image.is-enter-left {
+      opacity: 0;
+      transform: translateX(-28px);
+      z-index: 2;
+    }
+
+    .photo-side-image.is-enter-right {
+      opacity: 0;
+      transform: translateX(28px);
+      z-index: 2;
+    }
+
+    .photo-side-nav {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 56px;
+      height: 56px;
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.9);
+      color: #111827;
+      font-size: 30px;
+      font-weight: 700;
+      cursor: pointer;
+      z-index: 3;
+      box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+      transform: translate(-50%, -50%);
+    }
+
+    .photo-side-thumbs {
+      display: flex;
+      gap: 12px;
+      padding: 16px 20px;
+      overflow-x: auto;
+      border-bottom: 1px solid rgba(229, 231, 235, 0.9);
+      background: linear-gradient(180deg, #f8fafc 0%, #f4f7fb 100%);
+    }
+
+    .photo-side-thumb {
+      position: relative;
+      width: 86px;
+      height: 86px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      background: #fff;
+      flex: 0 0 auto;
+      cursor: pointer;
+      box-shadow: 0 8px 16px rgba(15, 23, 42, 0.08);
+      transition: transform 0.18s ease, border-color 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+      opacity: 0.52;
+    }
+
+    .photo-side-thumb.active {
+      transform: translateY(-4px) scale(1.06);
+      border-color: #2563eb;
+      box-shadow: 0 14px 28px rgba(37, 99, 235, 0.18), 0 0 0 4px rgba(37, 99, 235, 0.14);
+      opacity: 1;
+    }
+
+    .photo-side-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    .photo-side-info {
+      padding: 22px 24px 28px;
+      overflow: auto;
+      background: #fff;
+    }
+
+    .photo-side-date {
+      display: inline-block;
+      font-size: 13px;
+      color: #475569;
+      margin-bottom: 12px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: #f3f6fb;
+      border: 1px solid #e6edf7;
+      font-weight: 700;
+    }
+
+    .photo-side-caption-box {
+      margin-top: 10px;
+      padding: 18px;
+      border-radius: 18px;
+      border: 1px solid #dbe7fb;
+      background: linear-gradient(180deg, #fbfdff 0%, #f4f8ff 100%);
+      box-shadow: 0 10px 22px rgba(37, 99, 235, 0.05);
+    }
+
+    .photo-side-caption-label {
+      font-size: 13px;
+      font-weight: 800;
+      color: #2563eb;
+      margin-bottom: 10px;
+      letter-spacing: -0.01em;
+    }
+
+    .photo-side-caption {
+      font-size: 17px;
+      color: #1f2937;
+      line-height: 1.85;
+      white-space: pre-wrap;
+      word-break: break-word;
+      letter-spacing: -0.01em;
+    }
+
+    .photo-side-caption.empty { color: #6b7280; }
+
+    .photo-side-tripmemo {
+      margin-top: 16px;
+      font-size: 14px;
+      color: #4b5563;
+      line-height: 1.8;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .image-zoom-panel {
+      position: fixed;
+      inset: 0;
+      z-index: 90;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.24s ease;
+    }
+
+    .image-zoom-panel.show {
+      pointer-events: auto;
+      opacity: 1;
+    }
+
+    .image-zoom-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.82);
+      backdrop-filter: blur(8px);
+    }
+
+    .image-zoom-sheet {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 28px;
+    }
+
+    .image-zoom-image {
+      max-width: min(96vw, 1500px);
+      max-height: 92vh;
+      object-fit: contain;
+      border-radius: 22px;
+      box-shadow: 0 28px 60px rgba(0,0,0,0.42), 0 10px 24px rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.04);
+    }
+
+    .image-zoom-close {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      width: 44px;
+      height: 44px;
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+      font-size: 22px;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 22px rgba(0,0,0,0.2);
+    }
+
+    .image-zoom-caption {
+      position: absolute;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      max-width: min(88vw, 980px);
+      padding: 10px 14px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+      font-size: 13px;
+      line-height: 1.6;
+      text-align: center;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 22px rgba(0,0,0,0.18);
+    }
+
+    @media (max-width: 960px) {
+      body { overflow: auto; }
+
+      .app {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 55vh;
+        height: auto;
+        min-height: 100vh;
+      }
+
+      .sidebar {
+        height: auto;
+        min-width: 0;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .globe-area { min-height: 55vh; }
+      .floating-card { width: 240px; }
+      .floating-card-media-wrap { height: 130px; }
+      .photo-side-sheet { width: 100vw; }
+      .photo-side-image-wrap { height: min(46vh, 500px); padding: 18px 14px 16px; }
+      .photo-side-image {
+        inset: 18px 14px 16px 14px;
+        width: calc(100% - 28px);
+        height: calc(100% - 34px);
+      }
+      .photo-side-thumb { width: 70px; height: 70px; }
+      .photo-side-title { font-size: 24px; }
+      .photo-side-caption { font-size: 15px; }
+    }
+
+    @media (max-width: 620px) {
+      .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .photo-side-title { font-size: 22px; }
+      .photo-side-caption { font-size: 14px; }
+      .image-zoom-sheet { padding: 14px; }
+      .image-zoom-image {
+        max-width: 96vw;
+        max-height: 84vh;
+        border-radius: 16px;
+      }
+      .image-zoom-caption {
+        bottom: 14px;
+        font-size: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar-inner">
+        <div class="title-box">
+          <h1>Lama’s Travel Globe</h1>
+          <p>여행 기록을 지구본 위에서 다시 꺼내보는 사용자용 아카이브입니다. 이 페이지는 <code>travel-data.json</code>만 읽어서 표시합니다.</p>
+        </div>
+
+        <section class="stats" aria-label="통계">
+          <div class="stat"><div class="stat-label">방문 국가 수</div><div class="stat-value" id="statCountries">0</div></div>
+          <div class="stat"><div class="stat-label">방문 도시 수</div><div class="stat-value" id="statCities">0</div></div>
+          <div class="stat"><div class="stat-label">총 여행 수</div><div class="stat-value" id="statTrips">0</div></div>
+        </section>
+
+        <section class="panel status-panel" id="dataInfoPanel">
+          <div class="section-title">
+            <h2>여행 아카이브</h2>
+            <span>읽기 전용</span>
+          </div>
+          <div id="statusText">데이터를 불러오는 중입니다.</div>
+        </section>
+
+        <section class="panel list-panel">
+          <div class="section-title">
+            <h2>여행 리스트</h2>
+            <span>카드를 누르면 지구본이 이동합니다</span>
+          </div>
+          <div class="list-wrap">
+            <div id="tripList" class="trip-list"></div>
+          </div>
+        </section>
+      </div>
+    </aside>
+
+    <main class="globe-area">
+      <div class="globe-stage">
+        <div id="globeViz" aria-label="지구본"></div>
+      </div>
+
+      <div class="globe-overlay">
+        <div class="globe-badge" id="focusInfo">
+          <strong>선택된 여행지</strong>
+          <div>좌측 리스트 또는 지구본의 점을 클릭해보세요.</div>
+        </div>
+      </div>
+
+      <div id="floatingCard" class="floating-card" aria-hidden="true">
+        <div class="floating-card-media-wrap" id="floatingCardMediaWrap">
+          <img id="floatingCardImage" class="floating-card-media" alt="여행 대표사진" />
+          <div id="floatingCardImageEmpty" class="floating-card-media-empty">사진 없음</div>
+        </div>
+        <div class="floating-card-body">
+          <div class="floating-card-title" id="floatingCardTitle">도시명</div>
+          <div class="floating-card-date" id="floatingCardDate">방문일</div>
+          <div class="floating-card-memo" id="floatingCardMemo">메모</div>
+          <div class="floating-card-bottom">
+            <span id="floatingCardCount" class="floating-card-count">사진 0장</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="photoSidePanel" class="photo-side-panel" aria-hidden="true">
+        <div class="photo-side-backdrop" data-photo-close="true"></div>
+        <aside class="photo-side-sheet">
+          <button id="photoSideCloseBtn" class="photo-side-close" type="button" aria-label="닫기">×</button>
+
+          <div class="photo-side-header">
+            <div id="photoSideTitle" class="photo-side-title">도시명</div>
+            <div id="photoSideMeta" class="photo-side-meta">사진 1 / 1 · 방문일 미입력</div>
+          </div>
+
+          <div class="photo-side-stage">
+            <button id="photoPrevBtn" class="photo-side-nav prev" type="button" aria-label="이전 사진">‹</button>
+            <div class="photo-side-image-wrap">
+              <img id="photoSideImageA" class="photo-side-image is-active" alt="여행 사진 크게 보기" />
+              <img id="photoSideImageB" class="photo-side-image" alt="여행 사진 크게 보기" />
+            </div>
+            <button id="photoNextBtn" class="photo-side-nav next" type="button" aria-label="다음 사진">›</button>
+          </div>
+
+          <div class="photo-side-thumbs" id="photoSideThumbs"></div>
+
+          <div class="photo-side-info">
+            <div id="photoSideDate" class="photo-side-date">방문일</div>
+
+            <div class="photo-side-caption-box">
+              <div class="photo-side-caption-label">현재 사진 코멘트</div>
+              <div id="photoSideCaption" class="photo-side-caption empty">이 사진에 등록된 코멘트가 없습니다.</div>
+            </div>
+
+            <div id="photoSideMemo" class="photo-side-tripmemo">메모가 없습니다.</div>
+          </div>
+        </aside>
+      </div>
+
+      <div id="imageZoomPanel" class="image-zoom-panel" aria-hidden="true">
+        <div class="image-zoom-backdrop" data-zoom-close="true"></div>
+        <div class="image-zoom-sheet">
+          <button id="imageZoomCloseBtn" class="image-zoom-close" type="button" aria-label="확대 이미지 닫기">×</button>
+          <img id="imageZoomImage" class="image-zoom-image" alt="확대 이미지" />
+          <div id="imageZoomCaption" class="image-zoom-caption"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/globe.gl"></script>
+  <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+  <script>
+    (() => {
+      'use strict';
+
+      const EARTH_TEXTURE = 'https://unpkg.com/three-globe/example/img/earth-day.jpg';
+
+      let listRenderScheduled = false;
+      let globeRenderScheduled = false;
+      let resizeScheduled = false;
+      let photoImageTransitionTimer = null;
+
+      const state = {
+        trips: [],
+        activeId: null,
+        globe: null,
+        globeReady: false,
+        floatingTripId: null,
+        photoModalTripId: null,
+        photoModalIndex: 0,
+        photoImageLayerIndex: 0,
+        currentRings: [],
+        floatingFollowRaf: null
+      };
+
+      const dom = {
+        tripList: document.getElementById('tripList'),
+        globeViz: document.getElementById('globeViz'),
+        statusText: document.getElementById('statusText'),
+        statCountries: document.getElementById('statCountries'),
+        statCities: document.getElementById('statCities'),
+        statTrips: document.getElementById('statTrips'),
+        focusInfo: document.getElementById('focusInfo'),
+
+        floatingCard: document.getElementById('floatingCard'),
+        floatingCardImage: document.getElementById('floatingCardImage'),
+        floatingCardImageEmpty: document.getElementById('floatingCardImageEmpty'),
+        floatingCardTitle: document.getElementById('floatingCardTitle'),
+        floatingCardDate: document.getElementById('floatingCardDate'),
+        floatingCardMemo: document.getElementById('floatingCardMemo'),
+        floatingCardCount: document.getElementById('floatingCardCount'),
+        floatingCardMediaWrap: document.getElementById('floatingCardMediaWrap'),
+
+        photoSidePanel: document.getElementById('photoSidePanel'),
+        photoSideImageA: document.getElementById('photoSideImageA'),
+        photoSideImageB: document.getElementById('photoSideImageB'),
+        photoSideTitle: document.getElementById('photoSideTitle'),
+        photoSideMeta: document.getElementById('photoSideMeta'),
+        photoSideCloseBtn: document.getElementById('photoSideCloseBtn'),
+        photoSideThumbs: document.getElementById('photoSideThumbs'),
+        photoSideDate: document.getElementById('photoSideDate'),
+        photoSideCaption: document.getElementById('photoSideCaption'),
+        photoSideMemo: document.getElementById('photoSideMemo'),
+        photoPrevBtn: document.getElementById('photoPrevBtn'),
+        photoNextBtn: document.getElementById('photoNextBtn'),
+
+        imageZoomPanel: document.getElementById('imageZoomPanel'),
+        imageZoomImage: document.getElementById('imageZoomImage'),
+        imageZoomCaption: document.getElementById('imageZoomCaption'),
+        imageZoomCloseBtn: document.getElementById('imageZoomCloseBtn')
+      };
+
+      function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value));
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+
+      function normalizeText(value) {
+        return String(value ?? '').trim();
+      }
+
+      function sanitizePhotos(list) {
+        if (!Array.isArray(list)) return [];
+        return list
+          .map(item => ({
+            id: normalizeText(item.id) || `photo_${Math.random().toString(36).slice(2, 8)}`,
+            name: normalizeText(item.name) || 'photo',
+            dataUrl: normalizeText(item.dataUrl || item.url),
+            comment: normalizeText(item.comment || item.caption || '')
+          }))
+          .filter(item => item.dataUrl.startsWith('data:image/') || /^https?:\/\//.test(item.dataUrl))
+          .slice(0, 10);
+      }
+
+      function sanitizeTrips(list) {
+        return (Array.isArray(list) ? list : [])
+          .map(item => {
+            const photos = sanitizePhotos(item.photos);
+            return {
+              id: normalizeText(item.id) || `trip_${Math.random().toString(36).slice(2, 8)}`,
+              city: normalizeText(item.city),
+              country: normalizeText(item.country),
+              visitedAt: normalizeText(item.visitedAt),
+              memo: normalizeText(item.memo),
+              lat: Number(item.lat),
+              lng: Number(item.lng),
+              visible: item.visible !== false,
+              createdAt: normalizeText(item.createdAt) || new Date().toISOString(),
+              photos,
+              thumbnail: normalizeText(item.thumbnail) || photos[0]?.dataUrl || ''
+            };
+          })
+          .filter(item => item.city && item.country && Number.isFinite(item.lat) && Number.isFinite(item.lng));
+      }
+
+      function formatDate(dateString) {
+        return dateString || '방문일 미입력';
+      }
+
+      function setStatus(message, isError = false) {
+        dom.statusText.textContent = message;
+        dom.statusText.className = isError ? 'status-error' : '';
+      }
+
+      function getVisibleTrips() {
+        return state.trips.filter(item => item.visible !== false);
+      }
+
+      function getVisitLevelColor(count) {
+        if (count >= 4) return '#b91c1c';
+        if (count === 3) return '#ef4444';
+        if (count === 2) return '#f59e0b';
+        return '#facc15';
+      }
+
+      function getVisitLevelRadius(count) {
+        if (count >= 4) return 2.0;
+        if (count === 3) return 1.6;
+        if (count === 2) return 1.2;
+        return 1.0;
+      }
+
+      function sortVisitedDates(dates) {
+        return [...dates].sort((a, b) => {
+          if (!a && !b) return 0;
+          if (!a) return 1;
+          if (!b) return -1;
+          return a.localeCompare(b);
+        });
+      }
+
+      function buildTripGroupKey(trip) {
+        return `${normalizeText(trip.city).toLowerCase()}__${normalizeText(trip.country).toLowerCase()}`;
+      }
+
+      function groupVisibleTrips() {
+        const groups = new Map();
+        state.trips.filter(item => item.visible !== false).forEach(trip => {
+          const groupKey = buildTripGroupKey(trip);
+          if (!groups.has(groupKey)) {
+            groups.set(groupKey, {
+              groupKey,
+              city: trip.city,
+              country: trip.country,
+              lat: trip.lat,
+              lng: trip.lng,
+              visitCount: 0,
+              visitedDates: [],
+              latestVisitedAt: '',
+              latestTripId: trip.id
+            });
+          }
+          const group = groups.get(groupKey);
+          group.visitCount += 1;
+          if (trip.visitedAt) group.visitedDates.push(trip.visitedAt);
+          if (!group.latestVisitedAt || (trip.visitedAt && trip.visitedAt > group.latestVisitedAt)) {
+            group.latestVisitedAt = trip.visitedAt;
+            group.latestTripId = trip.id;
+          }
+        });
+        return Array.from(groups.values()).map(group => {
+          group.visitedDates = sortVisitedDates(group.visitedDates);
+          return group;
+        });
+      }
+
+      function updateStats() {
+        const visibleTrips = getVisibleTrips();
+        const countries = new Set();
+        const cities = new Set();
+
+        visibleTrips.forEach(item => {
+          countries.add(item.country.toLowerCase());
+          cities.add(`${item.city}|${item.country}`.toLowerCase());
+        });
+
+        dom.statCountries.textContent = String(countries.size);
+        dom.statCities.textContent = String(cities.size);
+        dom.statTrips.textContent = String(visibleTrips.length);
+      }
+
+      function getTripById(id) {
+        return state.trips.find(item => item.id === id) || null;
+      }
+
+      function scheduleListRender() {
+        if (listRenderScheduled) return;
+        listRenderScheduled = true;
+
+        queueMicrotask(() => {
+          listRenderScheduled = false;
+          renderTripList();
+        });
+      }
+
+      function renderTripList() {
+        const list = dom.tripList;
+        const visibleTrips = [...getVisibleTrips()].reverse();
+
+        if (!visibleTrips.length) {
+          list.innerHTML = `
+            <div class="empty">
+              아직 공개된 여행 기록이 없습니다.<br>
+              travel-data.json 파일을 확인해주세요.
+            </div>
+          `;
+          return;
+        }
+
+        list.innerHTML = visibleTrips.map((trip, index) => {
+          const activeClass = trip.id === state.activeId ? ' active' : '';
+          const thumbHtml = trip.thumbnail
+            ? `<img class="trip-preview-thumb" src="${trip.thumbnail}" alt="${escapeHtml(trip.city)} 대표사진">`
+            : `<div class="trip-preview-empty">사진 없음</div>`;
+
+          const noteHtml = trip.memo
+            ? `<div class="trip-note">${escapeHtml(trip.memo)}</div>`
+            : '';
+
+          const photoCount = trip.photos?.length || 0;
+          const total = visibleTrips.length;
+          const displayNumber = total - index;
+          const photoButtonHtml = photoCount
+            ? `<button class="btn small primary" type="button" data-action="photos" data-trip-id="${trip.id}">사진 보기</button>`
+            : `<button class="btn small" type="button" disabled>사진 없음</button>`;
+
+          return `
+            <article class="trip-card${activeClass}" data-trip-id="${trip.id}">
+              <div class="trip-head">
+                <div>
+                  <div class="trip-title"><span class="trip-number">${displayNumber}.</span>${escapeHtml(trip.city)}, ${escapeHtml(trip.country)}</div>
+                  <div class="trip-sub">${escapeHtml(formatDate(trip.visitedAt))}</div>
+                </div>
+              </div>
+
+              <div class="trip-meta">
+                <span class="chip">위도 ${trip.lat.toFixed(3)}</span>
+                <span class="chip">경도 ${trip.lng.toFixed(3)}</span>
+                <span class="chip">사진 ${photoCount}장</span>
+              </div>
+
+              ${noteHtml}
+
+              <div class="trip-preview">
+                <div class="trip-preview-left">
+                  ${thumbHtml}
+                  <div class="trip-preview-text">
+                    <div class="trip-preview-label">대표사진</div>
+                    <div class="trip-preview-value">${photoCount ? '사진 보기 가능' : '등록된 사진 없음'}</div>
+                  </div>
+                </div>
+
+                <div class="trip-actions">
+                  <button class="btn small" type="button" data-action="focus" data-trip-id="${trip.id}">위치 보기</button>
+                  ${photoButtonHtml}
+                </div>
+              </div>
+            </article>
+          `;
+        }).join('');
+      }
+
+      function setFocusInfo(trip) {
+        if (!trip) {
+          dom.focusInfo.innerHTML = '<strong>선택된 여행지</strong><div>좌측 리스트 또는 지구본의 점을 클릭해보세요.</div>';
+          return;
+        }
+
+        dom.focusInfo.innerHTML = `
+          <strong>${escapeHtml(trip.city)}, ${escapeHtml(trip.country)}</strong>
+          <div>
+            방문일: ${escapeHtml(formatDate(trip.visitedAt))}<br>
+            사진 수: ${trip.photos?.length || 0}장<br>
+            좌표: ${trip.lat.toFixed(4)}, ${trip.lng.toFixed(4)}
+          </div>
+        `;
+      }
+
+      function setFocusInfoFromGroup(group) {
+        const visitedDatesText = group.visitedDates.length ? group.visitedDates.join(', ') : '방문일 미입력';
+        dom.focusInfo.innerHTML = `
+          <strong>${escapeHtml(group.city)}, ${escapeHtml(group.country)}</strong>
+          <div>
+            총 ${group.visitCount}회 방문<br>
+            최근 방문일: ${escapeHtml(group.latestVisitedAt || '미입력')}<br>
+            전체 방문일: ${escapeHtml(visitedDatesText)}<br>
+            좌표: ${group.lat.toFixed(4)}, ${group.lng.toFixed(4)}
+          </div>
+        `;
+      }
+
+      function hideFloatingCard() {
+        state.floatingTripId = null;
+        dom.floatingCard.classList.remove('show', 'tail-right');
+        dom.floatingCard.setAttribute('aria-hidden', 'true');
+      }
+
+      function renderFloatingCard(trip) {
+        if (!trip) {
+          hideFloatingCard();
+          return;
+        }
+
+        state.floatingTripId = trip.id;
+        dom.floatingCardTitle.textContent = `${trip.city}, ${trip.country}`;
+        dom.floatingCardDate.textContent = formatDate(trip.visitedAt);
+        dom.floatingCardMemo.textContent = trip.memo || '메모가 없습니다.';
+        dom.floatingCardCount.textContent = `사진 ${trip.photos?.length || 0}장`;
+
+        if (trip.thumbnail) {
+          dom.floatingCardImage.src = trip.thumbnail;
+          dom.floatingCardImage.classList.add('show');
+          dom.floatingCardImageEmpty.style.display = 'none';
+          dom.floatingCardMediaWrap.classList.add('is-clickable');
+        } else {
+          dom.floatingCardImage.removeAttribute('src');
+          dom.floatingCardImage.classList.remove('show');
+          dom.floatingCardImageEmpty.style.display = 'grid';
+          dom.floatingCardMediaWrap.classList.remove('is-clickable');
+        }
+
+        dom.floatingCard.classList.add('show');
+        dom.floatingCard.setAttribute('aria-hidden', 'false');
+        updateFloatingCardPosition();
+      }
+
+      function getScreenPosition(lat, lng) {
+        if (!state.globe || !state.globeReady) return null;
+        const coords = state.globe.getScreenCoords(lat, lng, 0.02);
+        if (!coords) return null;
+        return { x: coords.x, y: coords.y };
+      }
+
+      function updateFloatingCardPosition() {
+        const trip = getTripById(state.floatingTripId || state.activeId);
+        if (!trip || !state.globeReady) return;
+
+        const point = getScreenPosition(trip.lat, trip.lng);
+        if (!point) return;
+
+        const card = dom.floatingCard;
+        const cardWidth = card.offsetWidth || 280;
+        const cardHeight = card.offsetHeight || 260;
+        const viewportWidth = dom.globeViz.clientWidth;
+        const viewportHeight = dom.globeViz.clientHeight;
+
+        let left = point.x + 26;
+        let top = point.y - (cardHeight / 2);
+
+        card.classList.remove('tail-right');
+
+        if (left + cardWidth > viewportWidth - 20) {
+          left = point.x - cardWidth - 26;
+          card.classList.add('tail-right');
+        }
+
+        top = clamp(top, 20, Math.max(20, viewportHeight - cardHeight - 20));
+        left = clamp(left, 20, Math.max(20, viewportWidth - cardWidth - 20));
+
+        card.style.left = `${left}px`;
+        card.style.top = `${top}px`;
+      }
+
+      function startFloatingCardFollow(duration = 1800) {
+        if (state.floatingFollowRaf) {
+          cancelAnimationFrame(state.floatingFollowRaf);
+          state.floatingFollowRaf = null;
+        }
+
+        const startedAt = performance.now();
+
+        function step(now) {
+          updateFloatingCardPosition();
+          if (now - startedAt < duration) {
+            state.floatingFollowRaf = requestAnimationFrame(step);
+          } else {
+            state.floatingFollowRaf = null;
+            updateFloatingCardPosition();
+          }
+        }
+
+        state.floatingFollowRaf = requestAnimationFrame(step);
+      }
+
+      function scheduleGlobeRender() {
+        if (globeRenderScheduled) return;
+        globeRenderScheduled = true;
+
+        queueMicrotask(() => {
+          globeRenderScheduled = false;
+          renderGlobe();
+        });
+      }
+
+      function renderGlobe() {
+        if (!state.globe) return;
+
+        const groups = groupVisibleTrips();
+
+        state.globe
+          .objectsData(groups)
+          .objectLat('lat')
+          .objectLng('lng')
+          .objectAltitude(0)
+          .objectFacesSurface(true)
+          .objectLabel(item => {
+            const visitedDatesText = item.visitedDates && item.visitedDates.length ? item.visitedDates.join(', ') : '방문일 미입력';
+            return `
+              <div style="padding:6px 8px;">
+                <strong>${escapeHtml(item.city)}, ${escapeHtml(item.country)}</strong><br>
+                <span>총 ${item.visitCount}회 방문</span><br>
+                <span>최근 방문일: ${escapeHtml(item.latestVisitedAt || '미입력')}</span><br>
+                <span>전체 방문일: ${escapeHtml(visitedDatesText)}</span>
+              </div>
+            `;
+          })
+          .objectThreeObject(item => {
+            const radius = getVisitLevelRadius(item.visitCount || 1);
+            const color = getVisitLevelColor(item.visitCount || 1);
+            const geometry = new THREE.SphereGeometry(radius, 24, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+            const material = new THREE.MeshPhongMaterial({
+              color,
+              transparent: true,
+              opacity: 0.98,
+              shininess: 110,
+              specular: 0xffffff,
+              emissive: 0x111111
+            });
+            const dome = new THREE.Mesh(geometry, material);
+            dome.position.y = 0;
+            dome.rotation.x = Math.PI / 2;
+            return dome;
+          })
+          .onObjectClick(obj => focusGroup(obj.groupKey, true));
+
+        state.globe.ringsData(state.currentRings || []);
+      }
+
+      function playRing(point) {
+        if (!state.globe) return;
+        const ring = { lat: point.lat, lng: point.lng, maxR: 5, propagationSpeed: 3, repeatPeriod: 900 };
+        state.globe.ringsData([ring]);
+        clearTimeout(window.__travelRingTimer);
+        window.__travelRingTimer = setTimeout(() => {
+          if (state.globe) state.globe.ringsData([]);
+        }, 1800);
+      }
+
+      function focusTrip(id, showRing = true) {
+        const trip = getTripById(id);
+        if (!trip) return;
+
+        state.activeId = trip.id;
+        setFocusInfo(trip);
+        scheduleListRender();
+        renderFloatingCard(trip);
+
+        if (state.globe) {
+          let altitude = 1.7;
+          const globeWidth = dom.globeViz.clientWidth;
+          if (globeWidth < 1000) altitude = 1.9;
+          if (globeWidth < 700) altitude = 2.1;
+          state.globe.pointOfView({ lat: Math.max(-85, Math.min(85, trip.lat + 6)), lng: trip.lng, altitude }, 1600);
+          startFloatingCardFollow(1700);
+        } else {
+          updateFloatingCardPosition();
+        }
+
+        if (showRing) playRing({ id: trip.id, lat: trip.lat, lng: trip.lng });
+      }
+
+      function focusGroup(groupKey, showRing = true) {
+        const groups = groupVisibleTrips();
+        const group = groups.find(item => item.groupKey === groupKey);
+        if (!group) return;
+
+        state.activeId = group.latestTripId;
+        setFocusInfoFromGroup(group);
+        scheduleListRender();
+        const trip = state.trips.find(item => item.id === group.latestTripId) || null;
+        renderFloatingCard(trip);
+
+        if (state.globe) {
+          let altitude = 1.6;
+          const globeWidth = dom.globeViz.clientWidth;
+          if (globeWidth < 1200) altitude = 1.75;
+          if (globeWidth < 1000) altitude = 1.95;
+          if (globeWidth < 850) altitude = 2.15;
+          if (globeWidth < 700) altitude = 2.3;
+          state.globe.pointOfView({ lat: Math.max(-85, Math.min(85, group.lat + 6)), lng: group.lng, altitude }, 1600);
+          startFloatingCardFollow(1700);
+        } else {
+          updateFloatingCardPosition();
+        }
+
+        if (showRing) playRing({ id: group.groupKey, lat: group.lat, lng: group.lng });
+      }
+
+      function updateResponsiveGlobeLayout(immediate = false) {
+        if (!state.globe || !dom.globeViz) return;
+
+        const globeWidth = dom.globeViz.clientWidth;
+        let altitude = 2.1;
+
+        if (globeWidth < 1400) altitude = 2.15;
+        if (globeWidth < 1200) altitude = 2.22;
+        if (globeWidth < 1000) altitude = 2.32;
+        if (globeWidth < 850) altitude = 2.45;
+        if (globeWidth < 700) altitude = 2.58;
+
+        if (!state.activeId) {
+          state.globe.pointOfView({ lat: 20, lng: 120, altitude }, immediate ? 0 : 250);
+        }
+
+        updateFloatingCardPosition();
+      }
+
+      function scheduleResize() {
+        if (resizeScheduled) return;
+        resizeScheduled = true;
+
+        requestAnimationFrame(() => {
+          resizeScheduled = false;
+
+          if (state.globe && dom.globeViz) {
+            state.globe
+              .width(dom.globeViz.clientWidth)
+              .height(dom.globeViz.clientHeight);
+          }
+
+          updateFloatingCardPosition();
+
+          if (dom.photoSidePanel.classList.contains('show')) {
+            updatePhotoNavPositions();
+          }
+
+          if (!state.activeId) {
+            updateResponsiveGlobeLayout();
+          }
+        });
+      }
+
+      function clampIndex(index, length) {
+        if (!length) return 0;
+        return ((index % length) + length) % length;
+      }
+
+      function getActivePhotoSideImage() {
+        return dom.photoSideImageA.classList.contains('is-active')
+          ? dom.photoSideImageA
+          : dom.photoSideImageB;
+      }
+
+      function getInactivePhotoSideImage() {
+        return dom.photoSideImageA.classList.contains('is-active')
+          ? dom.photoSideImageB
+          : dom.photoSideImageA;
+      }
+
+      function updatePhotoNavPositions() {
+        const activeImage = getActivePhotoSideImage();
+        if (!activeImage || !activeImage.src) return;
+
+        const stage = activeImage.closest('.photo-side-stage');
+        if (!stage) return;
+
+        const stageRect = stage.getBoundingClientRect();
+        const imageRect = activeImage.getBoundingClientRect();
+
+        const gap = 28;
+        const buttonHalf = 28;
+        const minX = buttonHalf + 10;
+        const maxX = stageRect.width - buttonHalf - 10;
+        const centerY = imageRect.top - stageRect.top + (imageRect.height / 2);
+
+        const prevXRaw = imageRect.left - stageRect.left - gap;
+        const nextXRaw = imageRect.right - stageRect.left + gap;
+
+        const prevX = clamp(prevXRaw, minX, maxX);
+        const nextX = clamp(nextXRaw, minX, maxX);
+
+        dom.photoPrevBtn.style.left = `${prevX}px`;
+        dom.photoPrevBtn.style.top = `${centerY}px`;
+
+        dom.photoNextBtn.style.left = `${nextX}px`;
+        dom.photoNextBtn.style.top = `${centerY}px`;
+      }
+
+      function openPhotoSidePanel(tripId, index = 0) {
+        const trip = getTripById(tripId);
+        if (!trip || !trip.photos?.length) return;
+
+        state.photoModalTripId = trip.id;
+        state.photoModalIndex = clampIndex(index, trip.photos.length);
+
+        dom.photoSidePanel.classList.add('show');
+        dom.photoSidePanel.setAttribute('aria-hidden', 'false');
+        renderPhotoSidePanel(true);
+      }
+
+      function closePhotoSidePanel() {
+        dom.photoSidePanel.classList.remove('show');
+        dom.photoSidePanel.setAttribute('aria-hidden', 'true');
+      }
+
+      function renderPhotoSideThumbs(trip) {
+        dom.photoSideThumbs.innerHTML = trip.photos.map((photo, index) => `
+          <button class="photo-side-thumb${index === state.photoModalIndex ? ' active' : ''}" type="button" data-thumb-index="${index}" aria-label="사진 ${index + 1}">
+            <img src="${photo.dataUrl}" alt="${escapeHtml(trip.city)} 사진 ${index + 1}">
+          </button>
+        `).join('');
+      }
+
+      function renderPhotoSideText(trip, photo) {
+        dom.photoSideTitle.textContent = `${trip.city}, ${trip.country}`;
+        dom.photoSideMeta.textContent = `사진 ${state.photoModalIndex + 1} / ${trip.photos.length} · 방문일 ${formatDate(trip.visitedAt)}`;
+        dom.photoSideDate.textContent = formatDate(trip.visitedAt);
+        dom.photoSideMemo.textContent = trip.memo || '메모가 없습니다.';
+
+        if (photo.comment) {
+          dom.photoSideCaption.textContent = photo.comment;
+          dom.photoSideCaption.classList.remove('empty');
+        } else {
+          dom.photoSideCaption.textContent = '이 사진에 등록된 코멘트가 없습니다.';
+          dom.photoSideCaption.classList.add('empty');
+        }
+      }
+
+      function swapPhotoImage(targetImage, src, direction = 'right') {
+        const active = getActivePhotoSideImage();
+        const inactive = targetImage || getInactivePhotoSideImage();
+
+        clearTimeout(photoImageTransitionTimer);
+
+        inactive.className = `photo-side-image is-enter-${direction}`;
+        inactive.src = src;
+
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            active.className = `photo-side-image is-exit-${direction}`;
+            inactive.className = 'photo-side-image is-active';
+
+            updatePhotoNavPositions();
+
+            photoImageTransitionTimer = setTimeout(() => {
+              active.className = 'photo-side-image';
+            }, 320);
+          });
+        });
+      }
+
+      function renderPhotoSidePanel(initial = false, direction = 'right') {
+        const trip = getTripById(state.photoModalTripId);
+        if (!trip || !trip.photos?.length) {
+          closePhotoSidePanel();
+          return;
+        }
+
+        const photo = trip.photos[state.photoModalIndex];
+        renderPhotoSideText(trip, photo);
+        renderPhotoSideThumbs(trip);
+
+        if (initial) {
+          dom.photoSideImageA.src = photo.dataUrl;
+          dom.photoSideImageA.className = 'photo-side-image is-active';
+          dom.photoSideImageB.className = 'photo-side-image';
+          requestAnimationFrame(updatePhotoNavPositions);
+        } else {
+          swapPhotoImage(getInactivePhotoSideImage(), photo.dataUrl, direction);
+        }
+      }
+
+      function movePhoto(delta) {
+        const trip = getTripById(state.photoModalTripId);
+        if (!trip || !trip.photos?.length) return;
+
+        const nextIndex = clampIndex(state.photoModalIndex + delta, trip.photos.length);
+        const direction = delta > 0 ? 'right' : 'left';
+
+        state.photoModalIndex = nextIndex;
+        renderPhotoSidePanel(false, direction);
+      }
+
+      function openZoomFromCurrentPhoto() {
+        const trip = getTripById(state.photoModalTripId);
+        if (!trip || !trip.photos?.length) return;
+
+        const photo = trip.photos[state.photoModalIndex];
+        dom.imageZoomImage.src = photo.dataUrl;
+        dom.imageZoomCaption.textContent = photo.comment || `${trip.city}, ${trip.country}`;
+        dom.imageZoomPanel.classList.add('show');
+        dom.imageZoomPanel.setAttribute('aria-hidden', 'false');
+      }
+
+      function closeZoomPanel() {
+        dom.imageZoomPanel.classList.remove('show');
+        dom.imageZoomPanel.setAttribute('aria-hidden', 'true');
+      }
+
+      function initGlobe() {
+        const globe = Globe()(dom.globeViz)
+          .globeImageUrl(EARTH_TEXTURE)
+          .backgroundColor('rgba(0,0,0,0)')
+          .showAtmosphere(true)
+          .atmosphereAltitude(0.12)
+          .atmosphereColor('#9ec5ff')
+          .ringMaxRadius(5)
+          .ringPropagationSpeed(3)
+          .ringRepeatPeriod(900)
+          .showPointerCursor(point => !!point)
+          .onGlobeReady(() => {
+            state.globeReady = true;
+            scheduleGlobeRender();
+            setTimeout(updateFloatingCardPosition, 150);
+
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                scheduleResize();
+              });
+            });
+          });
+
+        const renderer = globe.renderer();
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+
+        const controls = globe.controls();
+        controls.enablePan = false;
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.1;
+        controls.minDistance = 140;
+        controls.maxDistance = 360;
+        controls.rotateSpeed = 0.75;
+        controls.zoomSpeed = 0.9;
+        controls.addEventListener('change', () => {
+          if (state.floatingTripId || state.activeId) {
+            updateFloatingCardPosition();
+          }
+        });
+
+        state.globe = globe;
+        updateResponsiveGlobeLayout(true);
+
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            scheduleResize();
+          });
+        });
+      }
+
+      async function loadPublicData() {
+        try {
+          setStatus('여행 데이터를 불러오는 중입니다.');
+          const response = await fetch('./travel-data.json', { cache: 'no-store' });
+
+          if (!response.ok) {
+            throw new Error(`travel-data.json 불러오기 실패 (${response.status})`);
+          }
+
+          const data = await response.json();
+          state.trips = sanitizeTrips(data.trips || data).map(item => ({
+            ...item,
+            visitedDates: Array.isArray(item.visitedDates)
+              ? item.visitedDates.filter(Boolean)
+              : (normalizeText(item.visitedAt) ? [normalizeText(item.visitedAt)] : [])
+          }));
+
+          if (!state.trips.length) {
+            setStatus('표시할 여행 데이터가 없습니다.', true);
+            updateStats();
+            scheduleListRender();
+            scheduleGlobeRender();
+            return;
+          }
+
+          updateStats();
+          scheduleListRender();
+          scheduleGlobeRender();
+
+          const firstVisibleTrip = getVisibleTrips()[0] || state.trips[0];
+          if (firstVisibleTrip) {
+            state.activeId = firstVisibleTrip.id;
+            setFocusInfo(firstVisibleTrip);
+            renderFloatingCard(firstVisibleTrip);
+
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                focusTrip(firstVisibleTrip.id, false);
+              });
+            });
+          }
+
+          setStatus(`여행 ${getVisibleTrips().length}건을 불러왔습니다.`);
+        } catch (error) {
+          console.error(error);
+          state.trips = [];
+          updateStats();
+          scheduleListRender();
+          scheduleGlobeRender();
+          setStatus('travel-data.json 파일을 불러오지 못했습니다. Live Server나 GitHub Pages에서 열었는지, 같은 폴더에 파일이 있는지 확인해주세요.', true);
+        }
+      }
+
+      function bindEvents() {
+        window.addEventListener('resize', scheduleResize);
+
+        dom.tripList.addEventListener('click', event => {
+          const actionBtn = event.target.closest('[data-action]');
+          const card = event.target.closest('.trip-card');
+
+          if (actionBtn) {
+            const tripId = actionBtn.dataset.tripId;
+            const action = actionBtn.dataset.action;
+
+            if (action === 'focus') {
+              focusTrip(tripId, true);
+            } else if (action === 'photos') {
+              openPhotoSidePanel(tripId, 0);
+            }
+            return;
+          }
+
+          if (card) {
+            focusTrip(card.dataset.tripId, true);
+          }
+        });
+
+        dom.floatingCardMediaWrap.addEventListener('click', () => {
+          const trip = getTripById(state.floatingTripId || state.activeId);
+          if (trip?.photos?.length) {
+            openPhotoSidePanel(trip.id, 0);
+          }
+        });
+
+        dom.photoSideCloseBtn.addEventListener('click', closePhotoSidePanel);
+        dom.photoPrevBtn.addEventListener('click', () => movePhoto(-1));
+        dom.photoNextBtn.addEventListener('click', () => movePhoto(1));
+
+        dom.photoSideThumbs.addEventListener('click', event => {
+          const button = event.target.closest('[data-thumb-index]');
+          if (!button) return;
+
+          const nextIndex = Number(button.dataset.thumbIndex);
+          const direction = nextIndex > state.photoModalIndex ? 'right' : 'left';
+          state.photoModalIndex = nextIndex;
+          renderPhotoSidePanel(false, direction);
+        });
+
+        dom.photoSideImageA.addEventListener('load', updatePhotoNavPositions);
+        dom.photoSideImageB.addEventListener('load', updatePhotoNavPositions);
+
+        dom.photoSideImageA.addEventListener('click', openZoomFromCurrentPhoto);
+        dom.photoSideImageB.addEventListener('click', openZoomFromCurrentPhoto);
+
+        dom.imageZoomCloseBtn.addEventListener('click', closeZoomPanel);
+
+        document.addEventListener('click', event => {
+          if (event.target.matches('[data-photo-close="true"]')) {
+            closePhotoSidePanel();
+          }
+          if (event.target.matches('[data-zoom-close="true"]')) {
+            closeZoomPanel();
+          }
+        });
+
+        window.addEventListener('keydown', event => {
+          if (event.key === 'Escape') {
+            if (dom.imageZoomPanel.classList.contains('show')) {
+              closeZoomPanel();
+              return;
+            }
+
+            if (dom.photoSidePanel.classList.contains('show')) {
+              closePhotoSidePanel();
+            }
+          }
+
+          if (dom.photoSidePanel.classList.contains('show')) {
+            if (event.key === 'ArrowLeft') movePhoto(-1);
+            if (event.key === 'ArrowRight') movePhoto(1);
+          }
+        });
+      }
+
+      async function boot() {
+        initGlobe();
+        bindEvents();
+        await loadPublicData();
+      }
+
+      boot();
+    })();
+  </script>
+</body>
+</html>
