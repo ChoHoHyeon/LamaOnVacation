@@ -1821,7 +1821,8 @@
           scheduleListRender();
           scheduleGlobeRender();
 
-          const firstVisibleTrip = getVisibleTrips()[0] || state.trips[0];
+          const visibleTrips = [...getVisibleTrips()].reverse();
+          const firstVisibleTrip = visibleTrips[0] || state.trips[0];
             if (firstVisibleTrip) {
               state.activeId = firstVisibleTrip.id;
               setFocusInfo(firstVisibleTrip);
