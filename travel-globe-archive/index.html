@@ -1822,17 +1822,15 @@
           scheduleGlobeRender();
 
           const firstVisibleTrip = getVisibleTrips()[0] || state.trips[0];
-          if (firstVisibleTrip) {
-            state.activeId = firstVisibleTrip.id;
-            setFocusInfo(firstVisibleTrip);
-            renderFloatingCard(firstVisibleTrip);
+            if (firstVisibleTrip) {
+              state.activeId = firstVisibleTrip.id;
+              setFocusInfo(firstVisibleTrip);
+              renderFloatingCard(firstVisibleTrip);
 
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
+              setTimeout(() => {
                 focusTrip(firstVisibleTrip.id, false);
-              });
-            });
-          }
+              }, 80);
+            }
 
           setStatus(`여행 ${getVisibleTrips().length}건을 불러왔습니다.`);
         } catch (error) {
