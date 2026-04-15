@@ -206,6 +206,15 @@
     .btn.small { padding: 8px 10px; font-size: 12px; border-radius: 10px; }
     .btn.tiny { padding: 6px 8px; font-size: 11px; border-radius: 9px; }
 
+
+    .btn:disabled {
+      opacity: 0.55;
+      cursor: default;
+      pointer-events: none;
+    }
+
+
+
     .status {
       min-height: 20px;
       font-size: 12px;
@@ -850,8 +859,8 @@
       gap: 12px;
       padding: 16px 20px;
       overflow-x: auto;
-      border-bottom: 1px solid rgba(229, 231, 235, 0.9);
-      background: linear-gradient(180deg, #f8fafc 0%, #f4f7fb 100%);
+      border-bottom: none;
+      background: transparent;
     }
 
     .photo-side-thumb {
@@ -860,20 +869,34 @@
       height: 86px;
       border-radius: 16px;
       overflow: hidden;
-      border: 1px solid rgba(226, 232, 240, 0.9);
+      border: 1px solid rgba(226, 232, 240, 0.55);
       background: #fff;
       flex: 0 0 auto;
-      cursor: pointer;
-      box-shadow: 0 8px 16px rgba(15, 23, 42, 0.08);
+      cursor: grab;
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.05);
       transition: transform 0.18s ease, border-color 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
-      opacity: 0.52;
+      opacity: 0.72;
+    }
+
+    .photo-side-thumb:active {
+      cursor: grabbing;
     }
 
     .photo-side-thumb.active {
-      transform: translateY(-4px) scale(1.06);
+      transform: translateY(-3px) scale(1.04);
       border-color: #2563eb;
-      box-shadow: 0 14px 28px rgba(37, 99, 235, 0.18), 0 0 0 4px rgba(37, 99, 235, 0.14);
+      box-shadow: 0 10px 20px rgba(37, 99, 235, 0.14), 0 0 0 3px rgba(37, 99, 235, 0.10);
       opacity: 1;
+    }
+
+    .photo-side-thumb.dragging {
+      opacity: 0.35;
+      transform: scale(0.96);
+    }
+
+    .photo-side-thumb.drop-target {
+      border-color: #60a5fa;
+      box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.18);
     }
 
     .photo-side-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -1060,7 +1083,24 @@
       box-shadow: 0 10px 22px rgba(0,0,0,0.18);
     }
 
+.trip-memo-editor {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed #dbe3ef;
+}
 
+.trip-memo-editor textarea {
+  width: 100%;
+  min-height: 88px;
+  resize: vertical;
+}
+
+.trip-memo-editor-actions {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
 
 .date-icon-btn:hover {
   background: #f8fafc;
@@ -1440,7 +1480,10 @@
               <textarea id="photoSideCommentInput" class="photo-side-editor-input" placeholder="이 사진에 대한 생각이나 메모를 작성하세요."></textarea>
               <div class="photo-side-editor-actions">
                 <div id="photoSideEditorHint" class="photo-side-editor-hint">사진을 바꾸면 해당 사진의 코멘트가 자동으로 불러와집니다.</div>
-                <button id="photoSaveCommentBtn" class="btn small primary" type="button">이 사진 코멘트 저장</button>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                  <button id="photoSetCoverBtn" class="btn small" type="button">대표사진으로 설정</button>
+                  <button id="photoSaveCommentBtn" class="btn small primary" type="button">이 사진 코멘트 저장</button>
+                </div>
               </div>
             </div>
           </div>
@@ -1472,7 +1515,7 @@
       const STORAGE_KEY_LEGACY_V3 = 'travel_globe_records_v3';
       const FILE_SCHEMA_VERSION = 4;
       const EARTH_TEXTURE = 'https://unpkg.com/three-globe/example/img/earth-day.jpg';
-      const MAX_PHOTOS = 10;
+      const MAX_PHOTOS = 15;
       const MAX_PHOTO_SIDE = 1280;
       const PHOTO_QUALITY = 0.82;
 
@@ -1503,7 +1546,9 @@
         touchStartY: 0,
         touchDeltaX: 0,
         touchDeltaY: 0,
-        isSwipingPhoto: false
+        isSwipingPhoto: false, 
+        photoThumbDraggingIndex: null, 
+        editingMemoTripId: null
       };
 
       const dom = {
@@ -1569,7 +1614,8 @@
         imageZoomPanel: document.getElementById('imageZoomPanel'),
         imageZoomImage: document.getElementById('imageZoomImage'),
         imageZoomCaption: document.getElementById('imageZoomCaption'),
-        imageZoomCloseBtn: document.getElementById('imageZoomCloseBtn')
+        imageZoomCloseBtn: document.getElementById('imageZoomCloseBtn'), 
+        photoSetCoverBtn: document.getElementById('photoSetCoverBtn')
       };
 
 
@@ -1670,6 +1716,16 @@
         return (Array.isArray(list) ? list : [])
           .map(item => {
             const photos = sanitizePhotos(item.photos);
+            const coverPhotoId =
+              normalizeText(item.coverPhotoId) ||
+              photos[0]?.id ||
+              null;
+
+            const coverPhoto =
+              photos.find(photo => photo.id === coverPhotoId) ||
+              photos[0] ||
+              null;
+
             return {
               id: normalizeText(item.id) || uid(),
               city: normalizeText(item.city),
@@ -1681,11 +1737,17 @@
               visible: item.visible !== false,
               createdAt: normalizeText(item.createdAt) || new Date().toISOString(),
               photos,
-              thumbnail: photos[0]?.dataUrl || ''
+              coverPhotoId,
+              thumbnail: coverPhoto?.dataUrl || ''
             };
           })
           .filter(item => item.city && item.country && Number.isFinite(item.lat) && Number.isFinite(item.lng));
       }
+
+
+
+
+
 
       function getDb() {
         return new Promise((resolve, reject) => {
@@ -1809,6 +1871,15 @@
           }
         }
       }
+
+
+      function getCoverPhoto(trip) {
+        if (!trip || !Array.isArray(trip.photos) || !trip.photos.length) return null;
+        return trip.photos.find(photo => photo.id === trip.coverPhotoId) || trip.photos[0] || null;
+      }
+
+
+
 
       function schedulePersist() {
         if (!state.persistenceReady || state.isBooting) return;
@@ -2032,6 +2103,42 @@ function clearVisitedAtInputs() {
         return state.trips.find(item => item.id === state.activeId) || null;
       }
 
+      function setCurrentPhotoAsCover() {
+        const trip = getActiveTrip();
+        if (!trip || !trip.photos || !trip.photos.length) return;
+
+        const current = trip.photos[state.photoModalIndex];
+        if (!current) return;
+
+        trip.coverPhotoId = current.id;
+        trip.thumbnail = current.dataUrl || '';
+
+        schedulePersist();
+        scheduleListRender();
+        renderFloatingCard(trip);
+
+        if (dom.photoSidePanel.classList.contains('show')) {
+          renderPhotoModal('next', true);
+        }
+
+        setStatus('현재 사진을 대표사진으로 설정했습니다.', 'ok');
+      }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       function updateStats() {
         const countries = new Set();
         const cities = new Set();
@@ -2206,6 +2313,98 @@ function clearVisitedAtInputs() {
         }, 340);
       }
 
+
+      function reorderPhotosInActiveTrip(fromIndex, toIndex) {
+        const trip = getActiveTrip();
+        if (!trip || !trip.photos || !trip.photos.length) return;
+
+        const total = trip.photos.length;
+        if (
+          fromIndex < 0 || fromIndex >= total ||
+          toIndex < 0 || toIndex >= total ||
+          fromIndex === toIndex
+        ) {
+          return;
+        }
+
+        const [movedPhoto] = trip.photos.splice(fromIndex, 1);
+        trip.photos.splice(toIndex, 0, movedPhoto);
+
+        const coverPhoto = getCoverPhoto(trip);
+        trip.thumbnail = coverPhoto?.dataUrl || '';
+
+        if (state.photoModalIndex === fromIndex) {
+          state.photoModalIndex = toIndex;
+        } else if (fromIndex < state.photoModalIndex && toIndex >= state.photoModalIndex) {
+          state.photoModalIndex -= 1;
+        } else if (fromIndex > state.photoModalIndex && toIndex <= state.photoModalIndex) {
+          state.photoModalIndex += 1;
+        }
+
+        schedulePersist();
+        scheduleListRender();
+        renderFloatingCard(trip);
+        renderPhotoModal('next', true);
+      }
+
+      function clearPhotoThumbDragState() {
+        state.photoThumbDraggingIndex = null;
+        dom.photoSideThumbs
+          .querySelectorAll('.photo-side-thumb')
+          .forEach(el => el.classList.remove('dragging', 'drop-target'));
+      }
+
+      function bindPhotoThumbDragEvents() {
+        const thumbs = dom.photoSideThumbs.querySelectorAll('.photo-side-thumb');
+
+        thumbs.forEach(thumb => {
+          thumb.setAttribute('draggable', 'true');
+
+          thumb.addEventListener('dragstart', event => {
+            const index = Number(thumb.dataset.photoThumbIndex);
+            if (!Number.isInteger(index)) return;
+
+            state.photoThumbDraggingIndex = index;
+            thumb.classList.add('dragging');
+
+            if (event.dataTransfer) {
+              event.dataTransfer.effectAllowed = 'move';
+              event.dataTransfer.setData('text/plain', String(index));
+            }
+          });
+
+          thumb.addEventListener('dragend', () => {
+            clearPhotoThumbDragState();
+          });
+
+          thumb.addEventListener('dragover', event => {
+            if (state.photoThumbDraggingIndex === null) return;
+            event.preventDefault();
+            thumb.classList.add('drop-target');
+
+            if (event.dataTransfer) {
+              event.dataTransfer.dropEffect = 'move';
+            }
+          });
+
+          thumb.addEventListener('dragleave', () => {
+            thumb.classList.remove('drop-target');
+          });
+
+          thumb.addEventListener('drop', event => {
+            event.preventDefault();
+
+            const fromIndex = state.photoThumbDraggingIndex;
+            const toIndex = Number(thumb.dataset.photoThumbIndex);
+
+            clearPhotoThumbDragState();
+
+            if (!Number.isInteger(fromIndex) || !Number.isInteger(toIndex)) return;
+            reorderPhotosInActiveTrip(fromIndex, toIndex);
+          });
+        });
+      }
+
       function renderPhotoModal(direction = 'next', immediate = false) {
         const trip = getActiveTrip();
         if (!trip || !trip.photos || trip.photos.length === 0) return;
@@ -2238,6 +2437,13 @@ function clearVisitedAtInputs() {
             <img src="${photo.dataUrl}" alt="썸네일 ${index + 1}">
           </button>
         `).join('');
+        bindPhotoThumbDragEvents();
+
+        if (dom.photoSetCoverBtn) {
+          const isCover = !!current && current.id === trip.coverPhotoId;
+          dom.photoSetCoverBtn.disabled = isCover;
+          dom.photoSetCoverBtn.textContent = isCover ? '현재 대표사진' : '대표사진으로 설정';
+        }
       }
 
       function movePhotoModal(step) {
@@ -2430,6 +2636,17 @@ function clearVisitedAtInputs() {
         list.innerHTML = renderTrips.map((trip, index) => {
           const activeClass = trip.id === state.activeId ? ' active' : '';
           const noteHtml = trip.memo ? `<div class="trip-note">${escapeHtml(trip.memo)}</div>` : '';
+          const memoEditorHtml = state.editingMemoTripId === trip.id ? `
+            <div class="trip-memo-editor">
+              <textarea data-trip-memo-input="${escapeHtml(trip.id)}" placeholder="여행 메모를 입력하세요.">${escapeHtml(trip.memo || '')}</textarea>
+              <div class="trip-memo-editor-actions">
+                <button class="btn tiny primary" type="button" data-action="save-memo" data-id="${escapeHtml(trip.id)}">저장</button>
+                <button class="btn tiny" type="button" data-action="cancel-memo" data-id="${escapeHtml(trip.id)}">취소</button>
+              </div>
+            </div>
+          ` : '';
+
+
           const displayNumber = state.trips.length - index;
           const thumbHtml = trip.thumbnail
             ? `
@@ -2473,6 +2690,7 @@ function clearVisitedAtInputs() {
 
               ${thumbHtml}
               ${noteHtml}
+              ${memoEditorHtml}
 
               <div class="trip-actions">
                 <label class="toggle">
@@ -2481,6 +2699,7 @@ function clearVisitedAtInputs() {
                 </label>
 
                 <div class="actions">
+                  <button class="btn tiny" type="button" data-action="edit-memo" data-id="${escapeHtml(trip.id)}">메모수정</button>
                   <button class="btn small" type="button" data-action="focus" data-id="${escapeHtml(trip.id)}">이동</button>
                   <button class="btn small danger" type="button" data-action="delete" data-id="${escapeHtml(trip.id)}">삭제</button>
                 </div>
@@ -2572,6 +2791,14 @@ function clearVisitedAtInputs() {
         if (idx < 0) return;
         clearRingTimer(id);
         state.trips.splice(idx, 1);
+
+
+        if (state.editingMemoTripId === id) {
+          state.editingMemoTripId = null;
+        }
+
+
+
         if (state.activeId === id) {
           state.activeId = null;
           hideFloatingCard();
@@ -2610,6 +2837,7 @@ function clearVisitedAtInputs() {
         for (const id of ringTimers.keys()) clearRingTimer(id);
         state.trips = sanitizeTrips(nextTrips);
         state.activeId = null;
+        state.editingMemoTripId = null;
         hideFloatingCard();
         schedulePersist();
         updateStats();
@@ -2641,7 +2869,13 @@ function clearVisitedAtInputs() {
         try {
           const newPhotos = await buildPhotoObjects(targetFiles);
           trip.photos = [...trip.photos, ...newPhotos].slice(0, MAX_PHOTOS);
-          trip.thumbnail = trip.photos[0]?.dataUrl || '';
+
+          if (!trip.coverPhotoId && trip.photos.length) {
+            trip.coverPhotoId = trip.photos[0].id;
+          }
+
+          const coverPhoto = getCoverPhoto(trip);
+          trip.thumbnail = coverPhoto?.dataUrl || '';
           schedulePersist();
           updateStats();
           scheduleListRender();
@@ -2895,6 +3129,7 @@ function clearVisitedAtInputs() {
               visible: true,
               createdAt: new Date().toISOString(),
               photos,
+              coverPhotoId: photos[0]?.id || null,
               thumbnail: photos[0]?.dataUrl || ''
             };
             addTrip(trip);
@@ -2921,7 +3156,7 @@ function clearVisitedAtInputs() {
         });
 
         dom.downloadBtn.addEventListener('click', () => {
-          downloadJson(`travel-globe-${new Date().toISOString().slice(0, 10)}.json`, {
+          downloadJson(`travel-data-${new Date().toISOString().slice(0, 10)}.json`, {
             version: FILE_SCHEMA_VERSION,
             savedAt: new Date().toISOString(),
             trips: state.trips
@@ -2982,6 +3217,7 @@ dom.endDateInput.addEventListener('change', () => syncDatePartsFromPicker('end')
           setStatus('전체 데이터를 삭제했습니다.', 'ok');
         });
 
+
         dom.tripList.addEventListener('click', event => {
           const actionTarget = event.target.closest('[data-action]');
           const card = event.target.closest('.trip-card');
@@ -2993,6 +3229,7 @@ dom.endDateInput.addEventListener('change', () => syncDatePartsFromPicker('end')
           }
 
           if (!actionTarget) return;
+
           const action = actionTarget.dataset.action;
           const id = actionTarget.dataset.id;
           if (!id) return;
@@ -3000,23 +3237,82 @@ dom.endDateInput.addEventListener('change', () => syncDatePartsFromPicker('end')
           if (action === 'focus') {
             focusTrip(id, true);
             return;
-          }
 
-          if (action === 'delete') {
-            if (window.confirm('이 여행 기록을 삭제할까요?')) removeTrip(id);
+          } else if (action === 'edit-memo') {
+            state.editingMemoTripId = id;
+            scheduleListRender();
+
+            requestAnimationFrame(() => {
+              const input = document.querySelector(`[data-trip-memo-input="${id}"]`);
+              if (input) {
+                input.focus();
+                const len = input.value.length;
+                input.setSelectionRange(len, len);
+              }
+            });
+
             return;
-          }
 
-          if (action === 'toggle') {
+          } else if (action === 'cancel-memo') {
+            state.editingMemoTripId = null;
+            scheduleListRender();
+            return;
+
+          } else if (action === 'save-memo') {
+            const trip = state.trips.find(item => item.id === id);
+            if (!trip) return;
+
+            const input = document.querySelector(`[data-trip-memo-input="${id}"]`);
+            trip.memo = input ? input.value.trim() : trip.memo;
+
+            state.editingMemoTripId = null;
+
+            schedulePersist();
+            scheduleListRender();
+
+            if (state.activeId === id) {
+              renderFloatingCard(trip);
+              if (dom.photoSidePanel.classList.contains('show')) {
+                renderPhotoModal('next', true);
+              }
+            }
+
+            setStatus('여행 메모를 저장했습니다.', 'ok');
+            return;
+
+          } else if (action === 'delete') {
+            const trip = state.trips.find(item => item.id === id);
+            if (!trip) return;
+            const ok = window.confirm(`"${trip.city}, ${trip.country}" 기록을 삭제할까요?`);
+            if (ok) removeTrip(id);
+            return;
+
+          } else if (action === 'toggle') {
             toggleTripVisibility(id, actionTarget.checked);
             return;
-          }
 
-          if (action === 'add-photo') {
-            const input = dom.tripList.querySelector(`[data-trip-photo-input="${CSS.escape(id)}"]`);
-            if (input) input.click();
+          } else if (action === 'add-photo') {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const ownerCard = actionTarget.closest('.trip-card');
+            const input = ownerCard?.querySelector('[data-trip-photo-input]');
+
+            if (!input) {
+              setStatus('사진 업로드 입력창을 찾지 못했습니다.', 'error');
+              return;
+            }
+
+            if (typeof input.showPicker === 'function') {
+              input.showPicker();
+            } else {
+              input.click();
+            }
+            return;
           }
         });
+
+
 
         dom.tripList.addEventListener('change', async event => {
 		  const input = event.target.closest('[data-trip-photo-input]');
@@ -3154,18 +3450,46 @@ dom.endDateInput.addEventListener('change', () => syncDatePartsFromPicker('end')
           setStatus('이 사진 코멘트를 저장했습니다.', 'ok');
         });
 
+        dom.photoSetCoverBtn?.addEventListener('click', () => {
+          setCurrentPhotoAsCover();
+        });
+
+
+
+
         window.addEventListener('keydown', event => {
           const isOpen = dom.photoSidePanel.classList.contains('show');
           if (!isOpen) return;
+
+          const target = event.target;
+          const isTypingElement =
+            target &&
+            (
+              target.tagName === 'TEXTAREA' ||
+              target.tagName === 'INPUT' ||
+              target.isContentEditable
+            );
+
           if (event.key === 'Escape') {
             if (dom.imageZoomPanel.classList.contains('show')) {
               closeZoomImage();
             } else {
               closePhotoModal();
             }
+            return;
           }
-          if (event.key === 'ArrowLeft') movePhotoModal(-1);
-          if (event.key === 'ArrowRight') movePhotoModal(1);
+
+          if (isTypingElement) return;
+
+          if (event.key === 'ArrowLeft') {
+            event.preventDefault();
+            movePhotoModal(-1);
+          }
+
+          if (event.key === 'ArrowRight') {
+            event.preventDefault();
+            movePhotoModal(1);
+          }
         });
 
         window.addEventListener('resize', scheduleResize);
